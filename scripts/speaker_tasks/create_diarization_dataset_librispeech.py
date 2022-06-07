@@ -83,10 +83,10 @@ def create_new_entry(new_file, start, speaker_id):
 def main(
     input_manifest_filepath, output_rttm_filepath, output_wav_filepath
 ):
-    if os.path.exists(output_rttm_filepath):
-        os.remove(output_rttm_filepath)
-    if os.path.exists(output_wav_filepath):
-        os.remove(output_wav_filepath)
+    # if os.path.exists(output_rttm_filepath):
+    #     os.remove(output_rttm_filepath)
+    # if os.path.exists(output_wav_filepath):
+    #     os.remove(output_wav_filepath)
 
     #load librispeech manifest file
     input_file = read_manifest(input_manifest_filepath)
@@ -108,7 +108,9 @@ def main(
     current_dict = []
 
     outfile = 'librispeech_diarization_0001'
-    with wave.open(output_wav_filepath+outfile+'.wav', 'wb') as wav_out:
+
+    wavpath = os.path.join(output_wav_filepath, outfile+'.wav')
+    with wave.open(wavpath, 'wb') as wav_out:
 
         while (running_length < session_length):
             #randomly sample from each speaker (TODO enforce exclusion)
