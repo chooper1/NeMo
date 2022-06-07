@@ -19,6 +19,7 @@ import random
 import wave
 
 from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
+from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
 
 random.seed(42)
 
