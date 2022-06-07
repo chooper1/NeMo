@@ -95,7 +95,7 @@ def main(
 
     #build list of samples for speaker1 / speaker2
     #TODO replace with more efficient sampling method
-    speaker_lists = get_speaker_samples(speaker_ids)
+    speaker_lists = get_speaker_samples(input_file, speaker_ids)
 
     session_length = 60*10 #initially assuming 10 minute meeting length
     running_length = 0
