@@ -129,6 +129,7 @@ def main(
 
             #update speaker turn
             speaker_turn = (speaker_turn + 1) % 2
+            running_length += file['duration']
 
     wav_out.close()
     #write manifest file
