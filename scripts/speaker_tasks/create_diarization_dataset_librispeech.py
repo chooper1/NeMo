@@ -79,7 +79,7 @@ def load_speaker_sample(speaker_lists, speaker_turn):
 def create_new_entry(new_file, start, speaker_id):
     end = start + new_file['duration']
     #return [start,end,speaker_id]
-    return str(start)+','+str(end)+','+str(speaker_id)
+    return str(start)+' '+str(end)+' '+str(speaker_id)
 
 def main(
     input_manifest_filepath, output_rttm_filepath, output_wav_filepath
