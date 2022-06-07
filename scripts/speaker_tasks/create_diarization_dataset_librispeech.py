@@ -70,7 +70,7 @@ def load_speaker_sample(speaker_lists, speaker_turn):
         speaker_id = 'sp1'
     elif (speaker_turn == 1):
         speaker_id = 'sp2'
-    file_id = random.randint(0,len(speaker_lists[speaker_id]))
+    file_id = random.randint(0,len(speaker_lists[speaker_id])-1)
     file = speaker_lists[speaker_id][file_id]
     return file
 
