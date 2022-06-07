@@ -117,7 +117,7 @@ def main(
             #load wav file
             #new_wav = AudioSegment.from_file(filepath, target_sr=16000)
 
-            with wave.open(new_file, 'rb') as wav_in:
+            with wave.open(filepath, 'rb') as wav_in:
                 if not wav_out.getnframes():
                     wav_out.setparams(wav_in.getparams())
                 wav_out.writeframes(wav_in.readframes(wav_in.getnframes()))
