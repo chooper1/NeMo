@@ -66,9 +66,9 @@ def get_speaker_samples(file_list, speaker_ids):
 
 #load a sample for the selected speaker id
 def load_speaker_sample(speaker_lists, speaker_turn):
-    if (speaker_trun == 0):
+    if (speaker_turn == 0):
         speaker_id = 'sp1'
-    elif (speaker_trun == 1):
+    elif (speaker_turn == 1):
         speaker_id = 'sp2'
     file_id = random.randint(0,len(speaker_lists[speaker_id]))
     file = speaker_lists[speaker_id][file_id]
