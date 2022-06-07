@@ -124,7 +124,7 @@ def main(
 
             #build dict as you go
             #TODO fixed size dict before loop?
-            new_entry = add_new_entry(file, running_length, speaker_ids[speaker_turn])
+            new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
             current_dict.append(new_entry)
 
             #update speaker turn
