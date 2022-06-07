@@ -143,6 +143,6 @@ if __name__ == "__main__":
 
     main(
         args.input_manifest_filepath,
-        args.output_manifest_filepath,
+        args.output_rttm_filepath,
         args.output_wav_filepath
     )
