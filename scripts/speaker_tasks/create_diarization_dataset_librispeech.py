@@ -81,10 +81,10 @@ def create_new_entry(new_file, start, speaker_id):
     return [start,end,speaker_id]
 
 def main(
-    input_manifest_filepath, output_manifest_filepath, output_wav_filepath
+    input_manifest_filepath, output_rttm_filepath, output_wav_filepath
 ):
-    if os.path.exists(output_manifest_filepath):
-        os.remove(output_manifest_filepath)
+    if os.path.exists(output_rttm_filepath):
+        os.remove(output_rttm_filepath)
     if os.path.exists(output_wav_filepath):
         os.remove(output_wav_filepath)
 
