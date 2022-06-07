@@ -28,7 +28,7 @@ This script creates a synthetic diarization dataset using the LibriSpeech datase
 
 #read manifest file, from NeMo/examples/nlp/token_classification/punctuate_capitalize_infer.py
 #TODO add support for multiple input manifest files
-def read_manifest(manifest):
+def read_manifest(manifest_path):
     manifest_data = []
     with open(manifest_path, 'r', encoding='utf-8') as f:
         for line in f:
