@@ -21,9 +21,7 @@ import numpy as np
 import librosa
 from scipy.io.wavfile import write
 
-# from pydub import AudioSegment
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
-# from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
 
 random.seed(42)
@@ -128,12 +126,8 @@ def main(
 
             start = int(running_length*16000)
             length = int(duration*16000)
-            # out_file._samples[start:start+length] = audio_file._samples[:length]
-            print(array[start:start+length])
-            print(audio_file[:length])
             array[start:start+length] = audio_file[:length]
 
-            #TODO fixed size dict before loop?
             new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
             manifest_list.append(new_entry)
 
