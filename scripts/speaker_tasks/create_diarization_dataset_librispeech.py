@@ -19,6 +19,7 @@ import random
 import shutil
 import numpy as np
 import librosa
+from scipy.io.wavfile import write
 
 # from pydub import AudioSegment
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
@@ -120,7 +121,7 @@ def main(
             file = load_speaker_sample(speaker_lists, speaker_turn)
             filepath = file['audio_filepath']
             audio_file, sr = librosa.load(filepath, sr=16000)
-            
+
             duration = file['duration']
             if (running_length+duration) > session_length:
                 duration = session_length - running_length
@@ -139,7 +140,7 @@ def main(
             speaker_turn = (speaker_turn + 1) % 2
             running_length += duration
 
-        librosa.output.write_wav(wavpath, array, 16000)
+        write(wavpath, 16000, array)
         # labels_to_rttmfile(manifest_list, session_filename, rttm_path)
         labels_to_rttmfile(manifest_list, session_filename, output_dir)
 
