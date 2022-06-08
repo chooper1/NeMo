@@ -112,16 +112,21 @@ def main(
         running_length = 0
 
         wavpath = os.path.join(output_dir, session_filename + '.wav')
+        out_file = AudioSegment.silent(duration=session_length*1000).set_frame_rate(16000)
 
         while (running_length < session_length):
             file = load_speaker_sample(speaker_lists, speaker_turn)
             filepath = file['audio_filepath']
 
             audio_file = AudioSegment.from_wav(filepath).set_frame_rate(16000)
-            if running_length == 0:
-                out_file = audio_file
-            else:
-                out_file += audio_file
+
+            start = int(running_length*16000)
+            end = start + int(file['duration']*16000)
+            if (end > session_length*16000):
+                end = session_length*16000
+
+            out_file[start:end] = audio_file[:end]
+
             # silent_duration = 0.25 #0.25 blank seconds
             # blank = AudioSegment.silent(duration=silent_duration*1000)
             # out_file += blank
@@ -131,7 +136,8 @@ def main(
             manifest_list.append(new_entry)
 
             speaker_turn = (speaker_turn + 1) % 2
-            running_length += file['duration']
+            running_length = end/16000
+            # running_length += file['duration']
             # running_length += silent_duration
 
         # wav_out.close()
