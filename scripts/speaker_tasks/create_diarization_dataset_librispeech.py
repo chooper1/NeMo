@@ -18,9 +18,9 @@ import os
 import random
 import shutil
 
-from pydub import AudioSegment
+# from pydub import AudioSegment
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
-# from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
+from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
 
 random.seed(42)
@@ -118,7 +118,8 @@ def main(
             file = load_speaker_sample(speaker_lists, speaker_turn)
             filepath = file['audio_filepath']
 
-            audio_file = AudioSegment.from_wav(filepath).set_frame_rate(16000)
+            # audio_file = AudioSegment.from_wav(filepath).set_frame_rate(16000)
+            audio_file = AudioSegment.from_file(filepath, target_sr=16000)
 
             start = int(running_length*16000)
             end = start + int(file['duration']*16000)
