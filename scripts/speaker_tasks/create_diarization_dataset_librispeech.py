@@ -119,12 +119,11 @@ def main(
         while (running_length < session_length):
             file = load_speaker_sample(speaker_lists, speaker_turn)
             filepath = file['audio_filepath']
+            audio_file, sr = librosa.load(filepath, sr=16000)
+            
             duration = file['duration']
             if (running_length+duration) > session_length:
                 duration = session_length - running_length
-
-            audio_file, sr = librosa.load(filename, sr=16000)
-
 
             start = int(running_length*16000)
             length = int(duration*16000)
