@@ -114,8 +114,8 @@ def main(
 
         wavpath = os.path.join(output_dir, session_filename + '.wav')
         # out_file = AudioSegment.silent(duration=session_length*1000).set_frame_rate(16000)
-        zeros = np.zeros(session_length*16000)
-        out_file = AudioSegment(zeros,16000)
+        array = np.zeros(session_length*16000)
+        # out_file = AudioSegment(zeros,16000)
         # out_file.pad(session_length*16000)
 
         while (running_length < session_length):
@@ -125,12 +125,13 @@ def main(
             if (running_length+duration) > session_length:
                 duration = session_length - running_length
 
-            # audio_file = AudioSegment.from_wav(filepath).set_frame_rate(16000)
-            audio_file = AudioSegment.from_file(filepath, target_sr=16000)
+            audio_file = AudioSegment.from_wav(filepath).set_frame_rate(16000)
+            # audio_file = AudioSegment.from_file(filepath, target_sr=16000)
 
             start = int(running_length*16000)
             length = int(duration*16000)
-            out_file._samples[start:start+length] = audio_file._samples[:length]
+            # out_file._samples[start:start+length] = audio_file._samples[:length]
+            array[start:start+length] = audio_file[:length]
 
             # silent_duration = 0.25 #0.25 blank seconds
             # blank = AudioSegment.silent(duration=silent_duration*1000)
@@ -144,6 +145,7 @@ def main(
             running_length += duration
 
         # wav_out.close()
+        out_file = AudioSegment.from_numpy_array(array)
         out_file.export(wavpath, format="wav")
         # labels_to_rttmfile(manifest_list, session_filename, rttm_path)
         labels_to_rttmfile(manifest_list, session_filename, output_dir)
