@@ -16,6 +16,8 @@ import argparse
 import json
 import os
 import random
+import shutil
+
 
 import wave
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
@@ -75,8 +77,8 @@ def create_new_entry(new_file, start, speaker_id):
 def main(
     input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 600
 ):
-    if os.path.exists(output_dir):
-        os.rmdir(output_dir)
+    # if os.path.exists(output_dir):
+    #     shutil.rmtree(output_dir)
     os.mkdir(output_dir)
 
     #load librispeech manifest file
