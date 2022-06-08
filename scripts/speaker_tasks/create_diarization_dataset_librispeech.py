@@ -18,8 +18,9 @@ import os
 import random
 import wave
 
-from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
+# from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
+from filelist_to_manifest import read_manifest
 
 random.seed(42)
 
@@ -29,13 +30,13 @@ This script creates a synthetic diarization dataset using the LibriSpeech datase
 
 #read manifest file, from NeMo/examples/nlp/token_classification/punctuate_capitalize_infer.py
 #TODO add support for multiple input manifest files
-def read_manifest(manifest_path):
-    manifest_data = []
-    with open(manifest_path, 'r', encoding='utf-8') as f:
-        for line in f:
-            data = json.loads(line)
-            manifest_data.append(data)
-    return manifest_data
+# def read_manifest(manifest_path):
+#     manifest_data = []
+#     with open(manifest_path, 'r', encoding='utf-8') as f:
+#         for line in f:
+#             data = json.loads(line)
+#             manifest_data.append(data)
+#     return manifest_data
 
 #randomly select 2 speaker ids from loaded dict
 #TODO make parameterizable
