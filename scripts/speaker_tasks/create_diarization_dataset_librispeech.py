@@ -17,6 +17,7 @@ import json
 import os
 import random
 import shutil
+import torch
 
 # from pydub import AudioSegment
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
@@ -113,7 +114,7 @@ def main(
 
         wavpath = os.path.join(output_dir, session_filename + '.wav')
         # out_file = AudioSegment.silent(duration=session_length*1000).set_frame_rate(16000)
-        zeros = [0]*session_length*16000
+        zeros = torch.zeros(session_length*16000)
         out_file = AudioSegment(zeros,16000)
         # out_file.pad(session_length*16000)
 
