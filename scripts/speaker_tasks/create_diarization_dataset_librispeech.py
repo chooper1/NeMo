@@ -132,7 +132,7 @@ def main(
 
             speaker_turn = (speaker_turn + 1) % 2
             running_length += file['duration']
-            running_length += silent_duration
+            # running_length += silent_duration
 
         # wav_out.close()
         out_file.export(wavpath, format="wav")
