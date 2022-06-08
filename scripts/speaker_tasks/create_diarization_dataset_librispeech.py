@@ -92,7 +92,7 @@ def create_new_entry(new_file, start, speaker_id):
     return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
 def main(
-    input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 60, num_sessions=5
+    input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 60, num_sessions=1
 ):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
