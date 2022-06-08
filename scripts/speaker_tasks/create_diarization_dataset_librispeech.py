@@ -127,12 +127,12 @@ def main(
                     wav_out.writeframes(wav_in.readframes(wav_in.getnframes()))
 
                 #TODO fixed size dict before loop?
+                running_length = round(running_length, 3)
                 new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
 
                 speaker_turn = (speaker_turn + 1) % 2
                 running_length += file['duration']
-                running_length = round(running_length, 3)
 
         wav_out.close()
         labels_to_rttmfile(manifest_list, session_filename, rttm_path)
