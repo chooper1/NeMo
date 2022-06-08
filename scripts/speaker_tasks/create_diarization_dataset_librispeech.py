@@ -19,7 +19,7 @@ import random
 import shutil
 import numpy as np
 import librosa
-from scipy.io.wavfile import write
+import soundfile as sf
 
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
@@ -92,7 +92,7 @@ def create_new_entry(new_file, start, speaker_id):
     return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
 def main(
-    input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 20, num_sessions=1
+    input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 20, num_sessions=1, sampling_rate=16000
 ):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
@@ -134,8 +134,7 @@ def main(
             speaker_turn = (speaker_turn + 1) % 2
             running_length += duration
 
-        write(wavpath, 16000, array)
-        # labels_to_rttmfile(manifest_list, session_filename, rttm_path)
+        sf.write(wavpath, array, sampling_rate)
         labels_to_rttmfile(manifest_list, session_filename, output_dir)
 
 if __name__ == "__main__":
