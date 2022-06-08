@@ -18,12 +18,10 @@ import os
 import random
 import shutil
 
-
-# import wave
 from pydub import AudioSegment
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
 # from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
-
+from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
 
 random.seed(42)
 
@@ -33,20 +31,20 @@ This script creates a synthetic diarization dataset using the LibriSpeech datase
 
 # using modified version that appends to the current rttm file
 # previous version: from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
-def labels_to_rttmfile(labels, uniq_id, filepath):
-    """
-    write rttm file with filepath for wav file uniq_id with time_stamps in labels
-    """
-    with open(filepath, 'a') as f:
-        for line in labels:
-            line = line.strip()
-            start, end, speaker = line.split()
-            duration = float(end) - float(start)
-            start = float(start)
-            log = 'SPEAKER {} 1   {:.3f}   {:.3f} <NA> <NA> {} <NA> <NA>\n'.format(uniq_id, start, duration, speaker)
-            f.write(log)
-
-    return filepath
+# def labels_to_rttmfile(labels, uniq_id, filepath):
+#     """
+#     write rttm file with filepath for wav file uniq_id with time_stamps in labels
+#     """
+#     with open(filepath, 'a') as f:
+#         for line in labels:
+#             line = line.strip()
+#             start, end, speaker = line.split()
+#             duration = float(end) - float(start)
+#             start = float(start)
+#             log = 'SPEAKER {} 1   {:.3f}   {:.3f} <NA> <NA> {} <NA> <NA>\n'.format(uniq_id, start, duration, speaker)
+#             f.write(log)
+#
+#     return filepath
 
 #randomly select 2 speaker ids from loaded dict
 #TODO make parameterizable
@@ -93,7 +91,7 @@ def create_new_entry(new_file, start, speaker_id):
     return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
 def main(
-    input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 60, num_sessions=1
+    input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 20, num_sessions=1
 ):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
@@ -114,18 +112,11 @@ def main(
         running_length = 0
 
         wavpath = os.path.join(output_dir, session_filename + '.wav')
-        # with wave.open(wavpath, 'wb') as wav_out:
         out_file = AudioSegment.silent(duration=0)
 
         while (running_length < session_length):
             file = load_speaker_sample(speaker_lists, speaker_turn)
             filepath = file['audio_filepath']
-
-            #TODO fixed size wav before loop?
-            # with wave.open(filepath, 'rb') as wav_in:
-            #     if not wav_out.getnframes():
-            #         wav_out.setparams(wav_in.getparams())
-            #     wav_out.writeframes(wav_in.readframes(wav_in.getnframes()))
 
             audio_file = AudioSegment.from_wav(filepath)
 
@@ -145,7 +136,8 @@ def main(
 
         # wav_out.close()
         out_file.export(wavpath, format="wav")
-        labels_to_rttmfile(manifest_list, session_filename, rttm_path)
+        # labels_to_rttmfile(manifest_list, session_filename, rttm_path)
+        labels_to_rttmfile(manifest_list, session_filename, output_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
