@@ -19,7 +19,8 @@ import random
 import shutil
 
 
-import wave
+# import wave
+from pydub import AudioSegment
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
 # from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
 
@@ -78,7 +79,7 @@ def get_speaker_samples(file_list, speaker_ids):
 
 #load a sample for the selected speaker id
 def load_speaker_sample(speaker_lists, speaker_turn):
-    if (speaker_turn == 0): 
+    if (speaker_turn == 0):
         speaker_id = 'sp1'
     elif (speaker_turn == 1):
         speaker_id = 'sp2'
@@ -113,26 +114,37 @@ def main(
         running_length = 0
 
         wavpath = os.path.join(output_dir, session_filename + '.wav')
-        with wave.open(wavpath, 'wb') as wav_out:
+        # with wave.open(wavpath, 'wb') as wav_out:
+        out_file = AudioSegment.silent(duration=0)
 
-            while (running_length < session_length):
-                file = load_speaker_sample(speaker_lists, speaker_turn)
-                filepath = file['audio_filepath']
+        while (running_length < session_length):
+            file = load_speaker_sample(speaker_lists, speaker_turn)
+            filepath = file['audio_filepath']
 
-                #TODO fixed size wav before loop?
-                with wave.open(filepath, 'rb') as wav_in:
-                    if not wav_out.getnframes():
-                        wav_out.setparams(wav_in.getparams())
-                    wav_out.writeframes(wav_in.readframes(wav_in.getnframes()))
+            #TODO fixed size wav before loop?
+            # with wave.open(filepath, 'rb') as wav_in:
+            #     if not wav_out.getnframes():
+            #         wav_out.setparams(wav_in.getparams())
+            #     wav_out.writeframes(wav_in.readframes(wav_in.getnframes()))
 
-                #TODO fixed size dict before loop?
-                new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
-                manifest_list.append(new_entry)
+            audio_file = AudioSegment.from_wav(filepath)
 
-                speaker_turn = (speaker_turn + 1) % 2
-                running_length += file['duration']
+            silent_duration = 0.25 #0.25 blank seconds
+            blank = AudioSegment.silent(duration=silent_duration*1000)
 
-        wav_out.close()
+            out_file += audio_file
+            out_file += blank
+
+            #TODO fixed size dict before loop?
+            new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
+            manifest_list.append(new_entry)
+
+            speaker_turn = (speaker_turn + 1) % 2
+            running_length += file['duration']
+            running_length += silent_duration
+
+        # wav_out.close()
+        out_file.export(wavpath, format="wav")
         labels_to_rttmfile(manifest_list, session_filename, rttm_path)
 
 if __name__ == "__main__":
