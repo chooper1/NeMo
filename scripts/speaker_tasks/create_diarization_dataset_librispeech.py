@@ -120,11 +120,11 @@ def main(
 
             audio_file = AudioSegment.from_wav(filepath)
 
-            silent_duration = 0.25 #0.25 blank seconds
-            blank = AudioSegment.silent(duration=silent_duration*1000)
+            # silent_duration = 0.25 #0.25 blank seconds
+            # blank = AudioSegment.silent(duration=silent_duration*1000)
 
             out_file += audio_file
-            out_file += blank
+            # out_file += blank
 
             #TODO fixed size dict before loop?
             new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
