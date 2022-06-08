@@ -112,7 +112,9 @@ def main(
         running_length = 0
 
         wavpath = os.path.join(output_dir, session_filename + '.wav')
-        out_file = AudioSegment.silent(duration=session_length*1000).set_frame_rate(16000)
+        # out_file = AudioSegment.silent(duration=session_length*1000).set_frame_rate(16000)
+        out_file = AudioSegment()
+        out_file.pad(session_length*16000)
 
         while (running_length < session_length):
             file = load_speaker_sample(speaker_lists, speaker_turn)
