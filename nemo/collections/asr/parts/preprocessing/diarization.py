@@ -115,8 +115,8 @@ class LibriSpeechGenerator(object):
         return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
     def generate_session(self):
-        speaker_ids = get_speaker_ids() #randomly select 2 speaker ids
-        speaker_lists = get_speaker_samples(speaker_ids) #get list of samples per speaker
+        speaker_ids = self.get_speaker_ids() #randomly select 2 speaker ids
+        speaker_lists = self.get_speaker_samples(speaker_ids) #get list of samples per speaker
 
         speaker_turn = 0 #assume alternating between speakers 1 & 2
         running_length = 0
@@ -126,7 +126,7 @@ class LibriSpeechGenerator(object):
         manifest_list = []
 
         while (running_length < self._session_length):
-            file = load_speaker_sample(speaker_lists, speaker_turn)
+            file = self.load_speaker_sample(speaker_lists, speaker_turn)
             filepath = file['audio_filepath']
             audio_file, sr = librosa.load(filepath, sr=self._sr)
 
@@ -138,7 +138,7 @@ class LibriSpeechGenerator(object):
             length = int(duration*self._sr)
             array[start:start+length] = audio_file[:length]
 
-            new_entry = create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
+            new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
             manifest_list.append(new_entry)
 
             speaker_turn = (speaker_turn + 1) % 2
