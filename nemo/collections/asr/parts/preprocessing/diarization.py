@@ -144,5 +144,5 @@ class LibriSpeechGenerator(object):
             speaker_turn = (speaker_turn + 1) % 2
             running_length += duration
 
-        sf.write(wavpath, array, sampling_rate)
+        sf.write(wavpath, array, self._sr)
         labels_to_rttmfile(manifest_list, self._output_filename, self._output_dir)
