@@ -76,7 +76,7 @@ def main(
     input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 600
 ):
     if os.path.exists(output_dir):
-        os.remove(output_dir)
+        os.rmdir(output_dir)
     os.mkdir(output_dir)
 
     #load librispeech manifest file
