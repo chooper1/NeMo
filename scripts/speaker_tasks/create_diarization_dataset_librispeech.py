@@ -89,7 +89,6 @@ def load_speaker_sample(speaker_lists, speaker_turn):
 #add new entry to dict (to write to output manifest file)
 def create_new_entry(new_file, start, speaker_id):
     end = start + new_file['duration']
-    end = round(end, 3) #fixing accidental overlap issue?
     return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
 def main(
@@ -127,7 +126,6 @@ def main(
                     wav_out.writeframes(wav_in.readframes(wav_in.getnframes()))
 
                 #TODO fixed size dict before loop?
-                running_length = round(running_length, 3)
                 new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
 
