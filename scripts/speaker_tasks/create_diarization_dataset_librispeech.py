@@ -130,7 +130,7 @@ def main(
 
             start = int(running_length*16000)
             length = int(duration*16000)
-            out_file_samples[start:start+length] = audio_file._samples[:length]
+            out_file._samples[start:start+length] = audio_file._samples[:length]
 
             # silent_duration = 0.25 #0.25 blank seconds
             # blank = AudioSegment.silent(duration=silent_duration*1000)
