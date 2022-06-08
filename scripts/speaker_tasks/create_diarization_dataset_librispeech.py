@@ -91,11 +91,6 @@ def create_new_entry(new_file, start, speaker_id):
     end = start + new_file['duration']
     return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
-#https://stackoverflow.com/questions/38015319/how-to-create-a-numpy-array-from-a-pydub-audiosegment
-def pydub_to_np(audio: pydub.AudioSegment) -> (np.ndarray, int):
-    return np.array(audio.get_array_of_samples(), dtype=np.float32).reshape((-1, audio.channels)) / (
-            1 << (8 * audio.sample_width - 1)), audio.frame_rate
-
 def main(
     input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 20, num_sessions=1
 ):
@@ -130,7 +125,8 @@ def main(
             if (running_length+duration) > session_length:
                 duration = session_length - running_length
 
-            audio_file = pydub_to_np(AudioSegment.from_wav(filepath).set_frame_rate(16000))
+            audio_file = np.array(AudioSegment.from_wav(filepath).set_frame_rate(16000).get_array_of_samples())
+            #https://stackoverflow.com/questions/38015319/how-to-create-a-numpy-array-from-a-pydub-audiosegment - fix for multichannel
             # audio_file = AudioSegment.from_file(filepath, target_sr=16000)
 
             start = int(running_length*16000)
