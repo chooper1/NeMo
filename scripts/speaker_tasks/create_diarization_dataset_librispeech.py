@@ -89,6 +89,7 @@ def load_speaker_sample(speaker_lists, speaker_turn):
 #add new entry to dict (to write to output manifest file)
 def create_new_entry(new_file, start, speaker_id):
     end = start + new_file['duration']
+    end = round(end, 3) #fixing accidental overlap issue?
     return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
 def main(
