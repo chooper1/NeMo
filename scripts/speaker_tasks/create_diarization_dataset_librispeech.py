@@ -83,17 +83,18 @@ def main(
 
     #load librispeech manifest file
     input_file = read_manifest(input_manifest_filepath)
+    manifest_list = []
 
     for session in range(0,num_sessions):
         #get speaker ids for a given diarization session
         speaker_ids = get_speaker_ids(input_file) #randomly select 2 speaker ids
         speaker_lists = get_speaker_samples(input_file, speaker_ids) #get list of samples per speaker
+        session_filename = output_filename + '_{}'.format(session)
 
         speaker_turn = 0 #assume alternating between speakers 1 & 2
         running_length = 0
-        manifest_list = []
 
-        wavpath = os.path.join(output_dir, output_filename + '_{}'.format(session) + '.wav')
+        wavpath = os.path.join(output_dir, session_filename + '.wav')
         with wave.open(wavpath, 'wb') as wav_out:
 
             while (running_length < session_length):
@@ -114,7 +115,7 @@ def main(
                 running_length += file['duration']
 
         wav_out.close()
-        labels_to_rttmfile(manifest_list, output_filename, output_dir)
+        labels_to_rttmfile(manifest_list, session_filename, output_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
