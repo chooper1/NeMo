@@ -131,6 +131,8 @@ def main(
             start = int(running_length*16000)
             length = int(duration*16000)
             # out_file._samples[start:start+length] = audio_file._samples[:length]
+            print(array[start:start+length])
+            print(audio_file[:length])
             array[start:start+length] = audio_file[:length]
 
             # silent_duration = 0.25 #0.25 blank seconds
