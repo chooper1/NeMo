@@ -17,6 +17,7 @@ import json
 import os
 import random
 import shutil
+import numpy as np
 
 # from pydub import AudioSegment
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
