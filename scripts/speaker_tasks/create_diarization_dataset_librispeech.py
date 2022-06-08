@@ -78,7 +78,7 @@ def get_speaker_samples(file_list, speaker_ids):
 
 #load a sample for the selected speaker id
 def load_speaker_sample(speaker_lists, speaker_turn):
-    if (speaker_turn == 0):
+    if (speaker_turn == 0): 
         speaker_id = 'sp1'
     elif (speaker_turn == 1):
         speaker_id = 'sp2'
