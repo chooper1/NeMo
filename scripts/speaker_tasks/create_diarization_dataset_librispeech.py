@@ -22,13 +22,30 @@ import shutil
 import wave
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
 # from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
-from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
+
 
 random.seed(42)
 
 """
 This script creates a synthetic diarization dataset using the LibriSpeech dataset.
 """
+
+# using modified version that appends to the current rttm file
+# previous version: from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
+def labels_to_rttmfile(labels, uniq_id, filepath):
+    """
+    write rttm file with filepath for wav file uniq_id with time_stamps in labels
+    """
+    with open(filepath, 'a') as f:
+        for line in labels:
+            line = line.strip()
+            start, end, speaker = line.split()
+            duration = float(end) - float(start)
+            start = float(start)
+            log = 'SPEAKER {} 1   {:.3f}   {:.3f} <NA> <NA> {} <NA> <NA>\n'.format(uniq_id, start, duration, speaker)
+            f.write(log)
+
+    return filepath
 
 #randomly select 2 speaker ids from loaded dict
 #TODO make parameterizable
@@ -84,6 +101,7 @@ def main(
     #load librispeech manifest file
     input_file = read_manifest(input_manifest_filepath)
     manifest_list = []
+    rttm_path = os.path.join(output_dir, output_filename + '.rttm')
 
     for session in range(0,num_sessions):
         #get speaker ids for a given diarization session
@@ -115,8 +133,7 @@ def main(
                 running_length += file['duration']
 
         wav_out.close()
-
-    labels_to_rttmfile(manifest_list, output_filename, output_dir)
+        labels_to_rttmfile(manifest_list, session_filename, rttm_path)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
