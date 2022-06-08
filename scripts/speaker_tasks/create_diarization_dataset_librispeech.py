@@ -125,7 +125,7 @@ def main(
             if (running_length+duration) > session_length:
                 duration = session_length - running_length
 
-            audio_file = AudioSegment.from_wav(filepath).set_frame_rate(16000)
+            audio_file = AudioSegment.from_wav(filepath).set_frame_rate(16000).to_numpy_array()
             # audio_file = AudioSegment.from_file(filepath, target_sr=16000)
 
             start = int(running_length*16000)
