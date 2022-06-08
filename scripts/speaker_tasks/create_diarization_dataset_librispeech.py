@@ -75,7 +75,7 @@ def create_new_entry(new_file, start, speaker_id):
     return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
 def main(
-    input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 600
+    input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 60, num_sessions=5
 ):
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
@@ -84,36 +84,37 @@ def main(
     #load librispeech manifest file
     input_file = read_manifest(input_manifest_filepath)
 
-    #get speaker ids for a given diarization session
-    speaker_ids = get_speaker_ids(input_file) #randomly select 2 speaker ids
-    speaker_lists = get_speaker_samples(input_file, speaker_ids) #get list of samples per speaker
+    for session in range(0,num_sessions):
+        #get speaker ids for a given diarization session
+        speaker_ids = get_speaker_ids(input_file) #randomly select 2 speaker ids
+        speaker_lists = get_speaker_samples(input_file, speaker_ids) #get list of samples per speaker
 
-    speaker_turn = 0 #assume alternating between speakers 1 & 2
-    running_length = 0
-    manifest_list = []
+        speaker_turn = 0 #assume alternating between speakers 1 & 2
+        running_length = 0
+        manifest_list = []
 
-    wavpath = os.path.join(output_dir, output_filename+'.wav')
-    with wave.open(wavpath, 'wb') as wav_out:
+        wavpath = os.path.join(output_dir, output_filename + '_{}'.format(session) + '.wav')
+        with wave.open(wavpath, 'wb') as wav_out:
 
-        while (running_length < session_length):
-            file = load_speaker_sample(speaker_lists, speaker_turn)
-            filepath = file['audio_filepath']
+            while (running_length < session_length):
+                file = load_speaker_sample(speaker_lists, speaker_turn)
+                filepath = file['audio_filepath']
 
-            #TODO fixed size wav before loop?
-            with wave.open(filepath, 'rb') as wav_in:
-                if not wav_out.getnframes():
-                    wav_out.setparams(wav_in.getparams())
-                wav_out.writeframes(wav_in.readframes(wav_in.getnframes()))
+                #TODO fixed size wav before loop?
+                with wave.open(filepath, 'rb') as wav_in:
+                    if not wav_out.getnframes():
+                        wav_out.setparams(wav_in.getparams())
+                    wav_out.writeframes(wav_in.readframes(wav_in.getnframes()))
 
-            #TODO fixed size dict before loop?
-            new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
-            manifest_list.append(new_entry)
+                #TODO fixed size dict before loop?
+                new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
+                manifest_list.append(new_entry)
 
-            speaker_turn = (speaker_turn + 1) % 2
-            running_length += file['duration']
+                speaker_turn = (speaker_turn + 1) % 2
+                running_length += file['duration']
 
-    wav_out.close()
-    labels_to_rttmfile(manifest_list, output_filename, output_dir)
+        wav_out.close()
+        labels_to_rttmfile(manifest_list, output_filename, output_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
