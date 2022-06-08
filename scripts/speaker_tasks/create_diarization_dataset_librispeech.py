@@ -115,7 +115,8 @@ def main(
                 running_length += file['duration']
 
         wav_out.close()
-        labels_to_rttmfile(manifest_list, session_filename, output_dir)
+
+    labels_to_rttmfile(manifest_list, output_filename, output_dir)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
