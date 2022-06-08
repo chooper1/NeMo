@@ -132,6 +132,7 @@ def main(
 
                 speaker_turn = (speaker_turn + 1) % 2
                 running_length += file['duration']
+                running_length = round(running_length, 3)
 
         wav_out.close()
         labels_to_rttmfile(manifest_list, session_filename, rttm_path)
