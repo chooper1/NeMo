@@ -17,6 +17,8 @@ import os
 import random
 import shutil
 
+from nemo.collections.asr.parts.preprocessing.diarization import LibriSpeechGenerator
+
 random.seed(42)
 
 """
