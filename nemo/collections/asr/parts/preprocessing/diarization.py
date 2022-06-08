@@ -70,7 +70,9 @@ class LibriSpeechGenerator(object):
 
     def set_output_filename(self, new_fn):
         self._output_filename = new_fn
-    #TODO add more get/set methods here as needed
+
+    def set_num_speakers(self, new_ns):
+        self._num_speakers = new_ns
 
     #TODO add method to load all parameters from a config file (yaml)
 
@@ -114,6 +116,7 @@ class LibriSpeechGenerator(object):
         end = start + new_file['duration']
         return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
+    #generate diarization session
     def generate_session(self):
         speaker_ids = self.get_speaker_ids() #randomly select 2 speaker ids
         speaker_lists = self.get_speaker_samples(speaker_ids) #get list of samples per speaker
