@@ -77,6 +77,10 @@ def create_new_entry(new_file, start, speaker_id):
 def main(
     input_manifest_filepath, output_dir, output_filename = 'librispeech_diarization', session_length = 600
 ):
+    if os.path.exists(output_dir):
+        shutil.rmtree(output_dir)
+    os.mkdir(output_dir)
+
     #load librispeech manifest file
     input_file = read_manifest(input_manifest_filepath)
 
