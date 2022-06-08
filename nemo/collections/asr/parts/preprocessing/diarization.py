@@ -76,8 +76,8 @@ class LibriSpeechGenerator(object):
 
     #randomly select 2 speaker ids from loaded dict
     def get_speaker_ids(self):
-        file1 = self._manifest[random.randint(0, len(list)-1)]
-        file2 = self._manifest[random.randint(0, len(list)-1)]
+        file1 = self._manifest[random.randint(0, len(self._manifest)-1)]
+        file2 = self._manifest[random.randint(0, len(self._manifest)-1)]
 
         fn1 = file1['audio_filepath'].split('/')[-1]
         fn2 = file2['audio_filepath'].split('/')[-1]
