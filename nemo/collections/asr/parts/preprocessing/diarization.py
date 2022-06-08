@@ -49,7 +49,7 @@ class LibriSpeechGenerator(object):
         sr=16000,
         num_speakers=2,
         session_length=60,
-        output_dir='output'
+        output_dir='output',
         output_filename='librispeech_diarization',
         rng=None,
     ):
