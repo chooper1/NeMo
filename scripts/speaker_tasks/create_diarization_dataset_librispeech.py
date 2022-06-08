@@ -18,8 +18,9 @@ import os
 import random
 import shutil
 import numpy as np
+import librosa
 
-from pydub import AudioSegment
+# from pydub import AudioSegment
 from filelist_to_manifest import read_manifest #TODO add support for multiple input manifest files?
 # from nemo.collections.asr.parts.preprocessing.segment import AudioSegment
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
@@ -113,10 +114,7 @@ def main(
         running_length = 0
 
         wavpath = os.path.join(output_dir, session_filename + '.wav')
-        # out_file = AudioSegment.silent(duration=session_length*1000).set_frame_rate(16000)
         array = np.zeros(session_length*16000)
-        # out_file = AudioSegment(zeros,16000)
-        # out_file.pad(session_length*16000)
 
         while (running_length < session_length):
             file = load_speaker_sample(speaker_lists, speaker_turn)
@@ -125,9 +123,8 @@ def main(
             if (running_length+duration) > session_length:
                 duration = session_length - running_length
 
-            audio_file = np.array(AudioSegment.from_wav(filepath).set_frame_rate(16000).get_array_of_samples())
-            #https://stackoverflow.com/questions/38015319/how-to-create-a-numpy-array-from-a-pydub-audiosegment - fix for multichannel
-            # audio_file = AudioSegment.from_file(filepath, target_sr=16000)
+            audio_file, sr = librosa.load(filename, sr=16000)
+
 
             start = int(running_length*16000)
             length = int(duration*16000)
@@ -136,10 +133,6 @@ def main(
             print(audio_file[:length])
             array[start:start+length] = audio_file[:length]
 
-            # silent_duration = 0.25 #0.25 blank seconds
-            # blank = AudioSegment.silent(duration=silent_duration*1000)
-            # out_file += blank
-
             #TODO fixed size dict before loop?
             new_entry = create_new_entry(file, running_length, speaker_ids[speaker_turn])
             manifest_list.append(new_entry)
@@ -147,9 +140,7 @@ def main(
             speaker_turn = (speaker_turn + 1) % 2
             running_length += duration
 
-        # wav_out.close()
-        out_file = AudioSegment.from_numpy_array(array)
-        out_file.export(wavpath, format="wav")
+        librosa.output.write_wav(wavpath, array, 16000)
         # labels_to_rttmfile(manifest_list, session_filename, rttm_path)
         labels_to_rttmfile(manifest_list, session_filename, output_dir)
 
