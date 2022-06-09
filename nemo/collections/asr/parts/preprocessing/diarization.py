@@ -131,11 +131,12 @@ class LibriSpeechGenerator(object):
         while (running_length < self._session_length):
             file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
             filepath = file['audio_filepath']
+            duration = file['duration']
             audio_file, sr = librosa.load(filepath, sr=self._sr)
 
-            duration = file['duration']
-            if (running_length + duration) > self._session_length:
-                duration = self._session_length - running_length
+            # Reintroduce once frame-level word alignments are available?
+            # if (running_length + duration) > self._session_length:
+            #     duration = self._session_length - running_length
 
             start = int(running_length*self._sr)
             length = int(duration*self._sr)
