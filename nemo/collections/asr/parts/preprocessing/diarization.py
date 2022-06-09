@@ -160,6 +160,7 @@ class LibriSpeechGenerator(object):
                 length = int(duration*self._sr)
 
                 # add overlap (currently overlapping with some frequency and with a maximum percentage of overlap)
+                # TODO normalization?
                 is_overlap = random.uniform(0, 1)
                 if (is_overlap < self._overlap_frequency and running_length > 0):
                     overlap_percent = random.uniform(0, self._max_percent_overlap)

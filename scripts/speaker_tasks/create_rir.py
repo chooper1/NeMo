@@ -19,7 +19,11 @@ import shutil
 import numpy as np
 import numpy.matlib as matlib
 
+import librosa
+import soundfile as sf
+
 from gpuRIR import beta_SabineEstimation,att2t_SabineEstimator,t2n,simulateRIR #use simulateTrajectory for moving sources
+from scipy.signal import convolve #note scipy automatically uses fftconvolve if it is faster
 
 random.seed(42)
 
@@ -48,8 +52,20 @@ def main():
     Tdiff= att2t_SabineEstimator(att_diff, T60) # Time to start the diffuse reverberation model [s]
     Tmax = att2t_SabineEstimator(att_max, T60)	 # Time to stop the simulation [s]
     nb_img = t2n( Tdiff, room_sz )	# Number of image sources in each dimension
-    RIRs = simulateRIR(room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern)
+    RIR = simulateRIR(room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern)
     print(RIRs)
+
+    # from https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/room.py#2216
+    # need to convolve individual audio sources with separate RIRs
+    filepath = "/home/chooper/projects/datasets/LibriSpeech/LibriSpeech/dev-clean-processed/2277-149874-0000.wav"
+    input_wav, sr = librosa.load(filepath, sr=fs)
+
+    speaker_id = 0
+    output_sound=convolve(input_wav,RIR[:len(input_wav),speaker_id])
+    output_sound=output_sound/np.max(np.abs(output_sound)) #normalize to [-1,1]
+    sf.write("output.wav", output_sound, fs)
+
+
 
 if __name__ == "__main__":
 
