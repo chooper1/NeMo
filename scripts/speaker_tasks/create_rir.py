@@ -60,6 +60,10 @@ def main():
     filepath = "/home/chooper/projects/datasets/LibriSpeech/LibriSpeech/dev-clean-processed/2277-149874-0000.wav"
     input_wav, sr = librosa.load(filepath, sr=fs)
     print(input_wav)
+    print(input_wav.shape)
+
+    print(RIR[:len(input_wav),speaker_id].shape)
+    print(RIR[speaker_id,:len(input_wav)].shape)
 
     speaker_id = 0
     output_sound=convolve(input_wav,RIR[speaker_id,:len(input_wav)])
