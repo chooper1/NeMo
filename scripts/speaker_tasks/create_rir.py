@@ -43,7 +43,7 @@ def main():
     orV_rcv = None # Vectors pointing in the same direction than the receivers (None assumes omnidirectional)
     mic_pattern = "omni" # Receiver polar pattern
     abs_weights = [0.9]*5+[0.5] # Absortion coefficient ratios of the walls
-    T60 = 1.0	 # Time for the RIR to reach 60dB of attenuation [s]
+    T60 = 25	 # Time for the RIR to reach 60dB of attenuation [s]
     att_diff = 15.0	# Attenuation when start using the diffuse reverberation model [dB]
     att_max = 60.0 # Attenuation at the end of the simulation [dB]
     fs=16000.0 # Sampling frequency [Hz]
@@ -63,8 +63,8 @@ def main():
     print(input_wav.shape)
 
     speaker_id = 0
-    print(RIR[:len(input_wav),speaker_id].shape)
-    print(RIR[speaker_id,:len(input_wav)].shape)
+    print(RIR[0,:len(input_wav),speaker_id].shape)
+    print(RIR[0,speaker_id,:len(input_wav)].shape)
     output_sound=convolve(input_wav,RIR[speaker_id,:len(input_wav)])
     output_sound=output_sound/np.max(np.abs(output_sound)) #normalize to [-1,1]
     print(output_sound)
