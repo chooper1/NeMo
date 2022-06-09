@@ -65,7 +65,7 @@ def main():
     output_sound=convolve(input_wav,RIR[0,speaker_id,:len(input_wav)])
     output_sound=output_sound/np.max(np.abs(output_sound)) #normalize to [-1,1]
     print(output_sound)
-    sf.write("output.wav", output_sound, fs)
+    sf.write("output.wav", output_sound, int(fs))
 
 
 
