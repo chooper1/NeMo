@@ -177,7 +177,7 @@ class LibriSpeechGenerator(object):
                 manifest_list.append(new_entry)
 
                 # add silence (assuming times are rounded to nearest millisecond)
-                if (is_overlap > self._overlap_frequency):
+                if (is_overlap > self._overlap_frequency and self._max_silence > 0):
                     amount_silence = round(random.uniform(self._min_silence, self._max_silence),3)
                     amount_silence = int(amount_silence*self._sr)
                     array[end:end+amount_silence] = 0
