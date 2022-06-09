@@ -142,6 +142,10 @@ class LibriSpeechGenerator(object):
             length = int(duration*self._sr)
 
             # Remove once frame-level word alignments are available?
+            print(start)
+            print(length)
+            print(array.shape)
+            print(audio_file.shape)
             if (start+length > self._session_length):
                 np.pad(array, pad_width=(0, start+length-self._session_length), mode='constant')
             array[start:start+length] = audio_file[:length]
