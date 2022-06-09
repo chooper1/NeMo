@@ -46,10 +46,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
     parser.add_argument("--input_manifest_filepath", help="path to input manifest file", type=str, required=True)
     parser.add_argument("--output_dir", help="path to output directory", type=str, required=True)
-    parser.add_argument("--num_sessions", help="number of diarization sessions", type=str, default=1)
+    parser.add_argument("--output_filename", help="filename for wav and rttm files", type=str, default='diarization_session')
+    parser.add_argument("--num_sessions", help="number of diarization sessions", type=int, default=1)
     parser.add_argument("--session_length", help="length of each diarization session (seconds)", type=int, default=20)
     parser.add_argument("--num_speakers", help="number of speakers", type=int, default=2)
-    parser.add_argument("--output_filename", help="filename for wav and rttm files", type=str, default='diarization_session')
     args = parser.parse_args()
 
     main()
