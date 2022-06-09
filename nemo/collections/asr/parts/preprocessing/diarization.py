@@ -51,7 +51,10 @@ class LibriSpeechGenerator(object):
         session_length=60,
         output_dir='output',
         output_filename='librispeech_diarization',
-        rng=None,
+        min_silence=0,
+        max_silence=0,
+        overlap_frequency=0,
+        max_percent_overlap=0,
     ):
         self._manifest_path = manifest_path
         self._sr = sr
@@ -59,7 +62,12 @@ class LibriSpeechGenerator(object):
         self._session_length = session_length
         self._output_dir = output_dir
         self._output_filename = output_filename
-        self._rng = random.Random() if rng is None else rng
+
+        #overlap/silence
+        self._min_silence = min_silence
+        self._max_silence = max_silence
+        self._overlap_frequency = overlap_frequency
+        self._max_percent_overlap = max_percent_overlap
 
         self._manifest = read_manifest(manifest_path)
 
@@ -135,29 +143,44 @@ class LibriSpeechGenerator(object):
             while (running_length < self._session_length):
                 file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                 audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
+                duration = file['duration']
 
                 # Reintroduce once frame-level word alignments are available?
                 # if (running_length + duration) > self._session_length:
                 #     duration = self._session_length - running_length
 
                 start = int(running_length*self._sr)
-                length = int(file['duration']*self._sr)
+                length = int(duration*self._sr)
 
-                # Remove once frame-level word alignments are available?
-                if (start+length > self._session_length*self._sr):
-                    array = np.pad(array, pad_width=(0, start+length-self._session_length*self._sr), mode='constant')
-                array[start:start+length] = audio_file[:length]
+                # add overlap (currently overlapping with some frequency and
+                # with a maximum percentage of overlap)
+                #TODO clean up
+                # if (random.uniform(0, 1) < self._overlap_frequency and running_length > 0):
+                #     overlap_percent = random.uniform(0, self._max_percent_overlap)
+                #     overlap_length = int(overlap_percent*length)
+                #     start -= overlap_length
+                #     duration -= overlap_length
+
+                end = start+length
+                if (end > self._session_length*self._sr): # Remove once frame-level word alignments are available?
+                    array = np.pad(array, pad_width=(0, end-self._session_length*self._sr), mode='constant')
+                array[start:end] = audio_file[:length]
 
                 new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
+
+                # add silence (assuming times are rounded to nearest millisecond)
+                #TODO clean up
+                # amount_silence = round(random.uniform(self._min_silence, self._max_silence),3)
+                # array[end:end+amount_silence*self._sr] = 0
+                # duration += amount_silence
 
                 #pick new speaker (randomly select from other speakers)
                 prev_speaker_turn = speaker_turn
                 speaker_turn = random.randint(0, self._num_speakers-1)
                 while (speaker_turn == prev_speaker_turn):
                     speaker_turn = random.randint(0, self._num_speakers-1)
-
-                running_length += file['duration']
+                running_length += duration
 
             sf.write(wavpath, array, self._sr)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)

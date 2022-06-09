@@ -37,10 +37,13 @@ def main():
         shutil.rmtree(output_dir)
     os.mkdir(output_dir)
 
-    lg = LibriSpeechGenerator(manifest_path=input_manifest_filepath, output_dir=output_dir, session_length=session_length, num_speakers=num_speakers)
+    lg = LibriSpeechGenerator(manifest_path=input_manifest_filepath,
+                              output_dir=output_dir,
+                              session_length=session_length,
+                              num_speakers=num_speakers,
+                              output_filename=output_filename)
 
-    lg.set_output_filename(output_filename)
-    lg.generate_session(num_sessions) #can also pass number of sessions to generate_session if parameters are unchanged between sessions
+    lg.generate_session(num_sessions)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
