@@ -131,27 +131,24 @@ class LibriSpeechGenerator(object):
 
         while (running_length < self._session_length):
             file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
-            filepath = file['audio_filepath']
-            duration = file['duration']
-            audio_file, sr = librosa.load(filepath, sr=self._sr)
+            audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
 
             # Reintroduce once frame-level word alignments are available?
             # if (running_length + duration) > self._session_length:
             #     duration = self._session_length - running_length
 
             start = int(running_length*self._sr)
-            length = int(duration*self._sr)
+            length = int(file['duration']*self._sr)
 
             # Remove once frame-level word alignments are available?
             if (start+length > self._session_length*self._sr):
                 array = np.pad(array, pad_width=(0, start+length-self._session_length*self._sr), mode='constant')
-
             array[start:start+length] = audio_file[:length]
 
             new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
             manifest_list.append(new_entry)
 
-            #pick new speaker
+            #pick new speaker (randomly select from other speakers)
             prev_speaker_turn = speaker_turn
             speaker_turn = random.randint(0, self._num_speakers-1)
             while (speaker_turn == prev_speaker_turn):
