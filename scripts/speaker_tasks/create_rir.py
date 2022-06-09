@@ -17,6 +17,7 @@ import os
 import random
 import shutil
 import numpy as np
+import numpy.matlib as matlib
 
 from gpuRIR import simulateRIR #use simulateTrajectory for moving sources
 
@@ -34,7 +35,7 @@ def main():
     pos_src = np.array([[1,2.9,0.5],[1,2,0.5]]) # Positions of the sources ([m]
     nb_rcv = 3 # Number of receivers
     pos_rcv = np.array([[0.5,1,0.5],[1,1,0.5],[1.5,1,0.5]])	 # Position of the receivers [m]
-    orV_rcv = np.matlib.repmat(np.array([0,1,0]), nb_rcv, 1) # Vectors pointing in the same direction than the receivers
+    orV_rcv = matlib.repmat(np.array([0,1,0]), nb_rcv, 1) # Vectors pointing in the same direction than the receivers
     mic_pattern = "card" # Receiver polar pattern
     abs_weights = [0.9]*5+[0.5] # Absortion coefficient ratios of the walls
     T60 = 1.0	 # Time for the RIR to reach 60dB of attenuation [s]
