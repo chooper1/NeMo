@@ -41,7 +41,11 @@ class LibriSpeechGenerator(object):
         session_length (int): length of each diarization session (seconds)
         output_dir (str): output directory
         output_filename (str): output filename for the wav and rttm files
-        rng: Random number generator
+        min_silence (float): minimum silence between (non-overlapping) speakers
+        max_silence (float): maximum silence between (non-overlapping) speakers
+        overlap_frequency (float): frequency of overlapping speech
+        min_overlap (float): minimum percentage of overlap (as a percentage of the first clip)
+        max_overlap (float): maximum percentage of overlap (as a percentage of the first clip)
     """
     def __init__(
         self,
@@ -54,7 +58,8 @@ class LibriSpeechGenerator(object):
         min_silence=0,
         max_silence=0,
         overlap_frequency=0,
-        max_percent_overlap=0,
+        min_overlap=0,
+        max_overlap=0,
     ):
         self._manifest_path = manifest_path
         self._sr = sr
@@ -67,7 +72,8 @@ class LibriSpeechGenerator(object):
         self._min_silence = min_silence
         self._max_silence = max_silence
         self._overlap_frequency = overlap_frequency
-        self._max_percent_overlap = max_percent_overlap
+        self._min_overlap = min_overlap
+        self._max_overlap = max_overlap
 
         self._manifest = read_manifest(manifest_path)
 
@@ -135,6 +141,7 @@ class LibriSpeechGenerator(object):
 
             speaker_turn = 0 #assume alternating between speakers 1 & 2
             running_length = 0
+            previous_duration = 0 #for overlap
 
             wavpath = os.path.join(self._output_dir, filename + '.wav')
             array = np.zeros(self._session_length*self._sr)
@@ -152,17 +159,17 @@ class LibriSpeechGenerator(object):
                 start = int(running_length*self._sr)
                 length = int(duration*self._sr)
 
-                # add overlap (currently overlapping with some frequency and
-                # with a maximum percentage of overlap)
-                #TODO clean up
-                # if (random.uniform(0, 1) < self._overlap_frequency and running_length > 0):
-                #     overlap_percent = random.uniform(0, self._max_percent_overlap)
-                #     overlap_length = int(overlap_percent*length)
-                #     start -= overlap_length
-                #     duration -= overlap_length
+                # add overlap (currently overlapping with some frequency and with a maximum percentage of overlap)
+                is_overlap = random.uniform(0, 1)
+                if (is_overlap < self._overlap_frequency and running_length > 0):
+                    overlap_percent = random.uniform(0, self._max_percent_overlap)
+                    overlap_length = int(overlap_percent*length)
+                    start -= overlap_length
+                    duration -= overlap_length
 
                 end = start+length
-                if (end > self._session_length*self._sr): # Remove once frame-level word alignments are available?
+                # Remove once frame-level word alignments are available?
+                if (end > self._session_length*self._sr):
                     array = np.pad(array, pad_width=(0, end-self._session_length*self._sr), mode='constant')
                 array[start:end] = audio_file[:length]
 
@@ -170,10 +177,10 @@ class LibriSpeechGenerator(object):
                 manifest_list.append(new_entry)
 
                 # add silence (assuming times are rounded to nearest millisecond)
-                #TODO clean up
-                # amount_silence = round(random.uniform(self._min_silence, self._max_silence),3)
-                # array[end:end+amount_silence*self._sr] = 0
-                # duration += amount_silence
+                if (is_overlap > self._overlap_frequency):
+                    amount_silence = round(random.uniform(self._min_silence, self._max_silence),3)
+                    array[end:end+amount_silence*self._sr] = 0
+                    duration += amount_silence
 
                 #pick new speaker (randomly select from other speakers)
                 prev_speaker_turn = speaker_turn
@@ -181,6 +188,7 @@ class LibriSpeechGenerator(object):
                 while (speaker_turn == prev_speaker_turn):
                     speaker_turn = random.randint(0, self._num_speakers-1)
                 running_length += duration
+                previous_duration = file['duration']
 
             sf.write(wavpath, array, self._sr)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
