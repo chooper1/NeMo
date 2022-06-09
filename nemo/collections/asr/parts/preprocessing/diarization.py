@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
 import os
 import random
 import json
@@ -77,14 +76,16 @@ class LibriSpeechGenerator(object):
     #TODO add method to load all parameters from a config file (yaml)
 
     #randomly select speaker ids from loaded dict
-    #TODO enforce exclusivity
     def get_speaker_ids(self):
         speaker_ids = []
-        for s in range(0,self._num_speakers):
+        s = 0
+        while (s < self._num_speakers):
             file = self._manifest[random.randint(0, len(self._manifest)-1)]
             fn = file['audio_filepath'].split('/')[-1]
             speaker_id = fn.split('-')[0]
-            speaker_ids.append(speaker_id)
+            if (speaker_id not in speaker_ids): #enforce exclusivity
+                speaker_ids.append(speaker_id)
+                s += 1
         return speaker_ids
 
     #get a list of the samples for the two specified speakers
@@ -144,7 +145,7 @@ class LibriSpeechGenerator(object):
             # Remove once frame-level word alignments are available?
             if (start+length > self._session_length*self._sr):
                 array = np.pad(array, pad_width=(0, start+length-self._session_length*self._sr), mode='constant')
-                
+
             array[start:start+length] = audio_file[:length]
 
             new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
