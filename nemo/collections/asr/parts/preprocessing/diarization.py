@@ -146,7 +146,7 @@ class LibriSpeechGenerator(object):
 
             #pick new speaker
             rand_val = random.randint(0, self._num_speakers-1)
-            while (rand_val != speaker_turn):
+            while (rand_val == speaker_turn):
                 rand_val = random.randint(0, self._num_speakers-1)
 
             running_length += duration
