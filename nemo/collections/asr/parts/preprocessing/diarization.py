@@ -140,6 +140,10 @@ class LibriSpeechGenerator(object):
 
             start = int(running_length*self._sr)
             length = int(duration*self._sr)
+
+            # Remove once frame-level word alignments are available?
+            if (start+length > self._session_length):
+                np.pad(array, pad_width=(0, start+length-self._session_length), mode='constant')
             array[start:start+length] = audio_file[:length]
 
             new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
