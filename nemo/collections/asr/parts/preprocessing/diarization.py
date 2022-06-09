@@ -179,8 +179,9 @@ class LibriSpeechGenerator(object):
                 # add silence (assuming times are rounded to nearest millisecond)
                 if (is_overlap > self._overlap_frequency):
                     amount_silence = round(random.uniform(self._min_silence, self._max_silence),3)
-                    array[end:end+amount_silence*self._sr] = 0
-                    duration += amount_silence
+                    amount_silence = int(amount_silence*self._sr)
+                    array[end:end+amount_silence] = 0
+                    duration += int(amount_silence/self._sr)
 
                 #pick new speaker (randomly select from other speakers)
                 prev_speaker_turn = speaker_turn
