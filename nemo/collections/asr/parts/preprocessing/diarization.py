@@ -118,43 +118,46 @@ class LibriSpeechGenerator(object):
         return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
     #generate diarization session
-    def generate_session(self):
-        speaker_ids = self.get_speaker_ids() #randomly select 2 speaker ids
-        speaker_lists = self.get_speaker_samples(speaker_ids) #get list of samples per speaker
+    def generate_session(self, num_sessions=1):
+        for (i in range(0,num_sessions)):
+            filename = self._output_filename+'_{}'.format(i)
 
-        speaker_turn = 0 #assume alternating between speakers 1 & 2
-        running_length = 0
+            speaker_ids = self.get_speaker_ids() #randomly select 2 speaker ids
+            speaker_lists = self.get_speaker_samples(speaker_ids) #get list of samples per speaker
 
-        wavpath = os.path.join(self._output_dir, self._output_filename + '.wav')
-        array = np.zeros(self._session_length*self._sr)
-        manifest_list = []
+            speaker_turn = 0 #assume alternating between speakers 1 & 2
+            running_length = 0
 
-        while (running_length < self._session_length):
-            file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
-            audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
+            wavpath = os.path.join(self._output_dir, filename + '.wav')
+            array = np.zeros(self._session_length*self._sr)
+            manifest_list = []
 
-            # Reintroduce once frame-level word alignments are available?
-            # if (running_length + duration) > self._session_length:
-            #     duration = self._session_length - running_length
+            while (running_length < self._session_length):
+                file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
+                audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
 
-            start = int(running_length*self._sr)
-            length = int(file['duration']*self._sr)
+                # Reintroduce once frame-level word alignments are available?
+                # if (running_length + duration) > self._session_length:
+                #     duration = self._session_length - running_length
 
-            # Remove once frame-level word alignments are available?
-            if (start+length > self._session_length*self._sr):
-                array = np.pad(array, pad_width=(0, start+length-self._session_length*self._sr), mode='constant')
-            array[start:start+length] = audio_file[:length]
+                start = int(running_length*self._sr)
+                length = int(file['duration']*self._sr)
 
-            new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
-            manifest_list.append(new_entry)
+                # Remove once frame-level word alignments are available?
+                if (start+length > self._session_length*self._sr):
+                    array = np.pad(array, pad_width=(0, start+length-self._session_length*self._sr), mode='constant')
+                array[start:start+length] = audio_file[:length]
 
-            #pick new speaker (randomly select from other speakers)
-            prev_speaker_turn = speaker_turn
-            speaker_turn = random.randint(0, self._num_speakers-1)
-            while (speaker_turn == prev_speaker_turn):
+                new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
+                manifest_list.append(new_entry)
+
+                #pick new speaker (randomly select from other speakers)
+                prev_speaker_turn = speaker_turn
                 speaker_turn = random.randint(0, self._num_speakers-1)
+                while (speaker_turn == prev_speaker_turn):
+                    speaker_turn = random.randint(0, self._num_speakers-1)
 
-            running_length += duration
+                running_length += file['duration']
 
-        sf.write(wavpath, array, self._sr)
-        labels_to_rttmfile(manifest_list, self._output_filename, self._output_dir)
+            sf.write(wavpath, array, self._sr)
+            labels_to_rttmfile(manifest_list, filename, self._output_dir)

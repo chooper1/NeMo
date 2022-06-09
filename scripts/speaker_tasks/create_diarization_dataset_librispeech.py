@@ -39,10 +39,8 @@ def main():
 
     lg = LibriSpeechGenerator(manifest_path=input_manifest_filepath, output_dir=output_dir, session_length=session_length, num_speakers=num_speakers)
 
-    for i in range(num_sessions):
-        #update output_filename, session_length
-        lg.set_output_filename(output_filename+'_{}'.format(i))
-        lg.generate_session()
+    lg.set_output_filename(output_filename)
+    lg.generate_session(num_sessions) #can also pass number of sessions to generate_session if parameters are unchanged between sessions
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
