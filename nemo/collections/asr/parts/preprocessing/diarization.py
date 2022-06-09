@@ -149,6 +149,7 @@ class LibriSpeechGenerator(object):
             print(self._session_length*self._sr)
             if (start+length > self._session_length*self._sr):
                 print('pad')
+                print(start+length-self._session_length*self._sr)
                 np.pad(array, pad_width=(0, start+length-self._session_length*self._sr), mode='constant')
             print(array.shape)
             print(audio_file.shape)
