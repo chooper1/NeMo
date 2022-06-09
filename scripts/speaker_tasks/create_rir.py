@@ -43,7 +43,7 @@ def main():
     orV_rcv = None # Vectors pointing in the same direction than the receivers (None assumes omnidirectional)
     mic_pattern = "omni" # Receiver polar pattern
     abs_weights = [0.9]*5+[0.5] # Absortion coefficient ratios of the walls
-    T60 = 5	 # Time for the RIR to reach 60dB of attenuation [s]
+    T60 = 16	 # Time for the RIR to reach 60dB of attenuation [s]
     att_diff = 15.0	# Attenuation when start using the diffuse reverberation model [dB]
     att_max = 60.0 # Attenuation at the end of the simulation [dB]
     fs=16000.0 # Sampling frequency [Hz]
@@ -53,17 +53,14 @@ def main():
     Tmax = att2t_SabineEstimator(att_max, T60)	 # Time to stop the simulation [s]
     nb_img = t2n( Tdiff, room_sz )	# Number of image sources in each dimension
     RIR = simulateRIR(room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern)
-    print(RIR)
 
     # from https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/room.py#2216
     # need to convolve individual audio sources with separate RIRs
     filepath = "/home/chooper/projects/datasets/LibriSpeech/LibriSpeech/dev-clean-processed/2277-149874-0000.wav"
     input_wav, sr = librosa.load(filepath, sr=fs)
-    print(input_wav)
     print(input_wav.shape)
 
     speaker_id = 0
-    print(RIR[0,:len(input_wav),speaker_id].shape)
     print(RIR[0,speaker_id,:len(input_wav)].shape)
     output_sound=convolve(input_wav,RIR[speaker_id,:len(input_wav)])
     output_sound=output_sound/np.max(np.abs(output_sound)) #normalize to [-1,1]
