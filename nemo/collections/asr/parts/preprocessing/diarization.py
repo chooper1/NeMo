@@ -76,39 +76,39 @@ class LibriSpeechGenerator(object):
 
     #TODO add method to load all parameters from a config file (yaml)
 
-    #randomly select 2 speaker ids from loaded dict
+    #randomly select speaker ids from loaded dict
+    #TODO enforce exclusivity
     def get_speaker_ids(self):
-        file1 = self._manifest[random.randint(0, len(self._manifest)-1)]
-        file2 = self._manifest[random.randint(0, len(self._manifest)-1)]
-
-        fn1 = file1['audio_filepath'].split('/')[-1]
-        fn2 = file2['audio_filepath'].split('/')[-1]
-
-        speaker_id1 = fn1.split('-')[0]
-        speaker_id2 = fn2.split('-')[0]
-
-        return [speaker_id1,speaker_id2]
+        speaker_ids = []
+        for s in range(0,self._num_speakers):
+            file = self._manifest[random.randint(0, len(self._manifest)-1)]
+            fn = file['audio_filepath'].split('/')[-1]
+            speaker_id = fn.split('-')[0]
+            speaker_ids.append(speaker_id)
+        return speaker_ids
 
     #get a list of the samples for the two specified speakers
+    #TODO clean up dict usage (currently using librispeech id as index)
     def get_speaker_samples(self, speaker_ids):
-        speaker_lists = {'sp1': [], 'sp2': []}
+        speaker_lists = {}
+        for _ in range(0,self._num_speakers):
+            spid = speaker_ids[s]
+            speaker_lists[str(spid)] = []
+
         for file in self._manifest:
             fn = file['audio_filepath'].split('/')[-1]
-            spid = fn.split('-')[0]
-            if spid == speaker_ids[0]:
-                speaker_lists['sp1'].append(file)
-            elif spid == speaker_ids[1]:
-                speaker_lists['sp2'].append(file)
+            new_speaker_id = fn.split('-')[0]
+            for spid in speaker_ids:
+                if spid == new_speaker_id:
+                    speaker_lists[str(spid)].append(file)
+
         return speaker_lists
 
     #load a sample for the selected speaker id
-    def load_speaker_sample(self, speaker_lists, speaker_turn):
-        if (speaker_turn == 0):
-            speaker_id = 'sp1'
-        elif (speaker_turn == 1):
-            speaker_id = 'sp2'
-        file_id = random.randint(0,len(speaker_lists[speaker_id])-1)
-        file = speaker_lists[speaker_id][file_id]
+    def load_speaker_sample(self, speaker_lists, speaker_ids, speaker_turn):
+        speaker_id = speaker_ids[speaker_turn]
+        file_id = random.randint(0,len(speaker_lists[str(speaker_id)])-1)
+        file = speaker_lists[str(speaker_id)][file_id]
         return file
 
     #add new entry to dict (to write to output manifest file)
@@ -129,7 +129,7 @@ class LibriSpeechGenerator(object):
         manifest_list = []
 
         while (running_length < self._session_length):
-            file = self.load_speaker_sample(speaker_lists, speaker_turn)
+            file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
             filepath = file['audio_filepath']
             audio_file, sr = librosa.load(filepath, sr=self._sr)
 
@@ -144,7 +144,11 @@ class LibriSpeechGenerator(object):
             new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
             manifest_list.append(new_entry)
 
-            speaker_turn = (speaker_turn + 1) % 2
+            #pick new speaker
+            rand_val = random.randint(0, self._num_speakers-1)
+            while (rand_val != speaker_turn):
+                rand_val = random.randint(0, self._num_speakers-1)
+
             running_length += duration
 
         sf.write(wavpath, array, self._sr)
