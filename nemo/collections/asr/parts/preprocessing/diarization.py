@@ -119,7 +119,7 @@ class LibriSpeechGenerator(object):
 
     #generate diarization session
     def generate_session(self, num_sessions=1):
-        for (i in range(0,num_sessions)):
+        for i in range(0,num_sessions):
             filename = self._output_filename+'_{}'.format(i)
 
             speaker_ids = self.get_speaker_ids() #randomly select 2 speaker ids
