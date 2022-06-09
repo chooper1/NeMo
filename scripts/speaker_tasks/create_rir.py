@@ -53,16 +53,18 @@ def main():
     Tmax = att2t_SabineEstimator(att_max, T60)	 # Time to stop the simulation [s]
     nb_img = t2n( Tdiff, room_sz )	# Number of image sources in each dimension
     RIR = simulateRIR(room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern)
-    print(RIRs)
+    print(RIR)
 
     # from https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/room.py#2216
     # need to convolve individual audio sources with separate RIRs
     filepath = "/home/chooper/projects/datasets/LibriSpeech/LibriSpeech/dev-clean-processed/2277-149874-0000.wav"
     input_wav, sr = librosa.load(filepath, sr=fs)
+    print(input_wav)
 
     speaker_id = 0
     output_sound=convolve(input_wav,RIR[:len(input_wav),speaker_id])
     output_sound=output_sound/np.max(np.abs(output_sound)) #normalize to [-1,1]
+    print(output_sound)
     sf.write("output.wav", output_sound, fs)
 
 
