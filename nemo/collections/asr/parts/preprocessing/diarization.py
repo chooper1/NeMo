@@ -91,8 +91,8 @@ class LibriSpeechGenerator(object):
     #TODO clean up dict usage (currently using librispeech id as index)
     def get_speaker_samples(self, speaker_ids):
         speaker_lists = {}
-        for _ in range(0,self._num_speakers):
-            spid = speaker_ids[s]
+        for i in range(0,self._num_speakers):
+            spid = speaker_ids[i]
             speaker_lists[str(spid)] = []
 
         for file in self._manifest:
