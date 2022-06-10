@@ -47,7 +47,7 @@ def get_unaligned_examples(unaligned_path, dataset):
         i = 0
         skip_files = []
         while i < len(lines):
-            l = lines[i]
+            l = lines[i].strip('\n')
             if (l[0] == '#'):
                 unaligned_dataset = l.split(" ")[1]
             elif unaligned_dataset == dataset:
