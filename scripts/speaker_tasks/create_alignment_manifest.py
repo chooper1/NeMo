@@ -69,8 +69,8 @@ def main():
             words = words.replace('\"', '').split(',')
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
             print(manifest[i])
-            manifest[i]["words"] = words
-            manifest[i]["alignments"] = alignments
+            manifest[i]['words'] = words
+            manifest[i]['alignments'] = end_times
             i+=1
         alignment_file.close()
 
