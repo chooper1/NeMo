@@ -53,10 +53,6 @@ def get_unaligned_examples(unaligned_path, dataset):
             elif unaligned_dataset == dataset:
                 unaligned_file = l.split(" ")[0]
                 skip_files.append(unaligned_file)
-
-            print(unaligned_dataset)
-            print(dataset)
-            print(unaligned_dataset == dataset)
             i+=1
 
     return skip_files
@@ -96,14 +92,14 @@ def main():
             fn = file['audio_filepath'].split('/')[-1]
 
             #skip unaligned
-            # print(fn)
-            # print(unaligned)
+            print(fn)
+            print(unaligned)
             if fn not in unaligned:
                 line_id = fn.split('.')[0]
 
                 utterance_id, words, end_times = line.strip().split(' ')
-                # print(utterance_id)
-                # print(line_id)
+                print(utterance_id)
+                print(line_id)
                 if utterance_id != line_id:
                     # print(utterance_id)
                     # print(line_id)
