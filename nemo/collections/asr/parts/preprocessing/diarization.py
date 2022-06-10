@@ -140,11 +140,12 @@ class LibriSpeechGenerator(object):
     #TODO account for speaker dominance
     def get_speaker(self, prev_speaker):
         if (prev_speaker == None):
-            sp_id = random.randint(0,self._num_speakers-1)
+            speaker_turn = random.randint(0,self._num_speakers-1)
         else:
-            sp_id = random.randint(0,self._num_speakers-1)
+            speaker_turn = random.randint(0,self._num_speakers-1)
             while (speaker_turn == prev_speaker_turn and random.uniform(0, 1) > self._turn_prob):
                 speaker_turn = random.randint(0, self._num_speakers-1)
+        return speaker_turn
 
 
     #generate diarization session
