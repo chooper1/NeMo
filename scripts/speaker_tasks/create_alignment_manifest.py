@@ -124,6 +124,7 @@ def main():
     with open(output_path, "w") as outfile:
         for tgt in target_manifest:
             json.dump(tgt, outfile)
+            outfile.write('\n')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Alignment Manifest Creator")
