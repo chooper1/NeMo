@@ -143,7 +143,7 @@ class LibriSpeechGenerator(object):
             speaker_turn = random.randint(0,self._num_speakers-1)
         else:
             speaker_turn = random.randint(0,self._num_speakers-1)
-            while (speaker_turn == prev_speaker_turn and random.uniform(0, 1) > self._turn_prob):
+            while (speaker_turn == prev_speaker and random.uniform(0, 1) > self._turn_prob):
                 speaker_turn = random.randint(0, self._num_speakers-1)
         return speaker_turn
 
