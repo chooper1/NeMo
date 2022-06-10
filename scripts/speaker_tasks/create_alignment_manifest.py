@@ -68,8 +68,8 @@ def main():
             utterance_id, words, end_times = line.strip().split(' ')
             words = words.replace('\"', '').split(',')
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
-            manifest[i,'words'] = words
-            manifest[i,'alignments'] = alignments
+            manifest[i]['words'] = words
+            manifest[i]['alignments'] = alignments
             i+=1
         alignment_file.close()
 
