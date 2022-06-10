@@ -54,7 +54,6 @@ def main():
         fn = file['audio_filepath'].split('/')[-1]
         speaker_id = fn.split('-')[0]
         book_id = fn.split('-')[1]
-        line_id = fn.split('-')[2]
 
         book_dir = os.path.join(base_alignment_path, speaker_id, book_id)
         alignment_fpath = os.path.join(book_dir, f"{speaker_id}-{book_id}.alignment.txt")
@@ -68,6 +67,9 @@ def main():
             # Retrieve the utterance id, the words as a list and the end_times as a list
             # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
             utterance_id, words, end_times = line.strip().split(' ')
+            if utterance_id != fn:
+                raise Exception("utterance mismatch")
+
             words = words.replace('\"', '').lower().split(',')
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
             manifest[i]['words'] = words
