@@ -95,14 +95,14 @@ def main():
             fn = file['audio_filepath'].split('/')[-1]
 
             #skip unaligned
-            print(fn)
-            print(unaligned)
+            # print(fn)
+            # print(unaligned)
             if fn not in unaligned:
                 line_id = fn.split('.')[0]
 
                 utterance_id, words, end_times = line.strip().split(' ')
-                print(utterance_id)
-                print(line_id)
+                # print(utterance_id)
+                # print(line_id)
                 if utterance_id != line_id:
                     # print(utterance_id)
                     # print(line_id)
