@@ -43,7 +43,7 @@ def main():
         shutil.rmtree(output_dir)
     os.mkdir(output_dir)
 
-    manifest = read_manifest(input_manifest_filepath
+    manifest = read_manifest(input_manifest_filepath)
 
     #https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
     i = 0
