@@ -109,9 +109,9 @@ def main():
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
 
             target_manifest.append({})
-            target_manifest[i]['audio_filepath'] = manifest['audio_filepath']
-            target_manifest[i]['duration'] = manifest['duration']
-            target_manifest[i]['text'] = manifest['text']
+            target_manifest[i]['audio_filepath'] = file['audio_filepath']
+            target_manifest[i]['duration'] = file['duration']
+            target_manifest[i]['text'] = file['text']
             target_manifest[i]['words'] = words
             target_manifest[i]['alignments'] = end_times
 
