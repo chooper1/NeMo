@@ -169,7 +169,7 @@ class LibriSpeechGenerator(object):
                 speaker_turn = self.get_speaker(prev_speaker)
 
                 #select speaker length
-                sl = random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
+                sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
 
                 file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                 audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
