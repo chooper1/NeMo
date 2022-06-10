@@ -48,7 +48,6 @@ def main():
 
     manifest = read_manifest(input_manifest_filepath)
 
-    #https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
     i = 0
     while i < len(manifest):
         file = manifest[i]
@@ -67,10 +66,10 @@ def main():
         alignment_file = open(alignment_fpath, "r")
         for line in alignment_file:
             # Retrieve the utterance id, the words as a list and the end_times as a list
+            # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
             utterance_id, words, end_times = line.strip().split(' ')
-            words = words.replace('\"', '').split(',')
+            words = words.replace('\"', '').lower().split(',')
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
-            print(manifest[i])
             manifest[i]['words'] = words
             manifest[i]['alignments'] = end_times
             i+=1
