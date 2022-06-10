@@ -41,12 +41,32 @@ def write_manifest(manifest):
             item = json.loads(line)
             data.append(item)
 
+def get_unaligned_examples(unaligned_path, dataset):
+    with open(unaligned_path, 'r', encoding='utf-8') as f:
+        lines = f.readlines()
+        i = 0
+        skip_files = []
+        while i < len(lines):
+            if (l[0] == '#'):
+                unaligned_dataset = l.split(" ")[1]
+            elif unaligned_dataset == dataset:
+                unaligned_file = l.split(" ")[0]
+                skip_files.append(unaligned_file)
+            i+=1
+
+    return skip_files
+
+
 def main():
     input_manifest_filepath = args.input_manifest_filepath
     base_alignment_path = args.base_alignment_path
     output_path = args.output_path
+    dataset = args.dataset
 
     manifest = read_manifest(input_manifest_filepath)
+
+    unaligned_path = os.path.join(base_alignment_path,"unaligned.txt")
+    unaligned = get_unaligned_examples(unaligned_path, dataset)
 
     i = 0
     while i < len(manifest):
@@ -55,7 +75,7 @@ def main():
         speaker_id = fn.split('-')[0]
         book_id = fn.split('-')[1]
 
-        book_dir = os.path.join(base_alignment_path, speaker_id, book_id)
+        book_dir = os.path.join(base_alignment_path, dataset, speaker_id, book_id)
         alignment_fpath = os.path.join(book_dir, f"{speaker_id}-{book_id}.alignment.txt")
 
         if not os.path.exists(alignment_fpath):
@@ -68,18 +88,24 @@ def main():
             # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
             file = manifest[i]
             fn = file['audio_filepath'].split('/')[-1]
-            line_id = fn.split('.')[0]
 
-            utterance_id, words, end_times = line.strip().split(' ')
-            if utterance_id != line_id:
-                print(utterance_id)
-                print(line_id)
-                raise Exception("utterance mismatch")
+            #skip unaligned
+            if fn not in unaligned:
+                line_id = fn.split('.')[0]
 
-            words = words.replace('\"', '').lower().split(',')
-            end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
-            manifest[i]['words'] = words
-            manifest[i]['alignments'] = end_times
+                utterance_id, words, end_times = line.strip().split(' ')
+                if utterance_id != line_id:
+                    print(utterance_id)
+                    print(line_id)
+                    raise Exception("utterance mismatch")
+
+                words = words.replace('\"', '').lower().split(',')
+                end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
+                manifest[i]['words'] = words
+                manifest[i]['alignments'] = end_times
+            else:
+                print(f'skipping {fn}')
+
             i+=1
         alignment_file.close()
 
@@ -87,9 +113,10 @@ def main():
         json.dump(manifest, outfile)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
+    parser = argparse.ArgumentParser(description="LibriSpeech Alignment Manifest Creator")
     parser.add_argument("--input_manifest_filepath", help="path to input manifest file", type=str, required=True)
     parser.add_argument("--base_alignment_path", help="path to librispeech alignment dataset", type=str, required=True)
+    parser.add_argument("--dataset", help="which test/dev/training set to create a manifest for", type=str, required=True)
     parser.add_argument("--output_path", help="path to output manifest file", type=str, required=True)
     args = parser.parse_args()
 
