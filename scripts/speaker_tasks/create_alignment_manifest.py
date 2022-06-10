@@ -75,7 +75,7 @@ def main():
         speaker_id = fn.split('-')[0]
         book_id = fn.split('-')[1]
 
-        book_dir = os.path.join(base_alignment_path, dataset, speaker_id, book_id)
+        book_dir = os.path.join(base_alignment_path, "LibriSpeech", dataset, speaker_id, book_id)
         alignment_fpath = os.path.join(book_dir, f"{speaker_id}-{book_id}.alignment.txt")
 
         if not os.path.exists(alignment_fpath):
