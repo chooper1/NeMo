@@ -70,7 +70,7 @@ def main():
     unaligned = get_unaligned_examples(unaligned_path, dataset)
     num_unaligned = len(unaligned)
 
-    target_manifest = {}
+    target_manifest = []
 
     i = 0
     while i < len(manifest):
