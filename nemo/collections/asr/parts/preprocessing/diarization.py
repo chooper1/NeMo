@@ -191,7 +191,7 @@ class LibriSpeechGenerator(object):
                 #     start -= overlap_length
                 #     duration -= overlap_length
 
-                if (speaker_turn != prev_speaker): #don't overlap same speaker
+                #if (speaker_turn != prev_speaker): #don't overlap same speaker
                     #keep track of running overlap average
 
                 end = start+length
