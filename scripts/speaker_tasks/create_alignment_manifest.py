@@ -56,6 +56,7 @@ def get_unaligned_examples(unaligned_path, dataset):
 
             print(unaligned_dataset)
             print(dataset)
+            print(unaligned_dataset == dataset)
             i+=1
 
     return skip_files
