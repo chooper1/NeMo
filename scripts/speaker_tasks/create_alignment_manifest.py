@@ -93,6 +93,7 @@ def main():
 
             #skip unaligned
             print(fn)
+            print(unaligned)
             if fn not in unaligned:
                 line_id = fn.split('.')[0]
 
