@@ -35,14 +35,16 @@ def read_manifest(manifest):
             data.append(item)
     return data
 
+def write_manifest(manifest):
+    with open(manifest, 'r', encoding='utf-8') as f:
+        for line in f:
+            item = json.loads(line)
+            data.append(item)
+
 def main():
     input_manifest_filepath = args.input_manifest_filepath
     base_alignment_path = args.base_alignment_path
-    output_dir = args.output_dir
-
-    if os.path.exists(output_dir):
-        shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
+    output_path = args.output_path
 
     manifest = read_manifest(input_manifest_filepath)
 
@@ -74,13 +76,14 @@ def main():
             i+=1
         alignment_file.close()
 
-    print(manifest)
+    with open(output_path, "w") as outfile:
+        json.dump(manifest, outfile)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
     parser.add_argument("--input_manifest_filepath", help="path to input manifest file", type=str, required=True)
     parser.add_argument("--base_alignment_path", help="path to librispeech alignment dataset", type=str, required=True)
-    parser.add_argument("--output_dir", help="path to output directory", type=str, required=True)
+    parser.add_argument("--output_path", help="path to output manifest file", type=str, required=True)
     args = parser.parse_args()
 
     main()
