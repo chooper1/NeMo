@@ -216,7 +216,7 @@ class LibriSpeechGenerator(object):
                 # speaker_turn = random.randint(0, self._num_speakers-1)
                 # while (speaker_turn == prev_speaker_turn):
                 #     speaker_turn = random.randint(0, self._num_speakers-1)
-                # running_length += duration
+                running_length += duration
                 # previous_duration = file['duration']
                 prev_speaker = speaker_turn
 
