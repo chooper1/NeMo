@@ -70,8 +70,10 @@ def main():
     unaligned = get_unaligned_examples(unaligned_path, dataset)
     num_unaligned = len(unaligned)
 
+    target_manifest = {}
+
     i = 0
-    while i < len(manifest) - num_unaligned:
+    while i < len(manifest):
         file = manifest[i]
         fn = file['audio_filepath'].split('/')[-1]
         speaker_id = fn.split('-')[0]
@@ -90,30 +92,35 @@ def main():
             # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
             file = manifest[i]
             fn = file['audio_filepath'].split('/')[-1]
-
-            #skip unaligned
             line_id = fn.split('.')[0]
-            if line_id not in unaligned:
-                utterance_id, words, end_times = line.strip().split(' ')
-                # print(utterance_id)
-                # print(line_id)
-                if utterance_id != line_id:
-                    print(utterance_id)
-                    print(line_id)
-                    raise Exception("utterance mismatch")
+            while line_id in unaligned:
+                i+=1
+                file = manifest[i]
+                fn = file['audio_filepath'].split('/')[-1]
+                line_id = fn.split('.')[0]
 
-                words = words.replace('\"', '').lower().split(',')
-                end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
-                manifest[i]['words'] = words
-                manifest[i]['alignments'] = end_times
-            else:
-                print(f'skipping {fn}')
+            utterance_id, words, end_times = line.strip().split(' ')
+            if utterance_id != line_id:
+                print(utterance_id)
+                print(line_id)
+                raise Exception("utterance mismatch")
+
+            words = words.replace('\"', '').lower().split(',')
+            end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
+
+            target_manifest.append({})
+            target_manifest[i]['audio_filepath'] = manifest['audio_filepath']
+            target_manifest[i]['duration'] = manifest['duration']
+            target_manifest[i]['text'] = manifest['text']
+            target_manifest[i]['words'] = words
+            target_manifest[i]['alignments'] = end_times
+
             i+=1
 
         alignment_file.close()
 
     with open(output_path, "w") as outfile:
-        json.dump(manifest, outfile)
+        json.dump(target_manifest, outfile)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Alignment Manifest Creator")
