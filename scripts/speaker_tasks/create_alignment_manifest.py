@@ -68,6 +68,8 @@ def main():
             # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
             utterance_id, words, end_times = line.strip().split(' ')
             if utterance_id != fn:
+                print(utterance_id)
+                print(fn)
                 raise Exception("utterance mismatch")
 
             words = words.replace('\"', '').lower().split(',')
