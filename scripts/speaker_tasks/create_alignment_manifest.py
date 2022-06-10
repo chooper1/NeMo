@@ -66,8 +66,11 @@ def main():
         for line in alignment_file:
             # Retrieve the utterance id, the words as a list and the end_times as a list
             # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
-            utterance_id, words, end_times = line.strip().split(' ')
+            file = manifest[i]
+            fn = file['audio_filepath'].split('/')[-1]
             line_id = fn.split('.')[0]
+
+            utterance_id, words, end_times = line.strip().split(' ')
             if utterance_id != line_id:
                 print(utterance_id)
                 print(line_id)
