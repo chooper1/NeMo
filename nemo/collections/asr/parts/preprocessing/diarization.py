@@ -166,7 +166,7 @@ class LibriSpeechGenerator(object):
 
             while (running_length < self._session_length):
                 #select speaker
-                speaker_turn = get_speaker(prev_speaker)
+                speaker_turn = self.get_speaker(prev_speaker)
 
                 #select speaker length
                 sl = random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
