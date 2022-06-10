@@ -55,11 +55,13 @@ class LibriSpeechGenerator(object):
         session_length=60,
         output_dir='output',
         output_filename='librispeech_diarization',
-        min_silence=0,
-        max_silence=0,
-        overlap_frequency=0,
-        min_overlap=0,
-        max_overlap=0,
+        sentence_length_params = [2.81,0.1], #from https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents, p.209
+        turn_prob = 0.1,
+        # min_silence=0,
+        # max_silence=0,
+        # overlap_frequency=0,
+        # min_overlap=0,
+        # max_overlap=0,
     ):
         self._manifest_path = manifest_path
         self._sr = sr
@@ -68,12 +70,15 @@ class LibriSpeechGenerator(object):
         self._output_dir = output_dir
         self._output_filename = output_filename
 
+        self._sentence_length_params = sentence_length_params
+        self._turn_prob = turn_prob
+
         #overlap/silence
-        self._min_silence = min_silence
-        self._max_silence = max_silence
-        self._overlap_frequency = overlap_frequency
-        self._min_overlap = min_overlap
-        self._max_overlap = max_overlap
+        # self._min_silence = min_silence
+        # self._max_silence = max_silence
+        # self._overlap_frequency = overlap_frequency
+        # self._min_overlap = min_overlap
+        # self._max_overlap = max_overlap
 
         self._manifest = read_manifest(manifest_path)
 
@@ -131,6 +136,17 @@ class LibriSpeechGenerator(object):
         end = start + new_file['duration']
         return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
 
+    #sample from speakers
+    #TODO account for speaker dominance
+    def get_speaker(self, prev_speaker):
+        if (prev_speaker == None):
+            sp_id = random.randint(0,self._num_speakers-1)
+        else:
+            sp_id = random.randint(0,self._num_speakers-1)
+            while (speaker_turn == prev_speaker_turn and random.uniform(0, 1) > self._turn_prob):
+                speaker_turn = random.randint(0, self._num_speakers-1)
+
+
     #generate diarization session
     def generate_session(self, num_sessions=1):
         for i in range(0,num_sessions):
@@ -146,8 +162,15 @@ class LibriSpeechGenerator(object):
             wavpath = os.path.join(self._output_dir, filename + '.wav')
             array = np.zeros(self._session_length*self._sr)
             manifest_list = []
+            prev_speaker = None
 
             while (running_length < self._session_length):
+                #select speaker
+                speaker_turn = get_speaker(prev_speaker)
+
+                #select speaker length
+                sl = random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
+
                 file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                 audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
                 duration = file['duration']
@@ -161,12 +184,15 @@ class LibriSpeechGenerator(object):
 
                 # add overlap (currently overlapping with some frequency and with a maximum percentage of overlap)
                 # TODO normalization?
-                is_overlap = random.uniform(0, 1)
-                if (is_overlap < self._overlap_frequency and running_length > 0):
-                    overlap_percent = random.uniform(0, self._max_percent_overlap)
-                    overlap_length = int(overlap_percent*length)
-                    start -= overlap_length
-                    duration -= overlap_length
+                # is_overlap = random.uniform(0, 1)
+                # if (is_overlap < self._overlap_frequency and running_length > 0):
+                #     overlap_percent = random.uniform(0, self._max_percent_overlap)
+                #     overlap_length = int(overlap_percent*length)
+                #     start -= overlap_length
+                #     duration -= overlap_length
+
+                if (speaker_turn != prev_speaker): #don't overlap same speaker
+                    #keep track of running overlap average
 
                 end = start+length
                 # Remove once frame-level word alignments are available?
@@ -178,19 +204,20 @@ class LibriSpeechGenerator(object):
                 manifest_list.append(new_entry)
 
                 # add silence (assuming times are rounded to nearest millisecond)
-                if (is_overlap > self._overlap_frequency and self._max_silence > 0):
-                    amount_silence = round(random.uniform(self._min_silence, self._max_silence),3)
-                    amount_silence = int(amount_silence*self._sr)
-                    array[end:end+amount_silence] = 0
-                    duration += int(amount_silence/self._sr)
+                # if (is_overlap > self._overlap_frequency and self._max_silence > 0):
+                #     amount_silence = round(random.uniform(self._min_silence, self._max_silence),3)
+                #     amount_silence = int(amount_silence*self._sr)
+                #     array[end:end+amount_silence] = 0
+                #     duration += int(amount_silence/self._sr)
 
                 #pick new speaker (randomly select from other speakers)
-                prev_speaker_turn = speaker_turn
-                speaker_turn = random.randint(0, self._num_speakers-1)
-                while (speaker_turn == prev_speaker_turn):
-                    speaker_turn = random.randint(0, self._num_speakers-1)
-                running_length += duration
-                previous_duration = file['duration']
+                # prev_speaker_turn = speaker_turn
+                # speaker_turn = random.randint(0, self._num_speakers-1)
+                # while (speaker_turn == prev_speaker_turn):
+                #     speaker_turn = random.randint(0, self._num_speakers-1)
+                # running_length += duration
+                # previous_duration = file['duration']
+                prev_speaker = speaker_turn
 
             sf.write(wavpath, array, self._sr)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
