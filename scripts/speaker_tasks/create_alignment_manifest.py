@@ -106,9 +106,9 @@ def main():
                 end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
                 manifest[i]['words'] = words
                 manifest[i]['alignments'] = end_times
-                i+=1
             else:
                 print(f'skipping {fn}')
+            i+=1
 
         alignment_file.close()
 
