@@ -72,9 +72,10 @@ def main():
 
     target_manifest = []
 
-    i = 0
-    while i < len(manifest):
-        file = manifest[i]
+    src_i = 0
+    target_i = 0
+    while src_i < len(manifest):
+        file = manifest[src_i]
         fn = file['audio_filepath'].split('/')[-1]
         speaker_id = fn.split('-')[0]
         book_id = fn.split('-')[1]
@@ -90,12 +91,12 @@ def main():
         for line in alignment_file:
             # Retrieve the utterance id, the words as a list and the end_times as a list
             # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
-            file = manifest[i]
+            file = manifest[src_i]
             fn = file['audio_filepath'].split('/')[-1]
             line_id = fn.split('.')[0]
             while line_id in unaligned:
-                i+=1
-                file = manifest[i]
+                src_i += 1
+                file = manifest[src_i]
                 fn = file['audio_filepath'].split('/')[-1]
                 line_id = fn.split('.')[0]
 
@@ -109,13 +110,14 @@ def main():
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
 
             target_manifest.append({})
-            target_manifest[i]['audio_filepath'] = file['audio_filepath']
-            target_manifest[i]['duration'] = file['duration']
-            target_manifest[i]['text'] = file['text']
-            target_manifest[i]['words'] = words
-            target_manifest[i]['alignments'] = end_times
+            target_manifest[target_i]['audio_filepath'] = file['audio_filepath']
+            target_manifest[target_i]['duration'] = file['duration']
+            target_manifest[target_i]['text'] = file['text']
+            target_manifest[target_i]['words'] = words
+            target_manifest[target_i]['alignments'] = end_times
 
-            i+=1
+            src_i += 1
+            target_i += 1
 
         alignment_file.close()
 
