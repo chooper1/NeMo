@@ -225,9 +225,9 @@ class LibriSpeechGenerator(object):
                         alignments.append(sentence_duration+file['alignments'][i])
                         i += 1
                         dur = int(alignments[i]*self._sr)
-                        print(i)
-                        print(dur)
                     sentence[sentence_duration:sentence_duration+prev_dur] = audio_file[:prev_dur]
+
+                print('running_length',running_length)
 
                 start = running_length
                 length = sl_sr
