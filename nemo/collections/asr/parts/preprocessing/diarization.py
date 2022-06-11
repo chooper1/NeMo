@@ -183,8 +183,8 @@ class LibriSpeechGenerator(object):
 
                 while (sentence_duration < sl):
                     #copy sentence
-                    begin = sentence_duration*self._sr
-                    end = (sentence_duration+file['duration'])*self._sr
+                    begin = int(sentence_duration*self._sr)
+                    end = int((sentence_duration+file['duration'])*self._sr)
                     sentence[begin:end] = audio_file
 
                     #combine text, words, alignments here
