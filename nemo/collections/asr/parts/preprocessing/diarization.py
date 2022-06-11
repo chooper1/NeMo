@@ -247,7 +247,7 @@ class LibriSpeechGenerator(object):
                 new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
 
-                running_length += duration
+                running_length += sl_sr
                 prev_speaker = speaker_turn
 
             sf.write(wavpath, array, self._sr)
