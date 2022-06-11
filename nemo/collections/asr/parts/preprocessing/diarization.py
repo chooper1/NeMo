@@ -163,25 +163,25 @@ class LibriSpeechGenerator(object):
                 sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
 
                 #ensure session length is as desired
-                if running_length+s1 > self._session_length:
-                    s1 = self._session_length - running_length
+                if running_length+sl > self._session_length:
+                    sl = self._session_length - running_length
 
                 # only add if remaining length > 1 second
-                if s1 < 1:
+                if sl < 1:
                     break
 
                 #load audio file
                 file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                 audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
                 sentence_duration = file['duration']
-                sentence = np.zeros(s1*self._sr)
+                sentence = np.zeros(sl*self._sr)
 
                 #text, words, alignments
                 text = ""
                 words = []
                 alignments = []
 
-                while (sentence_duration < s1):
+                while (sentence_duration < sl):
                     #copy sentence
                     begin = sentence_duration*self._sr
                     end = (sentence_duration+file['duration'])*self._sr
@@ -227,7 +227,7 @@ class LibriSpeechGenerator(object):
                     sentence[sentence_duration*self._sr:(sentence_duration+prev_dur)*self._sr] = audio_file[:prev_dur*self._sr]
 
                 start = int(running_length*self._sr)
-                length = int(s1*self._sr)
+                length = int(sl*self._sr)
 
                 # add overlap (currently overlapping with some frequency and with a maximum percentage of overlap)
                 # also don't overlap same speaker
