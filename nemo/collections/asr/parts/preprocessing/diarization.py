@@ -192,7 +192,7 @@ class LibriSpeechGenerator(object):
                         text += " "
                     text += file['text'] #deal with space here
                     i = 0
-                    for i in len(file['words']):
+                    for i in range(0, len(file['words'])):
                         words.append(file['text'][i])
                         alignments.append(sentence_duration+file['alignments'][i])
 
