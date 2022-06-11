@@ -182,6 +182,8 @@ class LibriSpeechGenerator(object):
                 alignments = []
 
                 while (sentence_duration < sl):
+                    print(sentence_duration)
+                    print(sl)
                     #copy sentence
                     begin = int(sentence_duration*self._sr)
                     end = int((sentence_duration+file['duration'])*self._sr)
