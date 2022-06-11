@@ -242,7 +242,7 @@ class LibriSpeechGenerator(object):
                 #TODO also add silence
 
                 end = start+length
-                array[start:end] = audio_file[:length]
+                array[start:end] = sentence #audio_file[:length]
 
                 new_entry = self.create_new_rttm_entry(file, running_length, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
