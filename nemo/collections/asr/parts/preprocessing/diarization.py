@@ -243,7 +243,7 @@ class LibriSpeechGenerator(object):
                 end = start+length
                 array[start:end] = sentence #audio_file[:length]
 
-                new_entry = self.create_new_rttm_entry(start, length, speaker_ids[speaker_turn])
+                new_entry = self.create_new_rttm_entry(start/self._sr, length/self._sr, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
 
                 running_length += sl_sr
