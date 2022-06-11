@@ -164,12 +164,14 @@ class LibriSpeechGenerator(object):
                 sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
                 sl_sr = int(sl*self._sr)
 
+                #TODO make sure not shorter than one word
+
                 #ensure session length is as desired
                 if running_length+sl_sr > session_length_sr:
                     sl_sr = session_length_sr - running_length
 
                 # only add if remaining length > 1 second
-                if sl < 1:
+                if session_length_sr-running_length < self._sr:
                     break
 
                 #load audio file
