@@ -214,21 +214,20 @@ class LibriSpeechGenerator(object):
                 # only add more words if remaining_duration > 1 second
                 if remaining_duration > self._sr:
                     #use alignments to pad sentence
-                    words = file['words']
-                    alignments = file['alignments']
                     dur = 0
                     i = 0
-                    dur = int(alignments[i]*self._sr)
+                    dur = int(file['alignments'][i]*self._sr)
                     prev_dur = 0
                     while (dur < remaining_duration):
-                        word = words[i]
+                        word = file['words'][i]
                         prev_dur = dur
                         #TODO append word and alignment here (and to text)
-                        text += " " + word
-                        words.append(file['words'][i])
-                        alignments.append(sentence_duration+file['alignments'][i])
+                        if word != "":
+                            text += " " + word
+                        words.append(word)
+                        alignments.append(int(sentence_duration/self._sr)+file['alignments'][i])
                         i += 1
-                        dur = int(alignments[i]*self._sr)
+                        dur = int(file['alignments'][i]*self._sr)
                         print(i)
                         print(dur)
                     sentence[sentence_duration:sentence_duration+prev_dur] = audio_file[:prev_dur]
