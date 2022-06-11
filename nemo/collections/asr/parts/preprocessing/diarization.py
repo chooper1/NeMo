@@ -207,9 +207,10 @@ class LibriSpeechGenerator(object):
                 sentence_duration = sentence_duration - int(file['duration']*self._sr)
                 remaining_duration = sl_sr - sentence_duration
 
-                print('sentence_dur',sentence_duration)
-                print('sl_sr',sl_sr)
-                print('remaining_dur',remaining_duration)
+                print('sentence_dur ',sentence_duration)
+                print('sl_sr ',sl_sr)
+                print('remaining_dur ',remaining_duration)
+                print('shape ',file['duration']*self._sr)
 
                 # only add more words if remaining_duration > 1 second
                 if remaining_duration > self._sr:
