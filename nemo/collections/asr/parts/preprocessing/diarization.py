@@ -231,7 +231,7 @@ class LibriSpeechGenerator(object):
                 while (sentence_duration < sl_sr):
                     file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
-                    sentence_duration += add_file(file, audio_file, sentence_duration, sl_sr)
+                    sentence_duration += self.add_file(file, audio_file, sentence_duration, sl_sr)
 
                 start = running_length_sr
                 length = sl_sr
