@@ -165,6 +165,7 @@ class LibriSpeechGenerator(object):
             return sentence_duration_sr
 
         elif max_sentence_duration_sr - sentence_duration_sr > self._sr:
+            print('dur 2: ', sentence_duration_sr)
             #atleast 1 second remaining in sentence - use alignments to pad sentence
             remaining_duration = max_sentence_duration_sr - sentence_duration_sr
             dur = prev_dur = 0
@@ -217,7 +218,8 @@ class LibriSpeechGenerator(object):
 
                 #select speaker length
                 #TODO ensure length is atleast one word
-                sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
+                # sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
+                sl = 34
                 sl_sr = int(sl*self._sr)
                 print(sl)
 
