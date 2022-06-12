@@ -175,7 +175,7 @@ class LibriSpeechGenerator(object):
                     elif word != "":
                         self._text += " " + word
                     self._words.append(word)
-                    self._alignments.append(int(sentence_duration/self._sr)+file['alignments'][i])
+                    self._alignments.append(int(sentence_duration_sr/self._sr)+file['alignments'][i])
                     prev_dur = dur
             if prev_dur > 0:
                 self._sentence[sentence_duration_sr:sentence_duration_sr+prev_dur] = audio_file[:prev_dur]
