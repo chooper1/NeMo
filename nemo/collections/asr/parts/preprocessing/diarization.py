@@ -144,9 +144,6 @@ class LibriSpeechGenerator(object):
 
     def add_file(self, file, audio_file, sentence_duration_sr, max_sentence_duration_sr):
         #add to self._sentence
-        print('audio: ', len(audio_file))
-        print('max length: ', max_sentence_duration_sr)
-        print('dur: ', sentence_duration_sr)
         if (sentence_duration_sr + len(audio_file) < max_sentence_duration_sr):
             begin = sentence_duration_sr
             end = sentence_duration_sr + len(audio_file)
@@ -184,7 +181,6 @@ class LibriSpeechGenerator(object):
             if prev_dur > 0:
                 self._sentence[sentence_duration_sr:sentence_duration_sr+prev_dur] = audio_file[:prev_dur]
 
-            print('return dur 2: ', sentence_duration_sr)
             return max_sentence_duration_sr
 
         else:
@@ -216,8 +212,7 @@ class LibriSpeechGenerator(object):
 
                 #select speaker length
                 #TODO ensure length is atleast one word
-                # sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
-                sl = 34
+                sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
                 sl_sr = int(sl*self._sr)
                 print(sl)
 
