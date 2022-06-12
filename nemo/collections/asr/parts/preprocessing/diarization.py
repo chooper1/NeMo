@@ -143,7 +143,7 @@ class LibriSpeechGenerator(object):
         elif self._dominance_dist == "random":
             dominance = [random.uniform(0, 1) for s in range(0, self._num_speakers)]
             dominance.sort()
-            for i in range(self._num_speakers,1,-1):
+            for i in range(self._num_speakers-1,0,-1):
                 dominance[i] = dominance[i]-dominance[i-1]
         print(dominance)
         return dominance
