@@ -255,4 +255,6 @@ class LibriSpeechGenerator(object):
                 prev_speaker = speaker_turn
 
             sf.write(wavpath, array, self._sr)
+            print(manifest_list)
+            print(filename)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
