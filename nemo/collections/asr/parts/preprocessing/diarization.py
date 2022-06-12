@@ -128,8 +128,8 @@ class LibriSpeechGenerator(object):
         return file
 
     #add new entry to dict (to write to output manifest file)
-    def create_new_rttm_entry(self, start, end, speaker_id):
-        return str(start) + ' ' + str(end) + ' ' + str(speaker_id)
+    def create_new_rttm_entry(self, start, dur, speaker_id):
+        return str(start) + ' ' + str(dur) + ' ' + str(speaker_id)
 
     #sample from speakers
     #TODO account for speaker dominance
@@ -246,6 +246,7 @@ class LibriSpeechGenerator(object):
                 array[start:end] = self._sentence #audio_file[:length]
 
                 new_entry = self.create_new_rttm_entry(start/self._sr, length/self._sr, speaker_ids[speaker_turn])
+                print(new_entry)
                 manifest_list.append(new_entry)
 
                 running_length_sr += sl_sr
