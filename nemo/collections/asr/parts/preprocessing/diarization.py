@@ -41,11 +41,10 @@ class LibriSpeechGenerator(object):
         session_length (int): length of each diarization session (seconds)
         output_dir (str): output directory
         output_filename (str): output filename for the wav and rttm files
-        min_silence (float): minimum silence between (non-overlapping) speakers
-        max_silence (float): maximum silence between (non-overlapping) speakers
-        overlap_frequency (float): frequency of overlapping speech
-        min_overlap (float): minimum percentage of overlap (as a percentage of the first clip)
-        max_overlap (float): maximum percentage of overlap (as a percentage of the first clip)
+        sentence_length_params
+        dominance_dist
+        turn_prob
+
     """
     def __init__(
         self,
@@ -56,6 +55,7 @@ class LibriSpeechGenerator(object):
         output_dir='output',
         output_filename='librispeech_diarization',
         sentence_length_params = [2.81,0.1], #from https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents, p.209
+        dominance_dist = "random",
         turn_prob = 0.1,
     ):
         self._manifest_path = manifest_path
@@ -66,6 +66,11 @@ class LibriSpeechGenerator(object):
         self._output_filename = output_filename
 
         self._sentence_length_params = sentence_length_params
+
+        #dominance distribution:
+        #same - same for each speaker
+        #rand - randomly distributed (pick num_speaker random uniform values)
+        self._dominance_dist = dominance_dist
         self._turn_prob = turn_prob
 
         #overlap/silence
@@ -131,6 +136,17 @@ class LibriSpeechGenerator(object):
     def create_new_rttm_entry(self, start, dur, speaker_id):
         return str(start) + ' ' + str(dur) + ' ' + str(speaker_id)
 
+    #get dominance for each speaker
+    def get_speaker_dominance(self):
+        if dominance_dist == "same":
+            dominance = [1.0/self._num_speakers for s in range(0, self._num_speakers)]
+        elif dominance_dist == "random":
+            dominance = [random.uniform(0, 1) for s in range(0, self._num_speakers)].sort()
+            for i in range(len(dominance),1):
+                dominance[i] = dominance[i]-dominance[i-1]
+        print(dominance)
+        return dominance
+
     #sample from speakers
     #TODO account for speaker dominance
     def get_speaker(self, prev_speaker):
@@ -142,6 +158,7 @@ class LibriSpeechGenerator(object):
                 speaker_turn = random.randint(0, self._num_speakers-1)
         return speaker_turn
 
+    #add audio file to current sentence
     def add_file(self, file, audio_file, sentence_duration_sr, max_sentence_duration_sr):
         #add to self._sentence
         if (sentence_duration_sr + len(audio_file) < max_sentence_duration_sr):
@@ -192,7 +209,8 @@ class LibriSpeechGenerator(object):
         for i in range(0,num_sessions):
             filename = self._output_filename + f"_{i}"
 
-            speaker_ids = self.get_speaker_ids() #randomly select 2 speaker ids
+            speaker_ids = self.get_speaker_ids() #randomly select speaker ids
+            speaker_dominance = self.get_speaker_dominance() #randomly determine speaker dominance
             speaker_lists = self.get_speaker_samples(speaker_ids) #get list of samples per speaker
 
             speaker_turn = 0 #assume alternating between speakers 1 & 2
