@@ -170,10 +170,10 @@ class LibriSpeechGenerator(object):
                     break
                 else:
                     word = file['words'][i]
-                    if text == "":
-                        text += word
+                    if self._text == "":
+                        self._text += word
                     elif word != "":
-                        text += " " + word
+                        self._text += " " + word
                     self._words.append(word)
                     self._alignments.append(int(sentence_duration/self._sr)+file['alignments'][i])
                     prev_dur = dur
@@ -222,9 +222,9 @@ class LibriSpeechGenerator(object):
                     break
 
                 #text, words, alignments
-                text = ""
-                words = []
-                alignments = []
+                self._text = ""
+                self._words = []
+                self._alignments = []
 
                 self._sentence = np.zeros(sl_sr)
                 sentence_duration = 0
