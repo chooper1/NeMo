@@ -139,12 +139,11 @@ class LibriSpeechGenerator(object):
     #get dominance for each speaker
     def get_speaker_dominance(self):
         if self._dominance_dist == "same":
-            dominance = [1.0/self._num_speakers for s in range(0, self._num_speakers)]
+            dominance_factor = 1.0/self._num_speakers
+            dominance = [s*dominance_factor for s in range(0, self._num_speakers)]
         elif self._dominance_dist == "random":
             dominance = [random.uniform(0, 1) for s in range(0, self._num_speakers)]
             dominance.sort()
-            for i in range(self._num_speakers-1,0,-1):
-                dominance[i] = dominance[i]-dominance[i-1]
         print(dominance)
         return dominance
 
