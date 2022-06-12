@@ -214,7 +214,6 @@ class LibriSpeechGenerator(object):
                 #TODO ensure length is atleast one word
                 sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
                 sl_sr = int(sl*self._sr)
-                print(sl)
 
                 #ensure session length is as desired (clip sentence length at end)
                 if running_length_sr+sl_sr > session_length_sr:
