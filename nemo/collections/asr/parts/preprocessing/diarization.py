@@ -161,8 +161,8 @@ class LibriSpeechGenerator(object):
             sentence_duration_sr += len(audio_file)
             return sentence_duration_sr
 
-        elif max_sentence_duration_sr - sentence_duration_sr > self._sr:
-            #atleast 1 second remaining in sentence - use alignments to pad sentence
+        elif max_sentence_duration_sr - sentence_duration_sr > 0.5*self._sr:
+            #atleast 0.5 second remaining in sentence - use alignments to pad sentence
             remaining_duration = max_sentence_duration_sr - sentence_duration_sr
             dur = prev_dur = 0
             for i in range(0,len(file['words'])):
@@ -223,8 +223,8 @@ class LibriSpeechGenerator(object):
                 if running_length_sr+sl_sr > session_length_sr:
                     sl_sr = session_length_sr - running_length_sr
 
-                # only add if remaining length > 1 second
-                if session_length_sr-running_length_sr < self._sr:
+                # only add if remaining length > 0.5 second
+                if session_length_sr-running_length_sr < 0.5*self._sr:
                     break
 
                 #text, words, alignments
