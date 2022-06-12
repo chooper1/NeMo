@@ -247,14 +247,11 @@ class LibriSpeechGenerator(object):
                 end = start+length
                 array[start:end] = self._sentence #audio_file[:length]
 
-                new_entry = self.create_new_rttm_entry(start/self._sr, length/self._sr, speaker_ids[speaker_turn])
-                print(new_entry)
+                new_entry = self.create_new_rttm_entry(start/self._sr, end/self._sr, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
 
                 running_length_sr += sl_sr
                 prev_speaker = speaker_turn
 
             sf.write(wavpath, array, self._sr)
-            print(manifest_list)
-            print(filename)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
