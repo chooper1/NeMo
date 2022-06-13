@@ -77,7 +77,6 @@ class LibriSpeechGenerator(object):
 
         #overlap/silence
 
-
         #internal params
         self._manifest = read_manifest(manifest_path)
         self._sentence = None

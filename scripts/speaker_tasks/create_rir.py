@@ -67,8 +67,5 @@ def main():
     print(output_sound)
     sf.write("output.wav", output_sound, int(fs))
 
-
-
 if __name__ == "__main__":
-
     main()
