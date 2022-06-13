@@ -219,7 +219,7 @@ class LibriSpeechGenerator(object):
         remaining_duration = max_sentence_duration - sentence_duration
         prev_dur_sr = dur_sr = 0
         nw = i = 0
-        
+
         #ensure the desired number of words are added and the length of the output session isn't exceeded
         while nw < remaining_duration and dur_sr < remaining_duration_sr and i < len(file['words']):
             dur_sr = int(file['alignments'][i] * self._sr)
@@ -330,6 +330,8 @@ class LibriSpeechGenerator(object):
                 manifest_list.append(new_entry)
 
                 running_length_sr = np.maximum(running_length_sr, end)
+                print("running_length_sr: ", running_length_sr)
+                print("end: ", end)
                 prev_speaker = speaker_turn
                 prev_length_sr = length
 
