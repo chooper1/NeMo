@@ -338,6 +338,7 @@ class LibriSpeechGenerator(object):
 
                 running_length_sr = np.maximum(running_length_sr, end)
                 prev_speaker = speaker_turn
+                start = running_length_sr
                 prev_length_sr = length
 
                 print(running_length_sr)
