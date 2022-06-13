@@ -229,14 +229,13 @@ class LibriSpeechGenerator(object):
             for i in range(0, len(file['words'])):
                 self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
             return sentence_duration+num_words, sentence_duration_sr+len(audio_file)
-
         #not enough room to add the entire audio file or not all words are needed
         else:
             remaining_duration_sr = max_sentence_duration_sr - sentence_duration_sr
             remaining_duration = max_sentence_duration - sentence_duration
             prev_dur_sr = dur_sr = 0
             nw = i = 0
-            while nw < remaining_duration and dur_sr < remaining_duration_sr:
+            while nw < remaining_duration and dur_sr < remaining_duration_sr and i < len(file['words']):
                 dur_sr = int(file['alignments'][i] * self._sr)
                 if dur_sr > remaining_duration_sr:
                     break
