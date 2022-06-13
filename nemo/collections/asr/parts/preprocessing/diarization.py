@@ -291,7 +291,7 @@ class LibriSpeechGenerator(object):
             start = end = 0
             prev_speaker = None
             manifest_list = []
-            self._furthest_sample = [0 for n in range(0,num_speakers)]
+            self._furthest_sample = [0 for n in range(0,self._num_speakers)]
 
             session_length_sr = int((self._session_length * self._sr))
             array = np.zeros(session_length_sr)
