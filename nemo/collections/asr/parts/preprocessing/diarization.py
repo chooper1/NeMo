@@ -213,13 +213,8 @@ class LibriSpeechGenerator(object):
         for i in range(0, len(self._words)):
             word = self._words[i]
             if word != "":
-                text = str(session_name) + ' ' +
-                       str(speaker_id) + ' ' +
-                       str(self._alignments[i-1]) + ' ' +
-                       str(self._alignments[i] - self._alignments[i-1]) + ' ' +
-                       str(word) + ' '
-                       '0' + '\n'
-                arr.append()
+                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(self._alignments[i-1]) + ' ' + str(self._alignments[i] - self._alignments[i-1]) + ' ' + str(word) + ' ' + '0' + '\n'
+                arr.append(text)
         return arr
 
     # get dominance for each speaker
