@@ -349,6 +349,9 @@ class LibriSpeechGenerator(object):
                 start = running_length_sr
                 prev_length_sr = length
 
+                print("running_length_sr: ", running_length_sr)
+                print("session_length_sr: ", session_length_sr)
+
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
             sf.write(wavpath, array, self._sr)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
