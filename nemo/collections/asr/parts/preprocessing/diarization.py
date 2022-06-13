@@ -217,7 +217,7 @@ class LibriSpeechGenerator(object):
     def _add_file(self, file, audio_file, sentence_duration, max_sentence_duration, max_sentence_duration_sr):
         # #get number of words
         # num_words = len([word for word in file['words'] if word != ""])
-        # sentence_duration_sr = len(self._sentence)
+        sentence_duration_sr = len(self._sentence)
         # # enough room to add the entire audio file
         # if num_words < max_sentence_duration - sentence_duration and sentence_duration_sr + len(audio_file) <= max_sentence_duration_sr:
         #     self._sentence = np.append(self._sentence, audio_file)
