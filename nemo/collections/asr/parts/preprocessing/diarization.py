@@ -258,7 +258,6 @@ class LibriSpeechGenerator(object):
             self._sentence = np.append(self._sentence, audio_file[:prev_dur_sr])
             if dur_sr > remaining_duration_sr:
                 self._sentence = np.pad(self._sentence, (0, max_sentence_duration_sr - len(self._sentence)))
-                print('padding')
             return sentence_duration+nw, len(self._sentence)
 
     # returns new overlapped (or shifted) start position
@@ -335,9 +334,9 @@ class LibriSpeechGenerator(object):
 
                 length = len(self._sentence)
                 # add overlap or silence
-                # start = self._add_silence_or_overlap(
-                #     speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
-                # )
+                start = self._add_silence_or_overlap(
+                    speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
+                )
                 end = start + length
                 array[start:end] = self._sentence
 
@@ -346,7 +345,6 @@ class LibriSpeechGenerator(object):
 
                 running_length_sr = np.maximum(running_length_sr, end)
                 prev_speaker = speaker_turn
-                start = running_length_sr
                 prev_length_sr = length
 
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
