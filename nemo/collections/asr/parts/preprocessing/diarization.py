@@ -250,10 +250,18 @@ class LibriSpeechGenerator(object):
         else:
             return max_sentence_duration_sr
 
-    def add_silence_or_overlap(self, speaker_turn, prev_speaker, start, end, session_length_sr):
+    #returns new overlapped (or shifted) start position
+    def add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr):
+        mean_overlap_percent = self._mean_overlap / (self._turn_prob)
         if prev_speaker == speaker_turn or prev_speaker == None: #no overlap
-            overlap_percent = self._mean_overlap / (self._turn_prob)
+            overlap_percent = np.random.normal(loc=mean_overlap_percent,scale=0.5)
+            if overlap_percent > 0:
+                if overlap_percent > 1:
+                    overlap_percent = 1
+                #shift left by overlap_percent
+                return start - prev_length_sr*overlap_percent
 
+        return start
         #https://www.speech.kth.se/prod/publications/files/3418.pdf, p562 - dist'n of silence and overlap
         #https://hal.archives-ouvertes.fr/hal-01836475/document, p2 - dist'n of overlap
         #https://disi.unitn.it/~riccardi/papers2/CSL19-SpeechOverlapCategorization.pdf, p148 - dist'n of overlap
@@ -311,12 +319,9 @@ class LibriSpeechGenerator(object):
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
                     sentence_duration = self.add_file(file, audio_file, sentence_duration, sl_sr)
 
-                start = running_length_sr
-                end = start+sl_sr
+                start = self.add_silence_or_overlap(speaker_turn, prev_speaker, running_length_sr, sl_sr, session_length_sr, prev_length_sr)
 
-                # add overlap (currently overlapping with some frequency and with a maximum percentage of overlap)
-                self.add_silence_or_overlap(speaker_turn, prev_speaker, start, end, session_length_sr)
-
+                end = start + sl_sr
                 array[start:end] = self._sentence #audio_file[:length]
 
                 new_entry = self.create_new_rttm_entry(start/self._sr, end/self._sr, speaker_ids[speaker_turn])
@@ -324,6 +329,7 @@ class LibriSpeechGenerator(object):
 
                 running_length_sr += sl_sr
                 prev_speaker = speaker_turn
+                prev_length_sr = sl_sr
 
             sf.write(wavpath, array, self._sr)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
