@@ -35,12 +35,13 @@ def read_manifest(manifest):
             data.append(item)
     return data
 
-def write_manifest(manifest):
-    with open(manifest, 'r', encoding='utf-8') as f:
-        for line in f:
-            item = json.loads(line)
-            data.append(item)
+def write_manifest(output_path, target_manifest):
+    with open(output_path, "w") as outfile:
+        for tgt in target_manifest:
+            json.dump(tgt, outfile)
+            outfile.write('\n')
 
+#get librispeech examples without alignments for the desired dataset
 def get_unaligned_examples(unaligned_path, dataset):
     with open(unaligned_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
@@ -63,13 +64,12 @@ def main():
     dataset = args.dataset
 
     manifest = read_manifest(input_manifest_filepath)
-
+    target_manifest = []
     unaligned_path = os.path.join(base_alignment_path,"unaligned.txt")
     unaligned = get_unaligned_examples(unaligned_path, dataset)
     num_unaligned = len(unaligned)
 
-    target_manifest = []
-
+    #separate indices to manage source/destination manifest to manage missing alignments
     src_i = 0
     target_i = 0
     while src_i < len(manifest):
@@ -81,14 +81,10 @@ def main():
         book_dir = os.path.join(base_alignment_path, "LibriSpeech", dataset, speaker_id, book_id)
         alignment_fpath = os.path.join(book_dir, f"{speaker_id}-{book_id}.alignment.txt")
 
-        if not os.path.exists(alignment_fpath):
-            raise Exception("Alignment file not found.")
-
         # Parse each utterance present in the file
         alignment_file = open(alignment_fpath, "r")
         for line in alignment_file:
-            # Retrieve the utterance id, the words as a list and the end_times as a list
-            # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
+            # filter out unaligned examples
             file = manifest[src_i]
             fn = file['audio_filepath'].split('/')[-1]
             line_id = fn.split('.')[0]
@@ -98,11 +94,11 @@ def main():
                 fn = file['audio_filepath'].split('/')[-1]
                 line_id = fn.split('.')[0]
 
+            # from https://github.com/CorentinJ/librispeech-alignments/blob/master/parser_example.py
+            # Retrieve the utterance id, the words as a list and the end_times as a list
             utterance_id, words, end_times = line.strip().split(' ')
             if utterance_id != line_id:
-                print(utterance_id)
-                print(line_id)
-                raise Exception("utterance mismatch")
+                raise Exception("Mismatch between source and target utterance id")
 
             words = words.replace('\"', '').lower().split(',')
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
@@ -118,11 +114,7 @@ def main():
             target_i += 1
 
         alignment_file.close()
-
-    with open(output_path, "w") as outfile:
-        for tgt in target_manifest:
-            json.dump(tgt, outfile)
-            outfile.write('\n')
+    write_manifest(output_path, target_manifest)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Alignment Manifest Creator")
