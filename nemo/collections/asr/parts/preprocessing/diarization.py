@@ -228,7 +228,7 @@ class LibriSpeechGenerator(object):
             self._words += file['words']
             for i in range(0, len(file['words'])):
                 self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
-            return num_words
+            return num_words + sentence_duration
 
         else:
             remaining_duration = max_sentence_duration - sentence_duration
@@ -250,7 +250,7 @@ class LibriSpeechGenerator(object):
                 nw+=1
             # add audio clip up to the final alignment
             np.append(self._sentence, audio_file[:dur])
-            return num_words
+            return max_sentence_duration
 
     # returns new overlapped (or shifted) start position
     def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr):
@@ -318,8 +318,6 @@ class LibriSpeechGenerator(object):
 
                 # build sentence
                 while sentence_duration < sl:
-                    print('sentence_dur: ', sentence_duration)
-                    print('max len: ', sl)
                     file = self._load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
                     sentence_duration = self._add_file(file, audio_file, sentence_duration, sl)
