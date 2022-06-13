@@ -55,7 +55,7 @@ class LibriSpeechGenerator(object):
         output_dir='output',
         output_filename='librispeech_diarization',
         sentence_length_params = [2.81,0.1], #from https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents, p.209
-        dominance_dist = "same",
+        dominance_dist = "random",
         turn_prob = 0.1,
     ):
         self._manifest_path = manifest_path
