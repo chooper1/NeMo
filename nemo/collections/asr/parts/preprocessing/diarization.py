@@ -277,7 +277,7 @@ class LibriSpeechGenerator(object):
 
             speaker_turn = 0 #assume alternating between speakers 1 & 2
             running_length_sr = 0 #starting point for each sentence
-            previous_duration = 0 #for overlap
+            prev_length_sr = 0 #for overlap
 
             wavpath = os.path.join(self._output_dir, filename + '.wav')
             manifest_list = []
