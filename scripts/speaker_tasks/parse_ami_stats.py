@@ -34,7 +34,7 @@ def read_cmi_files(directory_path):
     return data
 
 def main():
-    input_filepath = args.input_directory
+    input_directory = args.input_directory
     list = read_cmi_files(input_directory)
     print(list)
 
