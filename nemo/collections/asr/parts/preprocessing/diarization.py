@@ -89,6 +89,7 @@ class LibriSpeechGenerator(object):
         self._text = ""
         self._words = []
         self._alignments = []
+        self._furthest_sample = [0 for n in num_speakers]
 
     """
     Load all parameters from a config file (yaml)
@@ -256,7 +257,10 @@ class LibriSpeechGenerator(object):
         if prev_speaker != speaker_turn and prev_speaker != None:
             if np.random.uniform(0, 1) < overlap_prob:
                 overlap_percent = mean_overlap_percent + np.random.uniform(-mean_overlap_percent, mean_overlap_percent)
-                return start - int(prev_length_sr * overlap_percent)
+                new_start = start - int(prev_length_sr * overlap_percent)
+                if (new_start < self._furthest_sample[speaker_turn]):
+                    new_start = self._furthest_sample[speaker_turn]
+                return new_start
 
         # add silence
         silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
@@ -287,6 +291,7 @@ class LibriSpeechGenerator(object):
             start = end = 0
             prev_speaker = None
             manifest_list = []
+            self._furthest_sample = [0 for n in num_speakers]
 
             session_length_sr = int((self._session_length * self._sr))
             array = np.zeros(session_length_sr)
@@ -333,6 +338,7 @@ class LibriSpeechGenerator(object):
                 print("end: ", end)
 
                 running_length_sr = np.maximum(running_length_sr, end)
+                self._furthest_sample[speaker_turn] = running_length_sr
                 prev_speaker = speaker_turn
                 prev_length_sr = length
 
