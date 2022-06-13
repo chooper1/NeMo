@@ -233,19 +233,21 @@ class LibriSpeechGenerator(object):
         else:
             remaining_duration = max_sentence_duration - sentence_duration
             sentence_duration_sr = len(self._sentence)
-            i = 0
-            while i < remaining_duration:
+            num_words = i = 0
+            while num_words < remaining_duration:
                 dur = int(file['alignments'][i] * self._sr)
                 word = file['words'][i]
                 self._words.append(word)
                 self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
                 if word == "":
+                    i+=1
                     continue
                 elif self._text == "":
                     self._text += word
                 else:
                     self._text += " " + word
                 i+=1
+                num_words+=1
             # add audio clip up to the final alignment
             np.append(self._sentence, audio_file[:dur])
             return num_words
@@ -316,6 +318,8 @@ class LibriSpeechGenerator(object):
 
                 # build sentence
                 while sentence_duration < sl:
+                    print(sentence_duration)
+                    print(sl)
                     file = self._load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
                     sentence_duration = self._add_file(file, audio_file, sentence_duration, sl)
