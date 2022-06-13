@@ -22,8 +22,8 @@ import numpy.matlib as matlib
 import librosa
 import soundfile as sf
 
-from gpuRIR import beta_SabineEstimation,att2t_SabineEstimator,t2n,simulateRIR #use simulateTrajectory for moving sources
-from scipy.signal import convolve #note scipy automatically uses fftconvolve if it is faster
+from gpuRIR import beta_SabineEstimation,att2t_SabineEstimator,t2n,simulateRIR
+from scipy.signal import convolve #note that scipy automatically uses fftconvolve if it is faster
 
 random.seed(42)
 

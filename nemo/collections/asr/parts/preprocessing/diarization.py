@@ -74,7 +74,6 @@ class LibriSpeechGenerator(object):
         self._session_length = session_length
         self._output_dir = output_dir
         self._output_filename = output_filename
-
         self._sentence_length_params = sentence_length_params
         self._dominance_dist = dominance_dist
         self._turn_prob = turn_prob
@@ -132,21 +131,21 @@ class LibriSpeechGenerator(object):
         OmegaConf.save(config=conf, f=config_path)
 
     #randomly select speaker ids from loaded dict
-    def get_speaker_ids(self):
+    def _get_speaker_ids(self):
         speaker_ids = []
         s = 0
         while (s < self._num_speakers):
             file = self._manifest[random.randint(0, len(self._manifest)-1)]
             fn = file['audio_filepath'].split('/')[-1]
             speaker_id = fn.split('-')[0]
-            if (speaker_id not in speaker_ids): #enforce exclusivity
+            #ensure speaker ids are not duplicated
+            if (speaker_id not in speaker_ids):
                 speaker_ids.append(speaker_id)
                 s += 1
         return speaker_ids
 
-    #get a list of the samples for the two specified speakers
-    #TODO clean up dict usage (currently using librispeech id as index)
-    def get_speaker_samples(self, speaker_ids):
+    #get a list of the samples for the specified speakers
+    def _get_speaker_samples(self, speaker_ids):
         speaker_lists = {}
         for i in range(0,self._num_speakers):
             spid = speaker_ids[i]
@@ -162,57 +161,52 @@ class LibriSpeechGenerator(object):
         return speaker_lists
 
     #load a sample for the selected speaker id
-    def load_speaker_sample(self, speaker_lists, speaker_ids, speaker_turn):
+    def _load_speaker_sample(self, speaker_lists, speaker_ids, speaker_turn):
         speaker_id = speaker_ids[speaker_turn]
         file_id = random.randint(0,len(speaker_lists[str(speaker_id)])-1)
         file = speaker_lists[str(speaker_id)][file_id]
         return file
 
     #add new entry to dict (to write to output manifest file)
-    def create_new_rttm_entry(self, start, dur, speaker_id):
+    def _create_new_rttm_entry(self, start, dur, speaker_id):
         return str(start) + ' ' + str(dur) + ' ' + str(speaker_id)
 
     #get dominance for each speaker
-    def get_speaker_dominance(self):
+    def _get_speaker_dominance(self):
         dominance = None
+        #set n-1 random thresholds to get a variable speaker distribution
         if self._dominance_dist == "random":
             dominance = [random.uniform(0, 1) for s in range(0, self._num_speakers - 1)]
             dominance.sort()
             dominance.append(1)
         return dominance
 
-    #sample from speakers
-    def get_speaker(self, prev_speaker, dominance):
+    #get next speaker (accounting for turn probability, dominance distribution)
+    def _get_next_speaker(self, prev_speaker, dominance):
+        if (random.uniform(0, 1) > self._turn_prob and prev_speaker != None):
+            return prev_speaker
+
         if self._dominance_dist == "same":
             speaker_turn = random.randint(0,self._num_speakers-1)
-            if (prev_speaker != None):
-                if (random.uniform(0, 1) < self._turn_prob):
-                    while (speaker_turn == prev_speaker):
-                        speaker_turn = random.randint(0, self._num_speakers-1)
-                else:
-                    speaker_turn = prev_speaker
+            while (speaker_turn == prev_speaker):
+                speaker_turn = random.randint(0, self._num_speakers-1)
 
         elif self._dominance_dist == "random":
             rand = random.uniform(0, 1)
             speaker_turn = 0
             while rand > dominance[speaker_turn]:
                 speaker_turn += 1
-
-            if (prev_speaker != None):
-                if (random.uniform(0, 1) < self._turn_prob):
-                    while (speaker_turn == prev_speaker):
-                        rand = random.uniform(0, 1)
-                        speaker_turn = 0
-                        while rand > dominance[speaker_turn]:
-                            speaker_turn += 1
-                else:
-                    speaker_turn = prev_speaker
+            while (speaker_turn == prev_speaker):
+                rand = random.uniform(0, 1)
+                speaker_turn = 0
+                while rand > dominance[speaker_turn]:
+                    speaker_turn += 1
 
         return speaker_turn
 
     #add audio file to current sentence
-    def add_file(self, file, audio_file, sentence_duration_sr, max_sentence_duration_sr):
-        #add to self._sentence
+    def _add_file(self, file, audio_file, sentence_duration_sr, max_sentence_duration_sr):
+        #enough room to add the entire audio file
         if (sentence_duration_sr + len(audio_file) < max_sentence_duration_sr):
             begin = sentence_duration_sr
             end = sentence_duration_sr + len(audio_file)
@@ -222,13 +216,12 @@ class LibriSpeechGenerator(object):
             if self._text != "":
                 self._text += " "
             self._text += file['text']
-            i = 0
+            self._words += file['words']
             for i in range(0, len(file['words'])):
-                self._words.append(file['words'][i])
                 self._alignments.append(int(sentence_duration_sr/self._sr)+file['alignments'][i])
+            return end
 
-            sentence_duration_sr += len(audio_file)
-            return sentence_duration_sr
+        #not enough room to add the entire audio file (but atleast 0.5 seconds left in the sentence)
         elif max_sentence_duration_sr - sentence_duration_sr > 0.5*self._sr:
             #atleast 0.5 second remaining in sentence - use alignments to pad sentence
             remaining_duration = max_sentence_duration_sr - sentence_duration_sr
@@ -246,14 +239,16 @@ class LibriSpeechGenerator(object):
                     self._words.append(word)
                     self._alignments.append(int(sentence_duration_sr/self._sr)+file['alignments'][i])
                     prev_dur = dur
+            #add audio clip up to the final alignment
             if prev_dur > 0:
                 self._sentence[sentence_duration_sr:sentence_duration_sr+prev_dur] = audio_file[:prev_dur]
             return max_sentence_duration_sr
+
         else:
             return max_sentence_duration_sr
 
     #returns new overlapped (or shifted) start position
-    def add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr):
+    def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr):
         overlap_prob = self._overlap_prob / (self._turn_prob) #accounting for not overlapping the same speaker
         mean_overlap_percent = self._mean_overlap / self._overlap_prob
         mean_silence_percent = self._mean_silence / (1-self._overlap_prob)
@@ -280,61 +275,56 @@ class LibriSpeechGenerator(object):
     """
     def generate_session(self, num_sessions=1):
         for i in range(0,num_sessions):
+            speaker_ids = self._get_speaker_ids() #randomly select speaker ids
+            speaker_dominance = self._get_speaker_dominance() #randomly determine speaker dominance
+            speaker_lists = self._get_speaker_samples(speaker_ids) #get list of samples per speaker
+
             filename = self._output_filename + f"_{i}"
-
-            speaker_ids = self.get_speaker_ids() #randomly select speaker ids
-            speaker_dominance = self.get_speaker_dominance() #randomly determine speaker dominance
-            speaker_lists = self.get_speaker_samples(speaker_ids) #get list of samples per speaker
-
+            wavpath = os.path.join(self._output_dir, filename + '.wav')
             speaker_turn = 0 #assume alternating between speakers 1 & 2
             running_length_sr = 0 #starting point for each sentence
             prev_length_sr = 0 #for overlap
-
-            wavpath = os.path.join(self._output_dir, filename + '.wav')
-            manifest_list = []
             prev_speaker = None
+            manifest_list = []
 
             session_length_sr = int((self._session_length*self._sr))
             array = np.zeros(session_length_sr)
 
             while (running_length_sr < session_length_sr):
                 #select speaker
-                speaker_turn = self.get_speaker(prev_speaker, speaker_dominance)
+                speaker_turn = self._get_next_speaker(prev_speaker, speaker_dominance)
 
                 #select speaker length
-                sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
-                sl += random.uniform(-0.5, 0.5)
+                sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1]) + random.uniform(-0.5, 0.5)
                 if sl < 0:
                     sl = 0
-                #inserting randomness into sentence length
                 sl_sr = int(sl*self._sr)
 
                 #ensure session length is as desired (clip sentence length at end)
-                if running_length_sr+sl_sr > session_length_sr:
+                if running_length_sr + sl_sr > session_length_sr:
                     sl_sr = session_length_sr - running_length_sr
-
                 # only add if remaining length > 0.5 second
                 if session_length_sr-running_length_sr < 0.5*self._sr:
                     break
 
-                #text, words, alignments
+                #initialize sentence, text, words, alignments
+                self._sentence = np.zeros(sl_sr)
                 self._text = ""
                 self._words = []
                 self._alignments = []
-
-                self._sentence = np.zeros(sl_sr)
                 sentence_duration = 0
+                #build sentence
                 while (sentence_duration < sl_sr):
-                    file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
+                    file = self._load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
-                    sentence_duration = self.add_file(file, audio_file, sentence_duration, sl_sr)
+                    sentence_duration = self._add_file(file, audio_file, sentence_duration, sl_sr)
 
-                start = self.add_silence_or_overlap(speaker_turn, prev_speaker, running_length_sr, sl_sr, session_length_sr, prev_length_sr)
-
+                #add overlap or silence
+                start = self._add_silence_or_overlap(speaker_turn, prev_speaker, running_length_sr, sl_sr, session_length_sr, prev_length_sr)
                 end = start + sl_sr
-                array[start:end] = self._sentence #audio_file[:length]
+                array[start:end] = self._sentence
 
-                new_entry = self.create_new_rttm_entry(start/self._sr, end/self._sr, speaker_ids[speaker_turn])
+                new_entry = self._create_new_rttm_entry(start/self._sr, end/self._sr, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
 
                 running_length_sr = np.maximum(running_length_sr, end)
