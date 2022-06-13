@@ -21,6 +21,8 @@ import soundfile as sf
 
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
 
+from omegaconf import OmegaConf
+
 #from scripts/speaker_tasks/filelist_to_manifest.py - move function?
 def read_manifest(manifest):
     data = []
@@ -83,6 +85,8 @@ class LibriSpeechGenerator(object):
         self._words = []
         self._alignments = []
 
+        self._config_path = None
+
     #Get/Set Methods
     def set_session_length(self, new_sl):
         self._session_length = new_sl
@@ -93,7 +97,26 @@ class LibriSpeechGenerator(object):
     def set_num_speakers(self, new_ns):
         self._num_speakers = new_ns
 
-    #TODO add method to load all parameters from a config file (yaml)
+    # load all parameters from a config file (yaml)
+    def load_config(self, config_path):
+        self._config_path = config_path
+        config = OmegaConf.load(config_path)
+        print(OmegaConf.to_yaml(config))
+
+    def write_config(self, config_path):
+        self._config_path = config_path
+
+        file = OmegaConf.create({"manifest_path": self._manifest_path,
+                                "sr": self._sr,
+                                "num_speakers": self._num_speakers,
+                                "session_length": self._session_length,
+                                "output_dir": self._output_dir,
+                                "output_filename": self._output_filename,
+                                "sentence_length_params": self._sentence_length_params,
+                                "dominance_dist": self._dominance_dist,
+                                "turn_prob": self._turn_prob,
+                                "sr": self._sr})
+        OmegaConf.save(config=conf, f=config_path)
 
     #randomly select speaker ids from loaded dict
     def get_speaker_ids(self):

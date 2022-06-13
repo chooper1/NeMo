@@ -45,6 +45,9 @@ def main():
 
     lg.generate_session(num_sessions)
 
+    lg.write_config("./config.yaml")
+    lg.load_config("./config.yaml")
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
     parser.add_argument("--input_manifest_filepath", help="path to input manifest file", type=str, required=True)
