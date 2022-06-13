@@ -333,7 +333,7 @@ class LibriSpeechGenerator(object):
             self._furthest_sample = [0 for n in range(0,self._num_speakers)]
 
             rttm_filepath = os.path.join(self._output_dir, filename + '.rttm')
-            json_filepath = s.path.join(self._output_dir, filename + '.json')
+            json_filepath = os.path.join(self._output_dir, filename + '.json')
             ctm_filepath = os.path.join(self._output_dir, filename + '.ctm')
 
             session_length_sr = int((self._session_length * self._sr))
