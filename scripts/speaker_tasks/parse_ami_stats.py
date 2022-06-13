@@ -28,8 +28,7 @@ def read_cmi(cmi):
     data = []
     with open(cmi, 'r', encoding='utf-8') as f:
         for line in f:
-            item = json.loads(line)
-            data.append(item)
+            data.append(line.split(" "))
     return data
 
 def main():
