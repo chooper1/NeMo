@@ -97,25 +97,22 @@ class LibriSpeechGenerator(object):
     def set_num_speakers(self, new_ns):
         self._num_speakers = new_ns
 
-    # load all parameters from a config file (yaml)
+    # load/write all parameters from/to a config file (yaml)
     def load_config(self, config_path):
         self._config_path = config_path
         config = OmegaConf.load(config_path)
-        print(config["manifest_path"])
-        print(OmegaConf.to_yaml(config))
+        self._manifest_path = config["manifest_path"]
+        self._sr = config["sr"]
+        self._num_speakers = config["num_speakers"]
+        self._session_length = config["session_length"]
+        self._output_dir = config["output_dir"]
+        self._output_filename = config["output_filename"]
+        self._sentence_length_params = config["sentence_length_params"]
+        self._dominance_dist = config["dominance_dist"]
+        self._turn_prob = config["turn_prob"]
 
     def write_config(self, config_path):
         self._config_path = config_path
-
-        conf = OmegaConf.create({"manifest_path": self._manifest_path,
-                                "sr": self._sr,
-                                "num_speakers": self._num_speakers,
-                                "session_length": self._session_length,
-                                "output_dir": self._output_dir,
-                                "output_filename": self._output_filename,
-                                "sentence_length_params": self._sentence_length_params,
-                                "dominance_dist": self._dominance_dist,
-                                "turn_prob": self._turn_prob})
         OmegaConf.save(config=conf, f=config_path)
 
     #randomly select speaker ids from loaded dict
