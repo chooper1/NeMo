@@ -33,6 +33,17 @@ def read_manifest(manifest):
             data.append(item)
     return data
 
+def write_manifest(output_path, target_manifest):
+    with open(output_path, "w") as outfile:
+        for tgt in target_manifest:
+            json.dump(tgt, outfile)
+            outfile.write('\n')
+
+def write_ctm(output_path, target_ctm):
+    with open(output_path, "w") as outfile:
+        for tgt in target_ctm:
+            outfile.write(tgt)
+
 
 class LibriSpeechGenerator(object):
     """
@@ -53,6 +64,7 @@ class LibriSpeechGenerator(object):
         turn_prob (float): probability of switching speakers
         mean_overlap (float): mean proportion of overlap to speaking time
         mean_silence (float): mean proportion of silence to speaking time
+        outputs (str): which files to output (r - rttm, j - json, c - ctm)
     """
 
     def __init__(
@@ -69,6 +81,7 @@ class LibriSpeechGenerator(object):
         mean_overlap=0.08,
         mean_silence=0.08,
         overlap_prob=0.3,
+        outputs = "rjc"
     ):
         self._manifest_path = manifest_path
         self._sr = sr
@@ -82,6 +95,7 @@ class LibriSpeechGenerator(object):
         self._mean_overlap = mean_overlap
         self._mean_silence = mean_silence
         self._overlap_prob = overlap_prob
+        self._outputs = outputs
 
         # internal params
         self._manifest = read_manifest(manifest_path)
@@ -176,9 +190,37 @@ class LibriSpeechGenerator(object):
         file = speaker_lists[str(speaker_id)][file_id]
         return file
 
-    # add new entry to dict (to write to output manifest file)
+    # add new entry to dict (to write to output rttm file)
     def _create_new_rttm_entry(self, start, dur, speaker_id):
         return str(start) + ' ' + str(dur) + ' ' + str(speaker_id)
+
+    # add new entry to dict (to write to output json file)
+    def _create_new_json_entry(self, wav_filename, start, dur, speaker_id, text, rttm_filepath, ctm_filepath):
+        dict = {"audio_filepath": wav_filename,
+                "offset": start,
+                "duration": dur,
+                "label": speaker_id,
+                "text": text,
+                "num_speakers": self._num_speakers,
+                "rttm_filepath": rttm_filepath,
+                "ctm_filepath": ctm_filepath,
+                "uem_filepath": None}
+        return dict
+
+    # add new entry to dict (to write to output ctm file)
+    def _create_new_ctm_entry(self, session_name, speaker_id, start):
+        arr = []
+        for i in range(0, len(self._words)):
+            word = self._words[i]
+            if word != "":
+                text = str(session_name) + ' ' +
+                       str(speaker_id) + ' ' +
+                       str(self._alignments[i-1]) + ' ' +
+                       str(self._alignments[i] - self._alignments[i-1]) + ' ' +
+                       str(word) + ' '
+                       '0' + '\n'
+                arr.append()
+        return arr
 
     # get dominance for each speaker
     def _get_speaker_dominance(self):
@@ -290,8 +332,14 @@ class LibriSpeechGenerator(object):
             prev_length_sr = 0  # for overlap
             start = end = 0
             prev_speaker = None
-            manifest_list = []
+            rttm_list = []
+            json_list = []
+            ctm_list = []
             self._furthest_sample = [0 for n in range(0,self._num_speakers)]
+
+            rttm_filepath = os.path.join(self._output_dir, filename + '.rttm')
+            json_filepath = s.path.join(self._output_dir, filename + '.json')
+            ctm_filepath = os.path.join(self._output_dir, filename + '.ctm')
 
             session_length_sr = int((self._session_length * self._sr))
             array = np.zeros(session_length_sr)
@@ -331,8 +379,16 @@ class LibriSpeechGenerator(object):
                 end = start + length
                 array[start:end] = self._sentence
 
-                new_entry = self._create_new_rttm_entry(start / self._sr, end / self._sr, speaker_ids[speaker_turn])
-                manifest_list.append(new_entry)
+                if 'r' in self._outputs:
+                    new_rttm_entry = self._create_new_rttm_entry(start / self._sr, end / self._sr, speaker_ids[speaker_turn])
+                    rttm_list.append(new_rttm_entry)
+                if 'j' in self._outputs:
+                    new_json_entry = self._create_new_json_entry(wavpath, start / self._sr, length / self._sr, speaker_ids[speaker_turn], self._text, rttm_filepath, ctm_filepath)
+                    json_list.append(new_json_entry)
+                if 'c' in self._outputs:
+                    new_ctm_entries = self._create_new_ctm_entry(filename, speaker_ids[speaker_turn])
+                    for entry in new_ctm_entries:
+                        ctm_list.append(entry)
 
                 running_length_sr = np.maximum(running_length_sr, end)
                 self._furthest_sample[speaker_turn] = running_length_sr
@@ -341,4 +397,10 @@ class LibriSpeechGenerator(object):
 
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
             sf.write(wavpath, array, self._sr)
-            labels_to_rttmfile(manifest_list, filename, self._output_dir)
+
+            if 'r' in self._outputs:
+                labels_to_rttmfile(rttm_list, filename, self._output_dir)
+            if 'j' in self._outputs:
+                write_manifest(json_filepath, json_list)
+            if 'c' in self._outputs:
+                write_ctm(ctm_filepath, ctm_list)
