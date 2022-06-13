@@ -144,18 +144,32 @@ class LibriSpeechGenerator(object):
         elif self._dominance_dist == "random":
             dominance = [random.uniform(0, 1) for s in range(0, self._num_speakers)]
             dominance.sort()
-        print(dominance)
         return dominance
 
     #sample from speakers
     #TODO account for speaker dominance
-    def get_speaker(self, prev_speaker):
-        if (prev_speaker == None):
+    def get_speaker(self, prev_speaker, dominance):
+        if self._dominance_dist == "same":
             speaker_turn = random.randint(0,self._num_speakers-1)
-        else:
-            speaker_turn = random.randint(0,self._num_speakers-1)
-            while (speaker_turn == prev_speaker and random.uniform(0, 1) > self._turn_prob):
-                speaker_turn = random.randint(0, self._num_speakers-1)
+            if (prev_speaker != None):
+                if (random.uniform(0, 1) > self._turn_prob):
+                    while (speaker_turn == prev_speaker):
+                        speaker_turn = random.randint(0, self._num_speakers-1)
+
+        elif self._dominance_dist == "random":
+            rand = random.uniform(0, 1)
+            speaker_turn = 0
+            while rand > dominance[speaker_turn]:
+                speaker_turn += 1
+
+            if (prev_speaker != None):
+                if (random.uniform(0, 1) > self._turn_prob):
+                    while (speaker_turn == prev_speaker):
+                        rand = random.uniform(0, 1)
+                        speaker_turn = 0
+                        while rand > dominance[speaker_turn]:
+                            speaker_turn += 1
+
         return speaker_turn
 
     #add audio file to current sentence
@@ -226,7 +240,7 @@ class LibriSpeechGenerator(object):
 
             while (running_length_sr < session_length_sr):
                 #select speaker
-                speaker_turn = self.get_speaker(prev_speaker)
+                speaker_turn = self.get_speaker(prev_speaker, speaker_dominance)
 
                 #select speaker length
                 #TODO ensure length is atleast one word
