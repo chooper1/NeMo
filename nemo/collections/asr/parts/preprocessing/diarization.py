@@ -259,7 +259,7 @@ class LibriSpeechGenerator(object):
                 if overlap_percent > 1:
                     overlap_percent = 1
                 #shift left by overlap_percent
-                return start - prev_length_sr*overlap_percent
+                return start - int(prev_length_sr*overlap_percent)
 
         return start
         #https://www.speech.kth.se/prod/publications/files/3418.pdf, p562 - dist'n of silence and overlap
