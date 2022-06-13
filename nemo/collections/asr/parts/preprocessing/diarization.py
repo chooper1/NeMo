@@ -22,6 +22,7 @@ import soundfile as sf
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
 
 from omegaconf import OmegaConf
+from scipy.stats import halfnorm
 
 #from scripts/speaker_tasks/filelist_to_manifest.py - move function?
 def read_manifest(manifest):
@@ -65,6 +66,7 @@ class LibriSpeechGenerator(object):
         turn_prob = 0.9,
         mean_overlap = 0.08,
         mean_silence = 0.08,
+        overlap_prob = 0.3,
     ):
         self._manifest_path = manifest_path
         self._sr = sr
@@ -78,6 +80,7 @@ class LibriSpeechGenerator(object):
         self._turn_prob = turn_prob
         self._mean_overlap = mean_overlap
         self._mean_silence = mean_silence
+        self._overlap_prob = overlap_prob
 
         #internal params
         self._manifest = read_manifest(manifest_path)
@@ -113,6 +116,7 @@ class LibriSpeechGenerator(object):
         self._turn_prob = config["turn_prob"]
         self._mean_overlap = config["mean_overlap"]
         self._mean_silence = config["mean_silence"]
+        self._overlap_prob = config["overlap_prob"]
 
     def write_config(self, config_path):
         self._config_path = config_path
@@ -126,7 +130,8 @@ class LibriSpeechGenerator(object):
                                 "dominance_dist": self._dominance_dist,
                                 "turn_prob": self._turn_prob,
                                 "mean_overlap": self._mean_overlap,
-                                "mean_silence": self._mean_silence})
+                                "mean_silence": self._mean_silence,
+                                "overlap_prob": self._overlap_prob})
         OmegaConf.save(config=conf, f=config_path)
 
     #randomly select speaker ids from loaded dict
@@ -252,19 +257,23 @@ class LibriSpeechGenerator(object):
 
     #returns new overlapped (or shifted) start position
     def add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr):
-        mean_overlap_percent = self._mean_overlap / (self._turn_prob)
-        if prev_speaker != speaker_turn and prev_speaker != None: #no overlap
-            overlap_percent = np.random.normal(loc=mean_overlap_percent,scale=0.5)
-            if overlap_percent > 0:
-                if overlap_percent > 1:
-                    overlap_percent = 1
-                #shift left by overlap_percent
+        overlap_prob = self._overlap_prob / (self._turn_prob) #accounting for not overlapping the same speaker
+        mean_overlap_percent = self._mean_overlap / self._overlap_prob
+        mean_silence_percent = self._mean_silence / (1-self._overlap_prob)
+
+        #overlap
+        if prev_speaker != speaker_turn and prev_speaker != None:
+            if np.random.uniform(0,1) < overlap_prob:
+                overlap_percent = mean_overlap_percent + np.random.uniform(-mean_overlap_percent,mean_overlap_percent)
                 return start - int(prev_length_sr*overlap_percent)
 
-        return start
-        #https://www.speech.kth.se/prod/publications/files/3418.pdf, p562 - dist'n of silence and overlap
-        #https://hal.archives-ouvertes.fr/hal-01836475/document, p2 - dist'n of overlap
-        #https://disi.unitn.it/~riccardi/papers2/CSL19-SpeechOverlapCategorization.pdf, p148 - dist'n of overlap
+        #add silence
+        silence_percent =  mean_silence_percent + np.random.uniform(-mean_silence_percent,mean_silence_percent)
+        silence_amount = int(length*silence_percent)
+        if start + length + silence_amount > session_length_sr:
+            return session_length_sr - length
+        else:
+            return start + silence_amount
 
     #generate diarization session
     def generate_session(self, num_sessions=1):
@@ -317,6 +326,7 @@ class LibriSpeechGenerator(object):
                 while (sentence_duration < sl_sr):
                     file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
+                    print(np.max(audio_file))
                     sentence_duration = self.add_file(file, audio_file, sentence_duration, sl_sr)
 
                 start = self.add_silence_or_overlap(speaker_turn, prev_speaker, running_length_sr, sl_sr, session_length_sr, prev_length_sr)
@@ -327,9 +337,10 @@ class LibriSpeechGenerator(object):
                 new_entry = self.create_new_rttm_entry(start/self._sr, end/self._sr, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
 
-                running_length_sr += sl_sr
+                running_length_sr = end
                 prev_speaker = speaker_turn
                 prev_length_sr = sl_sr
 
+            np.max(array)
             sf.write(wavpath, array, self._sr)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
