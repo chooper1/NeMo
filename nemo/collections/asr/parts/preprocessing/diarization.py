@@ -296,7 +296,7 @@ class LibriSpeechGenerator(object):
                 overlap_percent = mean_overlap_percent + np.random.uniform(-mean_overlap_percent, mean_overlap_percent)
                 new_start = start - int(prev_length_sr * overlap_percent)
                 if (new_start < self._furthest_sample[speaker_turn]):
-                    new_start = self._furthest_sample[speaker_turn]
+                    new_start = self._furthest_sample[speaker_turn] #TODO add silence here?
                 return new_start
 
         # add silence
