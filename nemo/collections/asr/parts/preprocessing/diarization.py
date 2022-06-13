@@ -89,21 +89,13 @@ class LibriSpeechGenerator(object):
         self._words = []
         self._alignments = []
 
-        self._config_path = None
+    """
+    Load all parameters from a config file (yaml)
 
-    #Get/Set Methods
-    def set_session_length(self, new_sl):
-        self._session_length = new_sl
-
-    def set_output_filename(self, new_fn):
-        self._output_filename = new_fn
-
-    def set_num_speakers(self, new_ns):
-        self._num_speakers = new_ns
-
-    # load/write all parameters from/to a config file (yaml)
+    Args:
+        config_path (str): path to a valid config file
+    """
     def load_config(self, config_path):
-        self._config_path = config_path
         config = OmegaConf.load(config_path)
         self._manifest_path = config["manifest_path"]
         self._sr = config["sr"]
@@ -118,8 +110,13 @@ class LibriSpeechGenerator(object):
         self._mean_silence = config["mean_silence"]
         self._overlap_prob = config["overlap_prob"]
 
+    """
+    Write all parameters to a config file (yaml)
+
+    Args:
+        config_path (str): target path for the config file
+    """
     def write_config(self, config_path):
-        self._config_path = config_path
         conf = OmegaConf.create({"manifest_path": self._manifest_path,
                                 "sr": self._sr,
                                 "num_speakers": self._num_speakers,
@@ -275,7 +272,12 @@ class LibriSpeechGenerator(object):
         else:
             return start + silence_amount
 
-    #generate diarization session
+    """
+    Generate diarization session
+
+    Args:
+        num_sessions (int): number of diarization sessions to generate with the current configuration
+    """
     def generate_session(self, num_sessions=1):
         for i in range(0,num_sessions):
             filename = self._output_filename + f"_{i}"
@@ -300,7 +302,6 @@ class LibriSpeechGenerator(object):
                 speaker_turn = self.get_speaker(prev_speaker, speaker_dominance)
 
                 #select speaker length
-                #TODO ensure length is atleast one word
                 sl = np.random.negative_binomial(self._sentence_length_params[0], self._sentence_length_params[1])
                 sl += random.uniform(-0.5, 0.5)
                 if sl < 0:
@@ -326,7 +327,6 @@ class LibriSpeechGenerator(object):
                 while (sentence_duration < sl_sr):
                     file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
-                    print(np.max(np.abs(audio_file)))
                     sentence_duration = self.add_file(file, audio_file, sentence_duration, sl_sr)
 
                 start = self.add_silence_or_overlap(speaker_turn, prev_speaker, running_length_sr, sl_sr, session_length_sr, prev_length_sr)
@@ -341,6 +341,6 @@ class LibriSpeechGenerator(object):
                 prev_speaker = speaker_turn
                 prev_length_sr = sl_sr
 
-            print(np.max(np.abs(array)))
+            array = array/(1.0*np.max(np.abs(array))) #normalize wav file
             sf.write(wavpath, array, self._sr)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
