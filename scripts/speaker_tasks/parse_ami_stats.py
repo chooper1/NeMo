@@ -25,7 +25,7 @@ This script parses a CMI file to extract statistics from the AMI dataset.
 """
 
 def read_cmi_files(directory_path):
-    onlyfiles = [f for f in os.listdir(directory_path) if os.path.isfile(join(directory_path, f))]
+    onlyfiles = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
     data = []
     for file in onlyfiles:
         with open(file, 'r', encoding='utf-8') as f:
