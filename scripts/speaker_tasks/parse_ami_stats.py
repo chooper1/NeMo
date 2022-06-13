@@ -34,7 +34,7 @@ def read_cmi(cmi):
 
 def main():
     input_filepath = args.input_filepath
-    list = read_cmi(cmi)
+    list = read_cmi(input_filepath)
     print(list)
 
 
