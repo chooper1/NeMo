@@ -334,9 +334,6 @@ class LibriSpeechGenerator(object):
                 new_entry = self._create_new_rttm_entry(start / self._sr, end / self._sr, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
 
-                print("running_length_sr: ", running_length_sr)
-                print("end: ", end)
-
                 running_length_sr = np.maximum(running_length_sr, end)
                 self._furthest_sample[speaker_turn] = running_length_sr
                 prev_speaker = speaker_turn
