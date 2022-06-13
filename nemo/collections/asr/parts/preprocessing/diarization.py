@@ -106,7 +106,7 @@ class LibriSpeechGenerator(object):
     def write_config(self, config_path):
         self._config_path = config_path
 
-        file = OmegaConf.create({"manifest_path": self._manifest_path,
+        conf = OmegaConf.create({"manifest_path": self._manifest_path,
                                 "sr": self._sr,
                                 "num_speakers": self._num_speakers,
                                 "session_length": self._session_length,
