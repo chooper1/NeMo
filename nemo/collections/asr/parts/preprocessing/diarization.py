@@ -44,9 +44,13 @@ class LibriSpeechGenerator(object):
         output_dir (str): output directory
         output_filename (str): output filename for the wav and rttm files
         sentence_length_params (list): k,p values for negative_binomial distribution
+                              initial values are from page 209 of
+                              https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents
         dominance_dist (str): same - same probability for each speakers
                               random - random probabilities for each speaker
         turn_prob (float): probability of switching speakers
+        mean_overlap (float): mean proportion of overlap to speaking time
+        mean_silence (float): mean proportion of silence to speaking time
     """
     def __init__(
         self,
@@ -56,9 +60,11 @@ class LibriSpeechGenerator(object):
         session_length=60,
         output_dir='output',
         output_filename='librispeech_diarization',
-        sentence_length_params = [2.81,0.1], #from https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents, p.209
+        sentence_length_params = [2.81,0.1],
         dominance_dist = "random",
         turn_prob = 0.9,
+        mean_overlap = 0.08,
+        mean_silence = 0.08,
     ):
         self._manifest_path = manifest_path
         self._sr = sr
@@ -68,14 +74,10 @@ class LibriSpeechGenerator(object):
         self._output_filename = output_filename
 
         self._sentence_length_params = sentence_length_params
-
-        #dominance distribution:
-        #same - same for each speaker
-        #rand - randomly distributed (pick num_speaker random uniform values)
         self._dominance_dist = dominance_dist
         self._turn_prob = turn_prob
-
-        #overlap/silence
+        self._mean_overlap = mean_overlap
+        self._mean_silence = mean_silence
 
         #internal params
         self._manifest = read_manifest(manifest_path)
@@ -109,6 +111,8 @@ class LibriSpeechGenerator(object):
         self._sentence_length_params = config["sentence_length_params"]
         self._dominance_dist = config["dominance_dist"]
         self._turn_prob = config["turn_prob"]
+        self._mean_overlap = config["mean_overlap"]
+        self._mean_silence = config["mean_silence"]
 
     def write_config(self, config_path):
         self._config_path = config_path
@@ -120,7 +124,9 @@ class LibriSpeechGenerator(object):
                                 "output_filename": self._output_filename,
                                 "sentence_length_params": self._sentence_length_params,
                                 "dominance_dist": self._dominance_dist,
-                                "turn_prob": self._turn_prob})
+                                "turn_prob": self._turn_prob,
+                                "mean_overlap": self._mean_overlap,
+                                "mean_silence": self._mean_silence})
         OmegaConf.save(config=conf, f=config_path)
 
     #randomly select speaker ids from loaded dict
@@ -221,7 +227,6 @@ class LibriSpeechGenerator(object):
 
             sentence_duration_sr += len(audio_file)
             return sentence_duration_sr
-
         elif max_sentence_duration_sr - sentence_duration_sr > 0.5*self._sr:
             #atleast 0.5 second remaining in sentence - use alignments to pad sentence
             remaining_duration = max_sentence_duration_sr - sentence_duration_sr
@@ -241,12 +246,17 @@ class LibriSpeechGenerator(object):
                     prev_dur = dur
             if prev_dur > 0:
                 self._sentence[sentence_duration_sr:sentence_duration_sr+prev_dur] = audio_file[:prev_dur]
-
             return max_sentence_duration_sr
-
         else:
             return max_sentence_duration_sr
 
+    def add_silence_or_overlap(speaker_turn, prev_speaker, start, end, session_length_sr):
+        if prev_speaker == speaker_turn or prev_speaker == None: #no overlap
+            overlap_percent = self._mean_overlap / (self._turn_prob)
+
+        #https://www.speech.kth.se/prod/publications/files/3418.pdf, p562 - dist'n of silence and overlap
+        #https://hal.archives-ouvertes.fr/hal-01836475/document, p2 - dist'n of overlap
+        #https://disi.unitn.it/~riccardi/papers2/CSL19-SpeechOverlapCategorization.pdf, p148 - dist'n of overlap
 
     #generate diarization session
     def generate_session(self, num_sessions=1):
@@ -302,14 +312,11 @@ class LibriSpeechGenerator(object):
                     sentence_duration = self.add_file(file, audio_file, sentence_duration, sl_sr)
 
                 start = running_length_sr
-                length = sl_sr
+                end = start+sl_sr
 
                 # add overlap (currently overlapping with some frequency and with a maximum percentage of overlap)
-                # also don't overlap same speaker
+                self.add_silence_or_overlap(speaker_turn, prev_speaker, start, end, session_length_sr)
 
-                #TODO also add silence
-
-                end = start+length
                 array[start:end] = self._sentence #audio_file[:length]
 
                 new_entry = self.create_new_rttm_entry(start/self._sr, end/self._sr, speaker_ids[speaker_turn])

@@ -54,9 +54,7 @@ def get_unaligned_examples(unaligned_path, dataset):
                 unaligned_file = l.split(" ")[0]
                 skip_files.append(unaligned_file)
             i+=1
-
     return skip_files
-
 
 def main():
     input_manifest_filepath = args.input_manifest_filepath
