@@ -24,7 +24,7 @@ random.seed(42)
 This script parses a CMI file to extract statistics from the AMI dataset.
 """
 
-def read_cmi(directory_path):
+def read_cmi_files(directory_path):
     onlyfiles = [f for f in listdir(directory_path) if isfile(join(directory_path, f))]
     data = []
     for file in onlyfiles:
