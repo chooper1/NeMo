@@ -213,13 +213,14 @@ class LibriSpeechGenerator(object):
         return speaker_turn
 
     # add audio file to current sentence
-    def _add_file(self, file, audio_file, sentence_duration_sr, max_sentence_duration_sr):
+    # TODO ensure session length is as desired (clip sentence length at end)
+    def _add_file(self, file, audio_file, sentence_duration, max_sentence_duration):
+        #get number of words
+        num_words = len([word for word in file['words'] if word != ""])
         # enough room to add the entire audio file
-        if sentence_duration_sr + len(audio_file) < max_sentence_duration_sr:
-            begin = sentence_duration_sr
-            end = sentence_duration_sr + len(audio_file)
-            self._sentence[begin:end] = audio_file
-
+        if num_words < max_sentence_duration - sentence_duration:
+            sentence_duration_sr = len(self._sentence)
+            np.append(self._sentence, audio_file)
             # combine text, words, alignments here
             if self._text != "":
                 self._text += " "
@@ -227,33 +228,27 @@ class LibriSpeechGenerator(object):
             self._words += file['words']
             for i in range(0, len(file['words'])):
                 self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
-            return end
-
-        # not enough room to add the entire audio file (but atleast 0.5 seconds left in the sentence)
-        elif max_sentence_duration_sr - sentence_duration_sr > 0.5 * self._sr:
-            # atleast 0.5 second remaining in sentence - use alignments to pad sentence
-            remaining_duration = max_sentence_duration_sr - sentence_duration_sr
-            dur = prev_dur = 0
-            for i in range(0, len(file['words'])):
-                dur = int(file['alignments'][i] * self._sr)
-                if dur > remaining_duration:
-                    break
-                else:
-                    word = file['words'][i]
-                    if self._text == "":
-                        self._text += word
-                    elif word != "":
-                        self._text += " " + word
-                    self._words.append(word)
-                    self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
-                    prev_dur = dur
-            # add audio clip up to the final alignment
-            if prev_dur > 0:
-                self._sentence[sentence_duration_sr : sentence_duration_sr + prev_dur] = audio_file[:prev_dur]
-            return max_sentence_duration_sr
+            return num_words
 
         else:
-            return max_sentence_duration_sr
+            remaining_duration = max_sentence_duration - sentence_duration
+            sentence_duration_sr = len(self._sentence)
+            i = 0
+            while i < remaining_duration:
+                dur = int(file['alignments'][i] * self._sr)
+                word = file['words'][i]
+                self._words.append(word)
+                self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
+                if word == "":
+                    continue
+                elif self._text == "":
+                    self._text += word
+                else:
+                    self._text += " " + word
+                i+=1
+            # add audio clip up to the final alignment
+            np.append(self._sentence, audio_file[:dur])
+            return num_words
 
     # returns new overlapped (or shifted) start position
     def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr):
@@ -306,35 +301,31 @@ class LibriSpeechGenerator(object):
                 # select speaker length
                 sl = np.random.negative_binomial(
                     self._sentence_length_params[0], self._sentence_length_params[1]
-                ) + random.uniform(-0.5, 0.5)
-                if sl < 0:
-                    sl = 0
-                sl_sr = int(sl * self._sr)
+                )
 
-                # ensure session length is as desired (clip sentence length at end)
-                if running_length_sr + sl_sr > session_length_sr:
-                    sl_sr = session_length_sr - running_length_sr
                 # only add if remaining length > 0.5 second
                 if session_length_sr - running_length_sr < 0.5 * self._sr:
                     break
 
                 # initialize sentence, text, words, alignments
-                self._sentence = np.zeros(sl_sr)
+                self._sentence = np.zeros(0)
                 self._text = ""
                 self._words = []
                 self._alignments = []
                 sentence_duration = 0
+
                 # build sentence
-                while sentence_duration < sl_sr:
+                while sentence_duration < s1:
                     file = self._load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
-                    sentence_duration = self._add_file(file, audio_file, sentence_duration, sl_sr)
+                    sentence_duration = self._add_file(file, audio_file, sentence_duration, s1)
 
+                length = len(self._sentence)
                 # add overlap or silence
                 start = self._add_silence_or_overlap(
-                    speaker_turn, prev_speaker, running_length_sr, sl_sr, session_length_sr, prev_length_sr
+                    speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
                 )
-                end = start + sl_sr
+                end = start + length
                 array[start:end] = self._sentence
 
                 new_entry = self._create_new_rttm_entry(start / self._sr, end / self._sr, speaker_ids[speaker_turn])
@@ -342,7 +333,10 @@ class LibriSpeechGenerator(object):
 
                 running_length_sr = np.maximum(running_length_sr, end)
                 prev_speaker = speaker_turn
-                prev_length_sr = sl_sr
+                prev_length_sr = length
+
+                print(running_length_sr)
+                print(session_length_sr)
 
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
             sf.write(wavpath, array, self._sr)

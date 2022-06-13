@@ -26,20 +26,26 @@ This script parses a CMI file to extract statistics from the AMI dataset.
 
 def read_cmi_files(directory_path):
     onlyfiles = [f for f in os.listdir(directory_path) if os.path.isfile(os.path.join(directory_path, f))]
-    data = []
+    data = {}
     for file in onlyfiles:
+        data[str(file)] = []
         with open(os.path.join(directory_path, file), 'r', encoding='utf-8') as f:
             for line in f:
-                data.append(line.strip('\n').split(' '))
+                data[str(file)].append(line.strip('\n').split(' '))
     return data
 
 def main():
     input_directory = args.input_directory
     list = read_cmi_files(input_directory)
-    print(list)
 
     #0 - file id, 1 - speaker id, 2 - start time, 3 - duration, 4 - word
     #assume break greater than one second is end of a sentence
+
+    #desired stats:
+    #   -distribution of sentence lengths (use plot to get k,p for nb distribution)
+    #   -speaker dominance
+    #   -overlap percentage
+    #   -silence percentage
 
 
 if __name__ == "__main__":
