@@ -324,11 +324,13 @@ class LibriSpeechGenerator(object):
 
                 length = len(self._sentence)
                 # add overlap or silence
-                start = self._add_silence_or_overlap(
-                    speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
-                )
+                # start = self._add_silence_or_overlap(
+                #     speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
+                # )
                 end = start + length
                 array[start:end] = self._sentence
+                print(length)
+                print(self._sentence)
 
                 new_entry = self._create_new_rttm_entry(start / self._sr, end / self._sr, speaker_ids[speaker_turn])
                 manifest_list.append(new_entry)
