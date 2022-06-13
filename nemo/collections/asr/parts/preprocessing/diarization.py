@@ -250,7 +250,7 @@ class LibriSpeechGenerator(object):
         else:
             return max_sentence_duration_sr
 
-    def add_silence_or_overlap(speaker_turn, prev_speaker, start, end, session_length_sr):
+    def add_silence_or_overlap(self, speaker_turn, prev_speaker, start, end, session_length_sr):
         if prev_speaker == speaker_turn or prev_speaker == None: #no overlap
             overlap_percent = self._mean_overlap / (self._turn_prob)
 
