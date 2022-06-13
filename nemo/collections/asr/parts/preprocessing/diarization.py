@@ -326,7 +326,7 @@ class LibriSpeechGenerator(object):
                 while (sentence_duration < sl_sr):
                     file = self.load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
-                    print(np.max(audio_file))
+                    print(np.max(np.abs(audio_file)))
                     sentence_duration = self.add_file(file, audio_file, sentence_duration, sl_sr)
 
                 start = self.add_silence_or_overlap(speaker_turn, prev_speaker, running_length_sr, sl_sr, session_length_sr, prev_length_sr)
@@ -341,6 +341,6 @@ class LibriSpeechGenerator(object):
                 prev_speaker = speaker_turn
                 prev_length_sr = sl_sr
 
-            np.max(array)
+            print(np.max(np.abs(array)))
             sf.write(wavpath, array, self._sr)
             labels_to_rttmfile(manifest_list, filename, self._output_dir)
