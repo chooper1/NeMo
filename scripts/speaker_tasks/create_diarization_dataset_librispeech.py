@@ -75,7 +75,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--sentence_length_params", help="k,p for nb distribution for sentence length", type=list, default=[2.81, 0.1]
     )
-    parser.add_argument("--dominance_dist", help="distribution of speaker dominance", type=int, default="random")
+    parser.add_argument("--dominance_dist", help="distribution of speaker dominance", type=str, default="random")
     parser.add_argument("--turn_prob", help="number of speakers", type=float, default=0.9)
     parser.add_argument("--mean_overlap", help="mean percentage of overlap", type=float, default=0.08)
     parser.add_argument("--mean_silence", help="mean percentage of silence", type=float, default=0.08)
