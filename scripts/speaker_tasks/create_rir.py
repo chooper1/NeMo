@@ -16,14 +16,13 @@ import argparse
 import os
 import random
 import shutil
-import numpy as np
-import numpy.matlib as matlib
 
 import librosa
+import numpy as np
+import numpy.matlib as matlib
 import soundfile as sf
-
-from gpuRIR import beta_SabineEstimation,att2t_SabineEstimator,t2n,simulateRIR
-from scipy.signal import convolve #note that scipy automatically uses fftconvolve if it is faster
+from gpuRIR import att2t_SabineEstimator, beta_SabineEstimation, simulateRIR, t2n
+from scipy.signal import convolve  # note that scipy automatically uses fftconvolve if it is faster
 
 random.seed(42)
 
@@ -32,27 +31,30 @@ This script creates a room impulse response using the gpuRIR library and then
 simulates the trajectory for a selected audio source in this room.
 """
 
+
 def main():
     # from the example: https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/example.py
     # parameter values explained here: https://github.com/DavidDiazGuerra/gpuRIR#simulatetrajectory
-    room_sz = [3,3,2.5]  # Size of the room [m]
+    room_sz = [3, 3, 2.5]  # Size of the room [m]
     nb_src = 2  # Number of sources
-    pos_src = np.array([[1,2.9,0.5],[1,2,0.5]]) # Positions of the sources ([m]
-    nb_rcv = 1 # Number of receivers
-    pos_rcv = np.array([[0.5,1,0.5]])	 # Position of the receivers [m]
-    orV_rcv = None # Vectors pointing in the same direction than the receivers (None assumes omnidirectional)
-    mic_pattern = "omni" # Receiver polar pattern
-    abs_weights = [0.9]*5+[0.5] # Absortion coefficient ratios of the walls
-    T60 = 1	 # Time for the RIR to reach 60dB of attenuation [s]
-    att_diff = 15.0	# Attenuation when start using the diffuse reverberation model [dB]
-    att_max = 60.0 # Attenuation at the end of the simulation [dB]
-    fs=16000.0 # Sampling frequency [Hz]
+    pos_src = np.array([[1, 2.9, 0.5], [1, 2, 0.5]])  # Positions of the sources ([m]
+    nb_rcv = 1  # Number of receivers
+    pos_rcv = np.array([[0.5, 1, 0.5]])  # Position of the receivers [m]
+    orV_rcv = None  # Vectors pointing in the same direction than the receivers (None assumes omnidirectional)
+    mic_pattern = "omni"  # Receiver polar pattern
+    abs_weights = [0.9] * 5 + [0.5]  # Absortion coefficient ratios of the walls
+    T60 = 1  # Time for the RIR to reach 60dB of attenuation [s]
+    att_diff = 15.0  # Attenuation when start using the diffuse reverberation model [dB]
+    att_max = 60.0  # Attenuation at the end of the simulation [dB]
+    fs = 16000.0  # Sampling frequency [Hz]
 
-    beta = beta_SabineEstimation(room_sz, T60, abs_weights=abs_weights) # Reflection coefficients
-    Tdiff= att2t_SabineEstimator(att_diff, T60) # Time to start the diffuse reverberation model [s]
-    Tmax = att2t_SabineEstimator(att_max, T60)	 # Time to stop the simulation [s]
-    nb_img = t2n( Tdiff, room_sz )	# Number of image sources in each dimension
-    RIR = simulateRIR(room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern)
+    beta = beta_SabineEstimation(room_sz, T60, abs_weights=abs_weights)  # Reflection coefficients
+    Tdiff = att2t_SabineEstimator(att_diff, T60)  # Time to start the diffuse reverberation model [s]
+    Tmax = att2t_SabineEstimator(att_max, T60)  # Time to stop the simulation [s]
+    nb_img = t2n(Tdiff, room_sz)  # Number of image sources in each dimension
+    RIR = simulateRIR(
+        room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern
+    )
 
     # from https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/room.py#2216
     # need to convolve individual audio sources with separate RIRs
@@ -61,11 +63,12 @@ def main():
     print(input_wav.shape)
 
     speaker_id = 0
-    print(RIR[0,speaker_id,:len(input_wav)].shape)
-    output_sound=convolve(input_wav,RIR[0,speaker_id,:len(input_wav)])
-    output_sound=output_sound/np.max(np.abs(output_sound)) #normalize to [-1,1]
+    print(RIR[0, speaker_id, : len(input_wav)].shape)
+    output_sound = convolve(input_wav, RIR[0, speaker_id, : len(input_wav)])
+    output_sound = output_sound / np.max(np.abs(output_sound))  # normalize to [-1,1]
     print(output_sound)
     sf.write("output.wav", output_sound, int(fs))
+
 
 if __name__ == "__main__":
     main()

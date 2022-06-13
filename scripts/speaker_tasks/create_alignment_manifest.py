@@ -13,10 +13,10 @@
 # limitations under the License.
 
 import argparse
+import json
 import os
 import random
 import shutil
-import json
 
 random.seed(42)
 
@@ -26,7 +26,7 @@ This script creates a manifest file containing word alignments.
 The alignments are obtained from: https://github.com/CorentinJ/librispeech-alignments
 """
 
-#from scripts/speaker_tasks/filelist_to_manifest.py - move function?
+# from scripts/speaker_tasks/filelist_to_manifest.py - move function?
 def read_manifest(manifest):
     data = []
     with open(manifest, 'r', encoding='utf-8') as f:
@@ -35,13 +35,15 @@ def read_manifest(manifest):
             data.append(item)
     return data
 
+
 def write_manifest(output_path, target_manifest):
     with open(output_path, "w") as outfile:
         for tgt in target_manifest:
             json.dump(tgt, outfile)
             outfile.write('\n')
 
-#get librispeech examples without alignments for the desired dataset
+
+# get librispeech examples without alignments for the desired dataset
 def get_unaligned_examples(unaligned_path, dataset):
     with open(unaligned_path, 'r', encoding='utf-8') as f:
         lines = f.readlines()
@@ -49,13 +51,14 @@ def get_unaligned_examples(unaligned_path, dataset):
         skip_files = []
         while i < len(lines):
             l = lines[i].strip('\n')
-            if (l[0] == '#'):
+            if l[0] == '#':
                 unaligned_dataset = l.split(" ")[1]
             elif unaligned_dataset == dataset:
                 unaligned_file = l.split(" ")[0]
                 skip_files.append(unaligned_file)
-            i+=1
+            i += 1
     return skip_files
+
 
 def main():
     input_manifest_filepath = args.input_manifest_filepath
@@ -65,11 +68,11 @@ def main():
 
     manifest = read_manifest(input_manifest_filepath)
     target_manifest = []
-    unaligned_path = os.path.join(base_alignment_path,"unaligned.txt")
+    unaligned_path = os.path.join(base_alignment_path, "unaligned.txt")
     unaligned = get_unaligned_examples(unaligned_path, dataset)
     num_unaligned = len(unaligned)
 
-    #separate indices to manage source/destination manifest to manage missing alignments
+    # separate indices to manage source/destination manifest to manage missing alignments
     src_i = 0
     target_i = 0
     while src_i < len(manifest):
@@ -116,11 +119,14 @@ def main():
         alignment_file.close()
     write_manifest(output_path, target_manifest)
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Alignment Manifest Creator")
     parser.add_argument("--input_manifest_filepath", help="path to input manifest file", type=str, required=True)
     parser.add_argument("--base_alignment_path", help="path to librispeech alignment dataset", type=str, required=True)
-    parser.add_argument("--dataset", help="which test/dev/training set to create a manifest for", type=str, required=True)
+    parser.add_argument(
+        "--dataset", help="which test/dev/training set to create a manifest for", type=str, required=True
+    )
     parser.add_argument("--output_path", help="path to output manifest file", type=str, required=True)
     args = parser.parse_args()
 
