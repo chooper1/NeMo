@@ -101,6 +101,7 @@ class LibriSpeechGenerator(object):
     def load_config(self, config_path):
         self._config_path = config_path
         config = OmegaConf.load(config_path)
+        print(config["manifest_path"])
         print(OmegaConf.to_yaml(config))
 
     def write_config(self, config_path):
@@ -114,8 +115,7 @@ class LibriSpeechGenerator(object):
                                 "output_filename": self._output_filename,
                                 "sentence_length_params": self._sentence_length_params,
                                 "dominance_dist": self._dominance_dist,
-                                "turn_prob": self._turn_prob,
-                                "sr": self._sr})
+                                "turn_prob": self._turn_prob})
         OmegaConf.save(config=conf, f=config_path)
 
     #randomly select speaker ids from loaded dict
