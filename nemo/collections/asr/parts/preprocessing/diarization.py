@@ -192,10 +192,14 @@ class LibriSpeechGenerator(object):
 
     # add new entry to dict (to write to output rttm file)
     def _create_new_rttm_entry(self, start, dur, speaker_id):
+        start = float(round(start,3))
+        dur = float(round(dur,3))
         return str(start) + ' ' + str(dur) + ' ' + str(speaker_id)
 
     # add new entry to dict (to write to output json file)
     def _create_new_json_entry(self, wav_filename, start, dur, speaker_id, text, rttm_filepath, ctm_filepath):
+        start = float(round(start,3))
+        dur = float(round(dur,3))
         dict = {"audio_filepath": wav_filename,
                 "offset": start,
                 "duration": dur,
@@ -210,10 +214,13 @@ class LibriSpeechGenerator(object):
     # add new entry to dict (to write to output ctm file)
     def _create_new_ctm_entry(self, session_name, speaker_id, start):
         arr = []
+        start = float(round(start,3))
         for i in range(0, len(self._words)):
             word = self._words[i]
-            if word != "":
-                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(self._alignments[i-1] + start) + ' ' + str(self._alignments[i] - self._alignments[i-1]) + ' ' + str(word) + ' ' + '0' + '\n'
+            align1 = float(round(self._alignments[i-1] + start, 3))
+            align2 = float(round(self._alignments[i] - self._alignments[i-1], 3))
+            if word != "": #note that using the current alignments the first word is always empty, so there is no error from indexing the array with i-1
+                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(align1) + ' ' + str(align2) + ' ' + str(word) + ' ' + '0' + '\n'
                 arr.append(text)
         return arr
 
@@ -291,21 +298,28 @@ class LibriSpeechGenerator(object):
         mean_silence_percent = self._mean_silence / (1 - self._overlap_prob)
 
         # overlap
-        if prev_speaker != speaker_turn and prev_speaker != None:
-            if np.random.uniform(0, 1) < overlap_prob:
-                overlap_percent = mean_overlap_percent + np.random.uniform(-mean_overlap_percent, mean_overlap_percent)
-                new_start = start - int(prev_length_sr * overlap_percent)
-                if (new_start < self._furthest_sample[speaker_turn]):
-                    new_start = self._furthest_sample[speaker_turn] #TODO add silence here?
+        if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
+            overlap_percent = mean_overlap_percent + np.random.uniform(-mean_overlap_percent, mean_overlap_percent)
+            new_start = start - int(prev_length_sr * overlap_percent)
+            #if same speaker ends up overlapping, pad with silence instead
+            if (new_start < self._furthest_sample[speaker_turn]):
+                new_start = self._furthest_sample[speaker_turn]
+                silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
+                silence_amount = int(length * silence_percent)
+                if new_start + length + silence_amount > session_length_sr:
+                    return session_length_sr - length
+                else:
+                    return new_start + silence_amount
+            else:
                 return new_start
-
-        # add silence
-        silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
-        silence_amount = int(length * silence_percent)
-        if start + length + silence_amount > session_length_sr:
-            return session_length_sr - length
         else:
-            return start + silence_amount
+            # add silence
+            silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
+            silence_amount = int(length * silence_percent)
+            if start + length + silence_amount > session_length_sr:
+                return session_length_sr - length
+            else:
+                return start + silence_amount
 
     """
     Generate diarization session
