@@ -20,7 +20,6 @@ import librosa
 import numpy as np
 import soundfile as sf
 from omegaconf import OmegaConf
-from scipy.stats import halfnorm
 
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
 
