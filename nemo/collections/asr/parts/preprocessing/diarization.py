@@ -55,7 +55,7 @@ class LibriSpeechGenerator(object):
         output_dir='output',
         output_filename='librispeech_diarization',
         sentence_length_params = [2.81,0.1], #from https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents, p.209
-        dominance_dist = "random",
+        dominance_dist = "same",
         turn_prob = 0.1,
     ):
         self._manifest_path = manifest_path
@@ -138,10 +138,11 @@ class LibriSpeechGenerator(object):
 
     #get dominance for each speaker
     def get_speaker_dominance(self):
-        if self._dominance_dist == "same":
-            dominance_factor = 1.0/self._num_speakers
-            dominance = [s*dominance_factor for s in range(1, self._num_speakers + 1)]
-        elif self._dominance_dist == "random":
+        dominance = None
+        # if self._dominance_dist == "same":
+        #     dominance_factor = 1.0/self._num_speakers
+        #     dominance = [s*dominance_factor for s in range(1, self._num_speakers + 1)]
+        if self._dominance_dist == "random":
             dominance = [random.uniform(0, 1) for s in range(0, self._num_speakers - 1)]
             dominance.sort()
             dominance.append(1)
