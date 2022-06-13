@@ -24,22 +24,27 @@ random.seed(42)
 This script parses a CMI file to extract statistics from the AMI dataset.
 """
 
-def read_cmi(cmi):
+def read_cmi(directory_path):
+    onlyfiles = [f for f in listdir(directory_path) if isfile(join(directory_path, f))]
     data = []
-    with open(cmi, 'r', encoding='utf-8') as f:
-        for line in f:
-            data.append(line.split(" "))
+    for file in onlyfiles:
+        with open(file, 'r', encoding='utf-8') as f:
+            for line in f:
+                data.append(line.strip('\n').split(' '))
     return data
 
 def main():
-    input_filepath = args.input_filepath
-    list = read_cmi(input_filepath)
+    input_filepath = args.input_directory
+    list = read_cmi_files(input_directory)
     print(list)
+
+    #0 - file id, 1 - speaker id, 2 - start time, 3 - duration, 4 - word
+    #assume break greater than one second is end of a sentence
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AMI CMI file parser")
-    parser.add_argument("--input_filepath", help="Path to input CMI file", type=str, required=True) #change eventually to loop over all files in directory
+    parser.add_argument("--input_directory", help="Path to input CMI file", type=str, required=True) #change eventually to loop over all files in directory
     args = parser.parse_args()
 
     main()
