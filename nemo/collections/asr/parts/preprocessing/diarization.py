@@ -41,10 +41,10 @@ class LibriSpeechGenerator(object):
         session_length (int): length of each diarization session (seconds)
         output_dir (str): output directory
         output_filename (str): output filename for the wav and rttm files
-        sentence_length_params
-        dominance_dist
-        turn_prob
-
+        sentence_length_params (list): k,p values for negative_binomial distribution
+        dominance_dist (str): same - same probability for each speakers
+                              random - random probabilities for each speaker
+        turn_prob (float): probability of switching speakers
     """
     def __init__(
         self,
@@ -56,7 +56,7 @@ class LibriSpeechGenerator(object):
         output_filename='librispeech_diarization',
         sentence_length_params = [2.81,0.1], #from https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents, p.209
         dominance_dist = "random",
-        turn_prob = 0.1,
+        turn_prob = 0.9,
     ):
         self._manifest_path = manifest_path
         self._sr = sr
@@ -155,9 +155,11 @@ class LibriSpeechGenerator(object):
         if self._dominance_dist == "same":
             speaker_turn = random.randint(0,self._num_speakers-1)
             if (prev_speaker != None):
-                if (random.uniform(0, 1) > self._turn_prob):
+                if (random.uniform(0, 1) < self._turn_prob):
                     while (speaker_turn == prev_speaker):
                         speaker_turn = random.randint(0, self._num_speakers-1)
+                else:
+                    speaker_turn = prev_speaker
 
         elif self._dominance_dist == "random":
             rand = random.uniform(0, 1)
@@ -166,12 +168,14 @@ class LibriSpeechGenerator(object):
                 speaker_turn += 1
 
             if (prev_speaker != None):
-                if (random.uniform(0, 1) > self._turn_prob):
+                if (random.uniform(0, 1) < self._turn_prob):
                     while (speaker_turn == prev_speaker):
                         rand = random.uniform(0, 1)
                         speaker_turn = 0
                         while rand > dominance[speaker_turn]:
                             speaker_turn += 1
+                else:
+                    speaker_turn = prev_speaker
 
         return speaker_turn
 
@@ -251,7 +255,7 @@ class LibriSpeechGenerator(object):
                 sl += random.uniform(-0.5, 0.5)
                 if sl < 0:
                     sl = 0
-                #inserting randomness
+                #inserting randomness into sentence length
                 sl_sr = int(sl*self._sr)
 
                 #ensure session length is as desired (clip sentence length at end)
