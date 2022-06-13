@@ -334,6 +334,7 @@ class LibriSpeechGenerator(object):
                     sentence_duration,sentence_duration_sr = self._add_file(file, audio_file, sentence_duration, sl, max_sentence_duration_sr)
 
                 length = len(self._sentence)
+                print("length: ", length)
                 # add overlap or silence
                 # start = self._add_silence_or_overlap(
                 #     speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
