@@ -168,18 +168,13 @@ class LibriSpeechGenerator(object):
     #get dominance for each speaker
     def get_speaker_dominance(self):
         dominance = None
-        # if self._dominance_dist == "same":
-        #     dominance_factor = 1.0/self._num_speakers
-        #     dominance = [s*dominance_factor for s in range(1, self._num_speakers + 1)]
         if self._dominance_dist == "random":
             dominance = [random.uniform(0, 1) for s in range(0, self._num_speakers - 1)]
             dominance.sort()
             dominance.append(1)
-        print(dominance)
         return dominance
 
     #sample from speakers
-    #TODO account for speaker dominance
     def get_speaker(self, prev_speaker, dominance):
         if self._dominance_dist == "same":
             speaker_turn = random.randint(0,self._num_speakers-1)
