@@ -324,6 +324,7 @@ class LibriSpeechGenerator(object):
                 self._words = []
                 self._alignments = []
                 sentence_duration = 0
+                sentence_duration_sr = 0
 
                 # build sentence
                 while sentence_duration < sl and sentence_duration_sr < max_sentence_duration_sr:
