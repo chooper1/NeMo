@@ -208,12 +208,12 @@ class LibriSpeechGenerator(object):
         return dict
 
     # add new entry to dict (to write to output ctm file)
-    def _create_new_ctm_entry(self, session_name, speaker_id):
+    def _create_new_ctm_entry(self, session_name, speaker_id, start):
         arr = []
         for i in range(0, len(self._words)):
             word = self._words[i]
             if word != "":
-                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(self._alignments[i-1]) + ' ' + str(self._alignments[i] - self._alignments[i-1]) + ' ' + str(word) + ' ' + '0' + '\n'
+                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(self._alignments[i-1] + start / self._sr) + ' ' + str(self._alignments[i] - self._alignments[i-1]) + ' ' + str(word) + ' ' + '0' + '\n'
                 arr.append(text)
         return arr
 
@@ -332,9 +332,10 @@ class LibriSpeechGenerator(object):
             ctm_list = []
             self._furthest_sample = [0 for n in range(0,self._num_speakers)]
 
-            rttm_filepath = os.path.join(self._output_dir, filename + '.rttm')
-            json_filepath = os.path.join(self._output_dir, filename + '.json')
-            ctm_filepath = os.path.join(self._output_dir, filename + '.ctm')
+            ROOT = os.getcwd()
+            rttm_filepath = os.path.join(ROOT, self._output_dir, filename + '.rttm')
+            json_filepath = os.path.join(ROOT, self._output_dir, filename + '.json')
+            ctm_filepath = os.path.join(ROOT, self._output_dir, filename + '.ctm')
 
             session_length_sr = int((self._session_length * self._sr))
             array = np.zeros(session_length_sr)
@@ -381,7 +382,7 @@ class LibriSpeechGenerator(object):
                     new_json_entry = self._create_new_json_entry(wavpath, start / self._sr, length / self._sr, speaker_ids[speaker_turn], self._text, rttm_filepath, ctm_filepath)
                     json_list.append(new_json_entry)
                 if 'c' in self._outputs:
-                    new_ctm_entries = self._create_new_ctm_entry(filename, speaker_ids[speaker_turn])
+                    new_ctm_entries = self._create_new_ctm_entry(filename, speaker_ids[speaker_turn], start / self._sr)
                     for entry in new_ctm_entries:
                         ctm_list.append(entry)
 
