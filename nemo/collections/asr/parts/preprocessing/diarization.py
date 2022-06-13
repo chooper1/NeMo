@@ -212,11 +212,8 @@ class LibriSpeechGenerator(object):
         arr = []
         for i in range(0, len(self._words)):
             word = self._words[i]
-            print('start: ', start / self._sr)
-            print('align: ', self._alignments[i-1])
-            print(str(self._alignments[i-1] + start / self._sr))
             if word != "":
-                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(self._alignments[i-1] + start / self._sr) + ' ' + str(self._alignments[i] - self._alignments[i-1]) + ' ' + str(word) + ' ' + '0' + '\n'
+                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(self._alignments[i-1] + start) + ' ' + str(self._alignments[i] - self._alignments[i-1]) + ' ' + str(word) + ' ' + '0' + '\n'
                 arr.append(text)
         return arr
 
