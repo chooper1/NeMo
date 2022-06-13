@@ -208,7 +208,7 @@ class LibriSpeechGenerator(object):
         return dict
 
     # add new entry to dict (to write to output ctm file)
-    def _create_new_ctm_entry(self, session_name, speaker_id, start):
+    def _create_new_ctm_entry(self, session_name, speaker_id):
         arr = []
         for i in range(0, len(self._words)):
             word = self._words[i]
@@ -392,7 +392,6 @@ class LibriSpeechGenerator(object):
 
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
             sf.write(wavpath, array, self._sr)
-
             if 'r' in self._outputs:
                 labels_to_rttmfile(rttm_list, filename, self._output_dir)
             if 'j' in self._outputs:
