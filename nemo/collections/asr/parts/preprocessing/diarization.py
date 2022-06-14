@@ -60,7 +60,7 @@ class LibriSpeechGenerator(object):
         sentence_length_params (list): k,p values for negative_binomial distribution
                               initial values are from page 209 of
                               https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents
-        alignments (str): input alignment format
+        alignment_type (str): input alignment format
                               end - end alignments passed
                               start - start alignments passed
                               tuple - alignments expected in (start,end) pairs
