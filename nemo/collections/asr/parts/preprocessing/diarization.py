@@ -81,7 +81,7 @@ class LibriSpeechGenerator(object):
         output_dir='output',
         output_filename='librispeech_diarization',
         sentence_length_params=[2.81, 0.1],
-        alignments='end',
+        alignment_type='end',
         dominance_dist="random",
         dominance_var=0.1,
         min_dominance=0.05,
@@ -98,7 +98,7 @@ class LibriSpeechGenerator(object):
         self._output_dir = output_dir
         self._output_filename = output_filename
         self._sentence_length_params = sentence_length_params
-        self._alignments = alignments
+        self._alignment_type = alignment_type
         self._dominance_var = dominance_var
         self._min_dominance = min_dominance
         self._turn_prob = turn_prob
@@ -131,7 +131,7 @@ class LibriSpeechGenerator(object):
         self._output_dir = config["output_dir"]
         self._output_filename = config["output_filename"]
         self._sentence_length_params = config["sentence_length_params"]
-        self._alignments = config["alignments"]
+        self._alignment_type = config["alignment_type"]
         self._dominance_var = config["dominance_var"]
         self._min_dominance = config["min_dominance"]
         self._turn_prob = config["turn_prob"]
@@ -156,7 +156,7 @@ class LibriSpeechGenerator(object):
                 "output_dir": self._output_dir,
                 "output_filename": self._output_filename,
                 "sentence_length_params": self._sentence_length_params,
-                "alignments": self._alignments,
+                "alignment_type": self._alignment_type,
                 "dominance_var": self._dominance_var,
                 "min_dominance": self._min_dominance,
                 "turn_prob": self._turn_prob,
@@ -231,13 +231,13 @@ class LibriSpeechGenerator(object):
         start = float(round(start,3))
         for i in range(0, len(self._words)):
             word = self._words[i]
-            if self._alignments == 'start':
+            if self._alignment_type == 'start':
                 align1 = float(round(self._alignments[i] + start, 3))
                 align2 = float(round(self._alignments[i+1] - self._alignments[i], 3))
-            elif self._alignments == 'end':
+            elif self._alignment_type == 'end':
                 align1 = float(round(self._alignments[i-1] + start, 3))
                 align2 = float(round(self._alignments[i] - self._alignments[i-1], 3))
-            elif self._alignments == 'tuple':
+            elif self._alignment_type == 'tuple':
                 align1 = float(round(self._alignments[i][0] + start, 3))
                 align2 = float(round(self._alignments[i][1] - self._alignments[i][0], 3))
             if word != "": #note that using the current alignments the first word is always empty, so there is no error from indexing the array with i-1
@@ -297,11 +297,11 @@ class LibriSpeechGenerator(object):
             word = file['words'][i]
             self._words.append(word)
 
-            if self._alignments == 'start':
+            if self._alignment_type == 'start':
                 self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
-            elif self._alignments == 'end':
+            elif self._alignment_type == 'end':
                 self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
-            elif self._alignments == 'tuple':
+            elif self._alignment_type == 'tuple':
                 start = int(sentence_duration_sr / self._sr) + file['alignments'][i][0]
                 end = int(sentence_duration_sr / self._sr) + file['alignments'][i][1]
                 self._alignments.append((start,end))
