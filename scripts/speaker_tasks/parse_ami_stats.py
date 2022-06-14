@@ -39,6 +39,43 @@ def main():
     input_directory = args.input_directory
     list = read_cmi_files(input_directory)
 
+    for key,meeting in list:
+        silence_time = 0
+        speaking_time = 0
+        overlap_time = 0
+        sentence_lengths = {}
+
+        prev_sp = None
+        sentence_length = 0
+        current_start = 0
+        prev_end = 0
+
+        for line in meeting:
+            sp = line[1]
+            start = line[2]
+            dur = line[3]
+            end = start+dur
+
+            sentence_length += 1
+
+            if prev_sp == sp:
+
+            else:
+                if not sentence_lengths.has_key(sentence_length):
+                    sentence_lengths[str(sentence_length)] = 0
+                sentence_lengths[str(sentence_length)] += 1
+                sentence_length = 0
+
+                silence_time += start - prev_end #what about overlap?
+
+            prev_end = end
+
+
+
+
+
+
+
     #0 - file id, 1 - speaker id, 2 - start time, 3 - duration, 4 - word
     #assume break greater than one second is end of a sentence
 
