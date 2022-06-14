@@ -59,8 +59,8 @@ class LibriSpeechGenerator(object):
         sentence_length_params (list): k,p values for negative_binomial distribution
                               initial values are from page 209 of
                               https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents
-        dominance_dist (str): same - same probability for each speakers
-                              random - random probabilities for each speaker
+        dominance_var (float): variance in speaker dominance
+        min_dominance (float): minimum percentage of speaking time per speaker
         turn_prob (float): probability of switching speakers
         mean_overlap (float): mean proportion of overlap to speaking time
         mean_silence (float): mean proportion of silence to speaking time
@@ -77,6 +77,8 @@ class LibriSpeechGenerator(object):
         output_filename='librispeech_diarization',
         sentence_length_params=[2.81, 0.1],
         dominance_dist="random",
+        dominance_var=0.1,
+        min_dominance=0.05,
         turn_prob=0.9,
         mean_overlap=0.08,
         mean_silence=0.08,
@@ -90,7 +92,8 @@ class LibriSpeechGenerator(object):
         self._output_dir = output_dir
         self._output_filename = output_filename
         self._sentence_length_params = sentence_length_params
-        self._dominance_dist = dominance_dist
+        self._dominance_var = dominance_var
+        self._min_dominance = min_dominance
         self._turn_prob = turn_prob
         self._mean_overlap = mean_overlap
         self._mean_silence = mean_silence
@@ -121,7 +124,8 @@ class LibriSpeechGenerator(object):
         self._output_dir = config["output_dir"]
         self._output_filename = config["output_filename"]
         self._sentence_length_params = config["sentence_length_params"]
-        self._dominance_dist = config["dominance_dist"]
+        self._dominance_var = config["dominance_var"]
+        self._min_dominance = config["min_dominance"]
         self._turn_prob = config["turn_prob"]
         self._mean_overlap = config["mean_overlap"]
         self._mean_silence = config["mean_silence"]
@@ -144,7 +148,8 @@ class LibriSpeechGenerator(object):
                 "output_dir": self._output_dir,
                 "output_filename": self._output_filename,
                 "sentence_length_params": self._sentence_length_params,
-                "dominance_dist": self._dominance_dist,
+                "dominance_var": self._dominance_var,
+                "min_dominance": self._min_dominance,
                 "turn_prob": self._turn_prob,
                 "mean_overlap": self._mean_overlap,
                 "mean_silence": self._mean_silence,
@@ -226,25 +231,28 @@ class LibriSpeechGenerator(object):
 
     # get dominance for each speaker
     def _get_speaker_dominance(self):
-        dominance = None
-        # set n-1 random thresholds to get a variable speaker distribution
-        if self._dominance_dist == "random":
-            dominance = [random.uniform(0, 1) for s in range(0, self._num_speakers - 1)]
-            dominance.sort()
-            dominance.append(1)
+        dominance_mean = 1.0/self._num_speakers
+        dominance = np.random.normal(loc=dominance_mean, scale=self._dominance_var, size=self._num_speakers)
+        for i in range(0,len(dominance)):
+          if dominance[i] < 0:
+            dominance[i] = 0
+        #normalize while maintaining minimum dominance
+        total = np.sum(dominance)
+        if total == 0:
+          for i in range(0,len(dominance)):
+            dominance[i]+=min_dominance
+        dominance = (dominance / total)*(1-self._min_dominance*self._num_speakers)
+        for i in range(0,len(dominance)):
+          dominance[i]+=self._min_dominance
+          if i > 0:
+            dominance[i] = dominance[i] + dominance[i-1]
         return dominance
 
     # get next speaker (accounting for turn probability, dominance distribution)
     def _get_next_speaker(self, prev_speaker, dominance):
         if random.uniform(0, 1) > self._turn_prob and prev_speaker != None:
             return prev_speaker
-
-        if self._dominance_dist == "same":
-            speaker_turn = random.randint(0, self._num_speakers - 1)
-            while speaker_turn == prev_speaker:
-                speaker_turn = random.randint(0, self._num_speakers - 1)
-
-        elif self._dominance_dist == "random":
+        else:
             rand = random.uniform(0, 1)
             speaker_turn = 0
             while rand > dominance[speaker_turn]:
@@ -254,8 +262,7 @@ class LibriSpeechGenerator(object):
                 speaker_turn = 0
                 while rand > dominance[speaker_turn]:
                     speaker_turn += 1
-
-        return speaker_turn
+            return speaker_turn
 
     # add audio file to current sentence
     def _add_file(self, file, audio_file, sentence_duration, max_sentence_duration, max_sentence_duration_sr):
