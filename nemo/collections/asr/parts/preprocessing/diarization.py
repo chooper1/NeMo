@@ -18,6 +18,7 @@ import random
 
 import librosa
 import numpy as np
+from scipy.stats import halfnorm
 import soundfile as sf
 from omegaconf import OmegaConf
 
@@ -306,11 +307,14 @@ class LibriSpeechGenerator(object):
 
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
-            overlap_percent = mean_overlap_percent + np.random.uniform(-mean_overlap_percent, mean_overlap_percent)
+            overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
+            if (overlap_percent > 1):
+                overlap_percent = 1
             new_start = start - int(prev_length_sr * overlap_percent)
             #if same speaker ends up overlapping, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
                 new_start = self._furthest_sample[speaker_turn]
+                #TODO should silence be added here
                 silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
                 silence_amount = int(length * silence_percent)
                 if new_start + length + silence_amount > session_length_sr:
@@ -321,7 +325,9 @@ class LibriSpeechGenerator(object):
                 return new_start
         else:
             # add silence
-            silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
+            silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
+            if (silence_percent > 1):
+                silence_percent = 1
             silence_amount = int(length * silence_percent)
             if start + length + silence_amount > session_length_sr:
                 return session_length_sr - length
