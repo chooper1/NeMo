@@ -424,7 +424,7 @@ class LibriSpeechGenerator(object):
                     speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
                 )
                 end = start + length
-                array[start:end] = self._sentence
+                array[start:end] += self._sentence
 
                 if 'r' in self._outputs:
                     new_rttm_entry = self._create_new_rttm_entry(start / self._sr, end / self._sr, speaker_ids[speaker_turn])
