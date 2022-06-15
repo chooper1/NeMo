@@ -41,10 +41,11 @@ def write_manifest(output_path, target_manifest):
             outfile.write('\n')
 
 def write_ctm(output_path, target_ctm):
+    target_ctm.sort(key=lambda y: y[0])
     with open(output_path, "w") as outfile:
-        for tgt in target_ctm:
+        for pair in target_ctm:
+            tgt = pair[1]
             outfile.write(tgt)
-
 
 class LibriSpeechGenerator(object):
     """
@@ -242,7 +243,7 @@ class LibriSpeechGenerator(object):
                 align2 = float(round(self._alignments[i][1] - self._alignments[i][0], 3))
             if word != "": #note that using the current alignments the first word is always empty, so there is no error from indexing the array with i-1
                 text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(align1) + ' ' + str(align2) + ' ' + str(word) + ' ' + '0' + '\n'
-                arr.append(text)
+                arr.append((align1, text))
         return arr
 
     # get dominance for each speaker
