@@ -42,11 +42,7 @@ def main():
     sentence_break_time = 1.0 #1 second
 
     for key,meeting in list:
-        silence_time = 0
-        speaking_time = 0
-        overlap_time = 0
         sentence_lengths = {}
-
         prev_sp = None
         sentence_length = 0
         current_start = 0
@@ -76,7 +72,31 @@ def main():
 
             prev_time_per_speaker[str(sp)] = prev_end = end
 
+        timeline = np.zeros(int(largest_end_time*100))
+
         for line in meeting:
+            sp = line[1]
+            start = int(float(line[2])*100)
+            dur = int(float(line[3])*100)
+            end = int((start+dur)*100)
+            timeline[start:end] += 1
+
+        speaking_time = np.sum(timeline > 0)
+        silence_time = len(timeline) - speaking_time
+        overlap_time = np.sum(timeline > 1)
+
+        silence_percent = silence_time / len(timeline)
+        overlap_percent = overlap_time / speaking_time
+
+        print('speaking_time: ', speaking_time)
+        print('silence_time: ', silence_time)
+        print('overlap_time: ', overlap_time)
+
+        print('silence_percent: ', silence_percent)
+        print('overlap_percent: ', overlap_percent)
+
+
+
 
 
 
