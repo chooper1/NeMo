@@ -284,7 +284,8 @@ class LibriSpeechGenerator(object):
         dominance = dominance / np.sum(dominance)
 
         for i in range(1,len(dominance)):
-          dominance[i] = dominance[i] + dominance[i-1]
+            dominance[i] = dominance[i] + dominance[i-1]
+        print('output dominance: ', dominance)
         return dominance
 
     # get next speaker (accounting for turn probability, dominance distribution)
