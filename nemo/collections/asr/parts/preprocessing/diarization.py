@@ -444,7 +444,7 @@ class LibriSpeechGenerator(object):
                 if max_sentence_duration_sr < 0.5 * self._sr and not enforce:
                     break
                 if enforce:
-                    max_sentence_duration_sr = ('inf')
+                    max_sentence_duration_sr = float('inf')
 
                 print(max_sentence_duration_sr)
 
