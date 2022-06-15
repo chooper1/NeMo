@@ -57,6 +57,7 @@ def main():
 
         current_sentence_lengths = {}
         prev_time_per_speaker = {}
+        dominance_per_speaker = {}
 
         largest_end_time = 0
 
@@ -77,12 +78,13 @@ def main():
                 if str(current_sentence_lengths[str(sp)]) not in total_sentence_lengths:
                     total_sentence_lengths[str(current_sentence_lengths[str(sp)])] = 0
                 total_sentence_lengths[str(current_sentence_lengths[str(sp)])] += 1
-                current_sentence_lengths[str(sp)] = 0
+                current_sentence_lengths[str(sp)] = 1 #start new sentence
             else:
                 #continue sentence
                 current_sentence_lengths[str(sp)] += 1
 
             prev_time_per_speaker[str(sp)] = end
+            dominance_per_speaker[str(sp)] += end - start
 
         timeline = np.zeros(int(largest_end_time*100))
 
@@ -102,6 +104,14 @@ def main():
 
         full_silence_percent.append(silence_percent)
         full_overlap_percent.append(overlap_percent)
+
+        total_dominance = 0
+        for k in dominance_per_speaker:
+            total_dominance += dominance_per_speaker[k]
+        for k in dominance_per_speaker:
+            dominance_per_speaker[k] = dominance_per_speaker[k] / total_dominance
+
+        print('dominance: ', dominance_per_speaker)
 
     print('full_silence_percent: ', np.mean(full_silence_percent))
     print('full_overlap_percent: ', np.mean(full_overlap_percent))
