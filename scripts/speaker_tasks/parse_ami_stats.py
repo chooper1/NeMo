@@ -44,6 +44,10 @@ def main():
 
     sentence_break_time = 1.0 #1 second
 
+    full_silence_percent = []
+    full_overlap_percent = []
+    total_sentence_lengths = {}
+
     for key in list:
         meeting = list[key]
         prev_sp = None
@@ -51,7 +55,6 @@ def main():
         current_start = 0
         prev_end = 0
 
-        total_sentence_lengths = {}
         current_sentence_lengths = {}
         prev_time_per_speaker = {}
 
@@ -97,19 +100,12 @@ def main():
         silence_percent = silence_time / len(timeline)
         overlap_percent = overlap_time / speaking_time
 
-        tsl = OrderedDict(sorted(total_sentence_lengths.items()))
+        full_silence_percent.append(silence_percent)
+        full_overlap_percent.append(overlap_percent)
 
-        print('speaking_time: ', speaking_time)
-        print('silence_time: ', silence_time)
-        print('overlap_time: ', overlap_time)
-
-        print('silence_percent: ', silence_percent)
-        print('overlap_percent: ', overlap_percent)
-
-        print('total_sentence_lengths: ', tsl)
-
-        #per speaker time
-        break
+    print('full_silence_percent: ', silence_percent)
+    print('full_overlap_percent: ', overlap_percent)
+    print('full_total_sentence_lengths: ', total_sentence_lengths)
 
 
 
