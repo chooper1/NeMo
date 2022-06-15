@@ -274,9 +274,10 @@ class LibriSpeechGenerator(object):
 
     def _increase_speaker_dominance(self, increase_percent, base_speaker_dominance, factor):
         dominance = base_speaker_dominance
+        print('base: ', dominance)
         for i in range(len(dominance)-1,0,-1):
             dominance[i] = dominance[i] - dominance[i-1]
-        print(dominance)
+        print('dominance: ', dominance)
         dominance = base_speaker_dominance
         for i in increase_percent:
             dominance[i] = dominance[i] * factor
