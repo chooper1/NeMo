@@ -19,6 +19,7 @@ import random
 import shutil
 
 import numpy as np
+from collections import OrderedDict
 
 random.seed(42)
 
@@ -89,17 +90,14 @@ def main():
             end = start+dur
             timeline[start:end] += 1
 
-            # print(start)
-            # print(end)
-
-        print(timeline)
-
         speaking_time = np.sum(timeline > 0)
         silence_time = len(timeline) - speaking_time
         overlap_time = np.sum(timeline > 1)
 
         silence_percent = silence_time / len(timeline)
         overlap_percent = overlap_time / speaking_time
+
+        tsl = OrderedDict(sorted(total_sentence_lengths.items()))
 
         print('speaking_time: ', speaking_time)
         print('silence_time: ', silence_time)
@@ -108,7 +106,7 @@ def main():
         print('silence_percent: ', silence_percent)
         print('overlap_percent: ', overlap_percent)
 
-        print('total_sentence_lengths: ', total_sentence_lengths)
+        print('total_sentence_lengths: ', tsl)
 
         #per speaker time
         break
