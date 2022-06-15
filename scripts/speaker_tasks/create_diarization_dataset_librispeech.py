@@ -39,6 +39,7 @@ def main():
     mean_overlap = args.mean_overlap
     mean_silence = args.mean_silence
     overlap_prob = args.overlap_prob
+    enforce_num_speakers = args.enforce_num_speakers
 
     if os.path.exists(output_dir):
         shutil.rmtree(output_dir)
@@ -76,6 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("--mean_overlap", help="mean percentage of overlap", type=float, default=0.08)
     parser.add_argument("--mean_silence", help="mean percentage of silence", type=float, default=0.08)
     parser.add_argument("--overlap_prob", help="probability of overlap", type=float, default=0.3)
+    parser.add_argument("--enforce_num_speakers", help="whether to enforce that all speakers are included", type=bool, default=False)
     args = parser.parse_args()
 
     main()
