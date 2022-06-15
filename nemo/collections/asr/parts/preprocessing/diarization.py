@@ -76,26 +76,7 @@ class LibriSpeechGenerator(object):
     """
 
     def __init__(self, cfg):
-        self._params = cfg#OmegaConf.load(cfg)
-        # self._cfg = cfg
-        print(self._params)
-        print('manifest_path: ', self._params.data_simulator.manifest_path)
-        self._manifest_path = manifest_path
-        self._sr = sr
-        self._num_speakers = num_speakers
-        self._session_length = session_length
-        self._output_dir = output_dir
-        self._output_filename = output_filename
-        self._sentence_length_params = sentence_length_params
-        self._alignment_type = alignment_type
-        self._dominance_var = dominance_var
-        self._min_dominance = min_dominance
-        self._turn_prob = turn_prob
-        self._mean_overlap = mean_overlap
-        self._mean_silence = mean_silence
-        self._overlap_prob = overlap_prob
-        self._outputs = outputs
-        self._enforce_num_speakers = enforce_num_speakers
+        self._params = cfg
 
         # internal params
         self._manifest = read_manifest(manifest_path)
@@ -107,70 +88,11 @@ class LibriSpeechGenerator(object):
         #keep track of furthest sample per speaker to avoid overlapping same speaker
         self._furthest_sample = [0 for n in range(0,num_speakers)]
 
-    # """
-    # Load all parameters from a config file (yaml)
-    #
-    # Args:
-    #     config_path (str): path to a valid config file
-    # """
-
-    # def load_config(self, config_path):
-    #     params = OmegaConf.load(config_path)
-    #     self._manifest_path = config["manifest_path"]
-    #     self._sr = config["sr"]
-    #     self._num_speakers = config["num_speakers"]
-    #     self._session_length = config["session_length"]
-    #     self._output_dir = config["output_dir"]
-    #     self._output_filename = config["output_filename"]
-    #     self._sentence_length_params = config["sentence_length_params"]
-    #     self._alignment_type = config["alignment_type"]
-    #     self._dominance_var = config["dominance_var"]
-    #     self._min_dominance = config["min_dominance"]
-    #     self._turn_prob = config["turn_prob"]
-    #     self._mean_overlap = config["mean_overlap"]
-    #     self._mean_silence = config["mean_silence"]
-    #     self._overlap_prob = config["overlap_prob"]
-    #     self._outputs = config["outputs"]
-    #     self._enforce_num_speakers = config["enforce_num_speakers"]
-
-    # """
-    # Write all parameters to a config file (yaml)
-    #
-    # Args:
-    #     config_path (str): target path for the config file
-    # """
-
-    # def write_config(self, config_path):
-    #     conf = OmegaConf.create(
-    #         {
-    #         "data_simulator":
-    #             {
-    #                 "manifest_path": self._manifest_path,
-    #                 "sr": self._sr,
-    #                 "num_speakers": self._num_speakers,
-    #                 "session_length": self._session_length,
-    #                 "output_dir": self._output_dir,
-    #                 "output_filename": self._output_filename,
-    #                 "sentence_length_params": self._sentence_length_params,
-    #                 "alignment_type": self._alignment_type,
-    #                 "dominance_var": self._dominance_var,
-    #                 "min_dominance": self._min_dominance,
-    #                 "turn_prob": self._turn_prob,
-    #                 "mean_overlap": self._mean_overlap,
-    #                 "mean_silence": self._mean_silence,
-    #                 "overlap_prob": self._overlap_prob,
-    #                 "outputs": self._outputs,
-    #                 "enforce_num_speakers": self._enforce_num_speakers
-    #             }
-    #         }
-    #     )
-    #     OmegaConf.save(config=conf, f=config_path)
-
     # randomly select speaker ids from loaded dict
     def _get_speaker_ids(self):
         speaker_ids = []
         s = 0
-        while s < self._num_speakers:
+        while s < self._params.data_simulator.num_speakers:
             file = self._manifest[random.randint(0, len(self._manifest) - 1)]
             fn = file['audio_filepath'].split('/')[-1]
             speaker_id = fn.split('-')[0]
@@ -183,7 +105,7 @@ class LibriSpeechGenerator(object):
     # get a list of the samples for the specified speakers
     def _get_speaker_samples(self, speaker_ids):
         speaker_lists = {}
-        for i in range(0, self._num_speakers):
+        for i in range(0, self._params.data_simulator.num_speakers):
             spid = speaker_ids[i]
             speaker_lists[str(spid)] = []
 
@@ -205,8 +127,8 @@ class LibriSpeechGenerator(object):
 
     # get dominance for each speaker
     def _get_speaker_dominance(self):
-        dominance_mean = 1.0/self._num_speakers
-        dominance = np.random.normal(loc=dominance_mean, scale=self._dominance_var, size=self._num_speakers)
+        dominance_mean = 1.0/self._params.data_simulator.num_speakers
+        dominance = np.random.normal(loc=dominance_mean, scale=self._params.data_simulator.dominance_var, size=self._params.data_simulator.num_speakers)
         for i in range(0,len(dominance)):
           if dominance[i] < 0:
             dominance[i] = 0
@@ -215,9 +137,9 @@ class LibriSpeechGenerator(object):
         if total == 0:
           for i in range(0,len(dominance)):
             dominance[i]+=min_dominance
-        dominance = (dominance / total)*(1-self._min_dominance*self._num_speakers)
+        dominance = (dominance / total)*(1-self._params.data_simulator.min_dominance*self._params.data_simulator.num_speakers)
         for i in range(0,len(dominance)):
-          dominance[i]+=self._min_dominance
+          dominance[i]+=self._params.data_simulator.min_dominance
           if i > 0:
             dominance[i] = dominance[i] + dominance[i-1]
         return dominance
@@ -235,7 +157,7 @@ class LibriSpeechGenerator(object):
 
     # get next speaker (accounting for turn probability, dominance distribution)
     def _get_next_speaker(self, prev_speaker, dominance):
-        if random.uniform(0, 1) > self._turn_prob and prev_speaker != None:
+        if random.uniform(0, 1) > self._params.data_simulator.turn_prob and prev_speaker != None:
             return prev_speaker
         else:
             rand = random.uniform(0, 1)
@@ -259,20 +181,20 @@ class LibriSpeechGenerator(object):
 
         #ensure the desired number of words are added and the length of the output session isn't exceeded
         while (nw < remaining_duration and dur_sr < remaining_duration_sr and i < len(file['words'])):
-            dur_sr = int(file['alignments'][i] * self._sr)
+            dur_sr = int(file['alignments'][i] * self._params.data_simulator.sr)
             if dur_sr > remaining_duration_sr:
                 break
 
             word = file['words'][i]
             self._words.append(word)
 
-            if self._alignment_type == 'start':
-                self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
-            elif self._alignment_type == 'end':
-                self._alignments.append(int(sentence_duration_sr / self._sr) + file['alignments'][i])
-            elif self._alignment_type == 'tuple':
-                start = int(sentence_duration_sr / self._sr) + file['alignments'][i][0]
-                end = int(sentence_duration_sr / self._sr) + file['alignments'][i][1]
+            if self._params.data_simulator.alignment_type == 'start':
+                self._alignments.append(int(sentence_duration_sr / self._params.data_simulator.sr) + file['alignments'][i])
+            elif self._params.data_simulator.alignment_type == 'end':
+                self._alignments.append(int(sentence_duration_sr / self._params.data_simulator.sr) + file['alignments'][i])
+            elif self._params.data_simulator.alignment_type == 'tuple':
+                start = int(sentence_duration_sr / self._params.data_simulator.sr) + file['alignments'][i][0]
+                end = int(sentence_duration_sr / self._params.data_simulator.sr) + file['alignments'][i][1]
                 self._alignments.append((start,end))
 
             if word == "":
@@ -294,9 +216,9 @@ class LibriSpeechGenerator(object):
 
     # returns new overlapped (or shifted) start position
     def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr, enforce):
-        overlap_prob = self._overlap_prob / (self._turn_prob)  # accounting for not overlapping the same speaker
-        mean_overlap_percent = self._mean_overlap / self._overlap_prob
-        mean_silence_percent = self._mean_silence / (1 - self._overlap_prob)
+        overlap_prob = self._params.data_simulator.overlap_prob / (self._params.data_simulator.turn_prob)  # accounting for not overlapping the same speaker
+        mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
+        mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
 
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
@@ -343,7 +265,7 @@ class LibriSpeechGenerator(object):
                 "duration": dur,
                 "label": speaker_id,
                 "text": text,
-                "num_speakers": self._num_speakers,
+                "num_speakers": self._params.data_simulator.num_speakers,
                 "rttm_filepath": rttm_filepath,
                 "ctm_filepath": ctm_filepath,
                 "uem_filepath": None}
@@ -355,13 +277,13 @@ class LibriSpeechGenerator(object):
         start = float(round(start,3))
         for i in range(0, len(self._words)):
             word = self._words[i]
-            if self._alignment_type == 'start':
+            if self._params.data_simulator.alignment_type == 'start':
                 align1 = float(round(self._alignments[i] + start, 3))
                 align2 = float(round(self._alignments[i+1] - self._alignments[i], 3))
-            elif self._alignment_type == 'end':
+            elif self._params.data_simulator.alignment_type == 'end':
                 align1 = float(round(self._alignments[i-1] + start, 3))
                 align2 = float(round(self._alignments[i] - self._alignments[i-1], 3))
-            elif self._alignment_type == 'tuple':
+            elif self._params.data_simulator.alignment_type == 'tuple':
                 align1 = float(round(self._alignments[i][0] + start, 3))
                 align2 = float(round(self._alignments[i][1] - self._alignments[i][0], 3))
             if word != "": #note that using the current alignments the first word is always empty, so there is no error from indexing the array with i-1
@@ -384,8 +306,8 @@ class LibriSpeechGenerator(object):
             base_speaker_dominance = np.copy(speaker_dominance)
             speaker_lists = self._get_speaker_samples(speaker_ids)  # get list of samples per speaker
 
-            filename = self._output_filename + f"_{i}"
-            wavpath = os.path.join(self._output_dir, filename + '.wav')
+            filename = self._params.data_simulator.output_filename + f"_{i}"
+            wavpath = os.path.join(self._params.data_simulator.output_dir, filename + '.wav')
             speaker_turn = 0  # assume alternating between speakers 1 & 2
             running_length_sr = 0  # starting point for each sentence
             prev_length_sr = 0  # for overlap
@@ -394,29 +316,29 @@ class LibriSpeechGenerator(object):
             rttm_list = []
             json_list = []
             ctm_list = []
-            self._furthest_sample = [0 for n in range(0,self._num_speakers)]
+            self._furthest_sample = [0 for n in range(0,self._params.data_simulator.num_speakers)]
 
             #hold enforce until all speakers have spoken
             enforce_counter = 2
             enforce_time = random.uniform(0.25, 0.75)
-            if self._enforce_num_speakers:
+            if self._params.data_simulator.enforce_num_speakers:
                 enforce = True
             else:
                 enforce = False
 
             ROOT = os.getcwd()
-            rttm_filepath = os.path.join(ROOT, self._output_dir, filename + '.rttm')
-            json_filepath = os.path.join(ROOT, self._output_dir, filename + '.json')
-            ctm_filepath = os.path.join(ROOT, self._output_dir, filename + '.ctm')
+            rttm_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.rttm')
+            json_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.json')
+            ctm_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.ctm')
 
-            session_length_sr = int((self._session_length * self._sr))
+            session_length_sr = int((self._params.data_simulator.session_length * self._params.data_simulator.sr))
             array = np.zeros(session_length_sr)
 
             while running_length_sr < session_length_sr or enforce:
                 #enforce num_speakers
                 if running_length_sr > enforce_time*session_length_sr and enforce:
                     increase_percent = []
-                    for i in range(0,self._num_speakers):
+                    for i in range(0,self._params.data_simulator.num_speakers):
                         if self._furthest_sample[i] == 0:
                             increase_percent.append(i)
                     #ramp up enforce counter until speaker is sampled, then reset once all speakers have spoken
@@ -433,12 +355,12 @@ class LibriSpeechGenerator(object):
 
                 # select speaker length
                 sl = np.random.negative_binomial(
-                    self._sentence_length_params[0], self._sentence_length_params[1]
+                    self._params.data_simulator.sentence_length_params[0], self._params.data_simulator.sentence_length_params[1]
                 )
                 max_sentence_duration_sr = session_length_sr - running_length_sr
 
                 # only add if remaining length > 0.5 second
-                if max_sentence_duration_sr < 0.5 * self._sr and not enforce:
+                if max_sentence_duration_sr < 0.5 * self._params.data_simulator.sr and not enforce:
                     break
                 if enforce:
                     max_sentence_duration_sr = float('inf')
@@ -453,7 +375,7 @@ class LibriSpeechGenerator(object):
                 # build sentence
                 while sentence_duration < sl and sentence_duration_sr < max_sentence_duration_sr:
                     file = self._load_speaker_sample(speaker_lists, speaker_ids, speaker_turn)
-                    audio_file, sr = librosa.load(file['audio_filepath'], sr=self._sr)
+                    audio_file, sr = librosa.load(file['audio_filepath'], sr=self._params.data_simulator.sr)
                     sentence_duration,sentence_duration_sr = self._add_file(file, audio_file, sentence_duration, sl, max_sentence_duration_sr)
 
                 length = len(self._sentence)
@@ -465,14 +387,14 @@ class LibriSpeechGenerator(object):
                     array = np.pad(array, (0, end - len(array)))
                 array[start:end] += self._sentence
 
-                if 'r' in self._outputs:
-                    new_rttm_entry = self._create_new_rttm_entry(start / self._sr, end / self._sr, speaker_ids[speaker_turn])
+                if 'r' in self._params.data_simulator.outputs:
+                    new_rttm_entry = self._create_new_rttm_entry(start / self._params.data_simulator.sr, end / self._params.data_simulator.sr, speaker_ids[speaker_turn])
                     rttm_list.append(new_rttm_entry)
-                if 'j' in self._outputs:
-                    new_json_entry = self._create_new_json_entry(wavpath, start / self._sr, length / self._sr, speaker_ids[speaker_turn], self._text, rttm_filepath, ctm_filepath)
+                if 'j' in self._params.data_simulator.outputs:
+                    new_json_entry = self._create_new_json_entry(wavpath, start / self._params.data_simulator.sr, length / self._params.data_simulator.sr, speaker_ids[speaker_turn], self._text, rttm_filepath, ctm_filepath)
                     json_list.append(new_json_entry)
-                if 'c' in self._outputs:
-                    new_ctm_entries = self._create_new_ctm_entry(filename, speaker_ids[speaker_turn], start / self._sr)
+                if 'c' in self._params.data_simulator.outputs:
+                    new_ctm_entries = self._create_new_ctm_entry(filename, speaker_ids[speaker_turn], start / self._params.data_simulator.sr)
                     for entry in new_ctm_entries:
                         ctm_list.append(entry)
 
@@ -483,13 +405,13 @@ class LibriSpeechGenerator(object):
 
             k = np.sum(self._furthest_sample == 0)
             if k != 0:
-                warnings.warn(f"{self._num_speakers-k} speakers were included in the clip instead of the requested amount of {self._num_speakers}")
+                warnings.warn(f"{self._params.data_simulator.num_speakers-k} speakers were included in the clip instead of the requested amount of {self._params.data_simulator.num_speakers}")
 
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
-            sf.write(wavpath, array, self._sr)
-            if 'r' in self._outputs:
-                labels_to_rttmfile(rttm_list, filename, self._output_dir)
-            if 'j' in self._outputs:
+            sf.write(wavpath, array, self._params.data_simulator.sr)
+            if 'r' in self._params.data_simulator.outputs:
+                labels_to_rttmfile(rttm_list, filename, self._params.data_simulator.output_dir)
+            if 'j' in self._params.data_simulator.outputs:
                 write_manifest(json_filepath, json_list)
-            if 'c' in self._outputs:
+            if 'c' in self._params.data_simulator.outputs:
                 write_ctm(ctm_filepath, ctm_list)
