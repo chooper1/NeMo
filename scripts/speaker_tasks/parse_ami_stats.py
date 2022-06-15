@@ -44,11 +44,13 @@ def main():
 
     for key in list:
         meeting = list[key]
-        sentence_lengths = {}
         prev_sp = None
         sentence_length = 0
         current_start = 0
         prev_end = 0
+
+        total_sentence_lengths = {}
+        current_sentence_lengths = {}
         prev_time_per_speaker = {}
 
         largest_end_time = 0
@@ -62,17 +64,20 @@ def main():
             if(end > largest_end_time):
                 largest_end_time = end
 
-            sentence_length += 1
+            if str(sp) not in prev_time_per_speaker:
+                prev_time_per_speaker[str(sp)] = end
+                current_sentence_lengths[str(sp)] = 1
+            elif start - prev_time_per_speaker[str(sp)] > sentence_break_time:
+                #break sentence
+                if not total_sentence_lengths.has_key(current_sentence_lengths[str(sp)]):
+                    total_sentence_lengths[str(current_sentence_lengths[str(sp)])] = 0
+                total_sentence_lengths[str(current_sentence_lengths[str(sp)])] += 1
+                current_sentence_lengths[str(sp)] = 0
+            else:
+                #continue sentence
+                current_sentence_lengths[str(sp)] += 1
 
-            #deal with overlap not breaking up sentence
-            if prev_sp != sp and start - prev_time_per_speaker[str(sp)] > sentence_break_time:
-                if not sentence_lengths.has_key(sentence_length):
-                    sentence_lengths[str(sentence_length)] = 0
-                sentence_lengths[str(sentence_length)] += 1
-                sentence_length = 0
-                silence_time += start - prev_end #what about overlap?
-
-            prev_time_per_speaker[str(sp)] = prev_end = end
+            prev_time_per_speaker[str(sp)] = end
 
         timeline = np.zeros(int(largest_end_time*100))
 
@@ -96,6 +101,11 @@ def main():
 
         print('silence_percent: ', silence_percent)
         print('overlap_percent: ', overlap_percent)
+
+        print('total_sentence_lengths: ', total_sentence_lengths)
+
+        #per speaker time
+        break
 
 
 
