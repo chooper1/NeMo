@@ -488,6 +488,7 @@ class LibriSpeechGenerator(object):
             for i in range(0,len(self._furthest_sample)):
                 if self._furthest_sample[i] == 0:
                     i += 1
+            print(i)
             if i != 0:
                 warnings.warn(f"{self._num_speakers-i} speakers were included in the clip instead of the requested amount of {self._num_speakers}")
 
