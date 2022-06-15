@@ -18,6 +18,8 @@ import os
 import random
 import shutil
 
+import numpy as np
+
 random.seed(42)
 
 """
