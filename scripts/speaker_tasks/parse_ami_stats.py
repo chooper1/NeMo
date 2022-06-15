@@ -86,11 +86,11 @@ def main():
             sp = line[1]
             start = int(float(line[2])*100)
             dur = int(float(line[3])*100)
-            end = int((start+dur)*100)
+            end = start+dur
             timeline[start:end] += 1
 
-            print(start)
-            print(end)
+            # print(start)
+            # print(end)
 
         print(timeline)
 
