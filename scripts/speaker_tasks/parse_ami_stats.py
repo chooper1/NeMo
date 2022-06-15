@@ -73,6 +73,7 @@ def main():
             if str(sp) not in prev_time_per_speaker:
                 prev_time_per_speaker[str(sp)] = end
                 current_sentence_lengths[str(sp)] = 1
+                dominance_per_speaker[str(sp)] = 0
             elif start - prev_time_per_speaker[str(sp)] > sentence_break_time:
                 #break sentence
                 if str(current_sentence_lengths[str(sp)]) not in total_sentence_lengths:
