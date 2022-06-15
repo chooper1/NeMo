@@ -33,7 +33,8 @@ def main():
     session_length = args.session_length
     num_speakers = args.num_speakers
     output_filename = args.output_filename
-    sentence_length_params = args.sentence_length_params
+    sentence_length_k = args.sentence_length_k
+    sentence_length_p = args.sentence_length_p
     dominance_var = args.dominance_var
     min_dominance = args.min_dominance
     turn_prob = args.turn_prob
@@ -54,7 +55,7 @@ def main():
         session_length=session_length,
         output_dir=output_dir,
         output_filename=output_filename,
-        sentence_length_params=sentence_length_params,
+        sentence_length_params=[sentence_length_k, sentence_length_p],
         dominance_var=dominance_var,
         min_dominance=min_dominance,
         turn_prob=turn_prob,
@@ -76,7 +77,8 @@ if __name__ == "__main__":
     parser.add_argument("--num_sessions", help="number of diarization sessions", type=int, default=1)
     parser.add_argument("--session_length", help="length of each diarization session (seconds)", type=int, default=20)
     parser.add_argument("--num_speakers", help="number of speakers", type=int, default=2)
-    parser.add_argument("--sentence_length_params", help="k,p for nb distribution for sentence length", type=list, default=[2.81, 0.1])
+    parser.add_argument("--sentence_length_k", help="k for nb distribution for sentence length", type=float, default=2.81)
+    parser.add_argument("--sentence_length_p", help="p for nb distribution for sentence length", type=float, default=0.1)
     parser.add_argument("--dominance_var", help="distribution of speaker dominance", type=float, default=0.1)
     parser.add_argument("--min_dominance", help="minimum dominance", type=float, default=0.05)
     parser.add_argument("--turn_prob", help="number of speakers", type=float, default=0.9)

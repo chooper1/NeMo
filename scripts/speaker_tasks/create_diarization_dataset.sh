@@ -10,7 +10,8 @@ python create_diarization_dataset_librispeech.py \
   --num_sessions 1 \
   --num_speakers 3 \
   --session_length 300 \
-  --sentence_length_params 2.81 0.1 \
+  --sentence_length_k 2.81 \
+  --sentence_length_p 0.1 \
   --dominance_var 0.1 \
   --min_dominance 0.05 \
   --turn_prob 0.9 \
@@ -20,3 +21,4 @@ python create_diarization_dataset_librispeech.py \
   --outputs rjc
 
 # note: --enforce_num_speakers is store_true
+# also note:
