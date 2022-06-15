@@ -103,9 +103,8 @@ def main():
         full_silence_percent.append(silence_percent)
         full_overlap_percent.append(overlap_percent)
 
-    print('full_silence_percent: ', silence_percent)
-    print('overlap_percent: ', overlap_percent)
-    print('full_overlap_percent: ', overlap_percent)
+    print('full_silence_percent: ', np.mean(full_silence_percent))
+    print('full_overlap_percent: ', np.mean(full_overlap_percent))
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
 
