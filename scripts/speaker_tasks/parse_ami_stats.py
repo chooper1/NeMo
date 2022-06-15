@@ -146,28 +146,18 @@ def main():
     print('full_num_speakers: ', total_num_speakers)
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
+    #collected stats:
+    #   -sentence_length_params (must fit to sentence length dist'n)
+    #   -dominance_var
+    #   -turn_prob
+    #   -overlap_prob
+    #   -mean_overlap
+    #   -mean_silence
 
-
-
-
-
-
-
-
-
-    #0 - file id, 1 - speaker id, 2 - start time, 3 - duration, 4 - word
-    #assume break greater than one second is end of a sentence
-
-    #desired stats:
-    #   -sentence_length_params=[2.81, 0.1]
-    #   -dominance_var=0.1
-    #   -turn_prob=0.9
-    #   -overlap_prob=0.3
-    #   -mean_overlap=0.08
+    #TODO:
+    #   -overlap_prob
     #   -dist'n of overlap
-    #   -mean_silence=0.08
     #   -dist'n of silence
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AMI CMI file parser")

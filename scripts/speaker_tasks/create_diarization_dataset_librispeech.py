@@ -34,11 +34,13 @@ def main():
     num_speakers = args.num_speakers
     output_filename = args.output_filename
     sentence_length_params = args.sentence_length_params
-    dominance_dist = args.dominance_dist
+    dominance_var = args.dominance_var
+    min_dominance = args.min_dominance
     turn_prob = args.turn_prob
     mean_overlap = args.mean_overlap
     mean_silence = args.mean_silence
     overlap_prob = args.overlap_prob
+    outputs = args.outputs
     enforce_num_speakers = args.enforce_num_speakers
 
     if os.path.exists(output_dir):
@@ -48,16 +50,18 @@ def main():
     lg = LibriSpeechGenerator(
         manifest_path=input_manifest_filepath,
         sr=16000,
-        output_dir=output_dir,
-        session_length=session_length,
         num_speakers=num_speakers,
+        session_length=session_length,
+        output_dir=output_dir,
         output_filename=output_filename,
         sentence_length_params=sentence_length_params,
-        dominance_dist=dominance_dist,
+        dominance_var=dominance_var,
+        min_dominance=min_dominance,
         turn_prob=turn_prob,
         mean_overlap=mean_overlap,
         mean_silence=mean_silence,
         overlap_prob=overlap_prob,
+        outputs=outputs,
         enforce_num_speakers=enforce_num_speakers,
     )
 
@@ -73,11 +77,13 @@ if __name__ == "__main__":
     parser.add_argument("--session_length", help="length of each diarization session (seconds)", type=int, default=20)
     parser.add_argument("--num_speakers", help="number of speakers", type=int, default=2)
     parser.add_argument("--sentence_length_params", help="k,p for nb distribution for sentence length", type=list, default=[2.81, 0.1])
-    parser.add_argument("--dominance_dist", help="distribution of speaker dominance", type=str, default="random")
+    parser.add_argument("--dominance_var", help="distribution of speaker dominance", type=str, default="random")
+    parser.add_argument("--min_dominance", help="minimum dominance", type=float, default=0.05)
     parser.add_argument("--turn_prob", help="number of speakers", type=float, default=0.9)
     parser.add_argument("--mean_overlap", help="mean percentage of overlap", type=float, default=0.08)
     parser.add_argument("--mean_silence", help="mean percentage of silence", type=float, default=0.08)
     parser.add_argument("--overlap_prob", help="probability of overlap", type=float, default=0.3)
+    parser.add_argument("--outputs", help="which file types to output", type=str, default="rjc")
     parser.add_argument("--enforce_num_speakers", help="whether to enforce that all speakers are included", action='store_true', default=False)
     args = parser.parse_args()
 
