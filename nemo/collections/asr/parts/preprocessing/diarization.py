@@ -90,7 +90,8 @@ class LibriSpeechGenerator(object):
         mean_overlap=0.08,
         mean_silence=0.08,
         overlap_prob=0.3,
-        outputs = "rjc"
+        outputs = "rjc",
+        enforce_num_speakers = False
     ):
         self._manifest_path = manifest_path
         self._sr = sr
@@ -107,6 +108,7 @@ class LibriSpeechGenerator(object):
         self._mean_silence = mean_silence
         self._overlap_prob = overlap_prob
         self._outputs = outputs
+        self._enforce_num_speakers = enforce_num_speakers
 
         # internal params
         self._manifest = read_manifest(manifest_path)
@@ -139,6 +141,8 @@ class LibriSpeechGenerator(object):
         self._mean_overlap = config["mean_overlap"]
         self._mean_silence = config["mean_silence"]
         self._overlap_prob = config["overlap_prob"]
+        self._outputs = config["outputs"]
+        self._enforce_num_speakers = config["enforce_num_speakers"]
 
     """
     Write all parameters to a config file (yaml)
@@ -164,6 +168,8 @@ class LibriSpeechGenerator(object):
                 "mean_overlap": self._mean_overlap,
                 "mean_silence": self._mean_silence,
                 "overlap_prob": self._overlap_prob,
+                "outputs": self._outputs,
+                "enforce_num_speakers": self._enforce_num_speakers
             }
         )
         OmegaConf.save(config=conf, f=config_path)
@@ -359,6 +365,12 @@ class LibriSpeechGenerator(object):
             else:
                 return start + silence_amount
 
+    def increase_speaker_dominance(increase_percent, base_speaker_dominance, factor):
+        dominance = base_speaker_dominance
+        for i in increase_percent:
+            dominance[i] = dominance[i] * factor
+        return dominance / np.sum(dominance)
+
     """
     Generate diarization session
 
@@ -369,7 +381,7 @@ class LibriSpeechGenerator(object):
     def generate_session(self, num_sessions=1):
         for i in range(0, num_sessions):
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
-            speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
+            speaker_dominance = base_speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
             speaker_lists = self._get_speaker_samples(speaker_ids)  # get list of samples per speaker
 
             filename = self._output_filename + f"_{i}"
@@ -384,6 +396,14 @@ class LibriSpeechGenerator(object):
             ctm_list = []
             self._furthest_sample = [0 for n in range(0,self._num_speakers)]
 
+            #hold enforce until all speakers have spoken
+            enforce_counter = 2
+            enforce_time = random.uniform(0.5, 0.75)
+            if self._enforce_num_speakers:
+                enforce = True
+            else:
+                enforce = False
+
             ROOT = os.getcwd()
             rttm_filepath = os.path.join(ROOT, self._output_dir, filename + '.rttm')
             json_filepath = os.path.join(ROOT, self._output_dir, filename + '.json')
@@ -392,7 +412,21 @@ class LibriSpeechGenerator(object):
             session_length_sr = int((self._session_length * self._sr))
             array = np.zeros(session_length_sr)
 
-            while running_length_sr < session_length_sr:
+            while running_length_sr < session_length_sr or enforce:
+                #enforce num_speakers
+                if running_length_sr > enforce_time*session_length_sr and enforce:
+                    increase_percent = []
+                    for i in range(0,self._num_speakers):
+                        if self._furthest_sample[i] == 0:
+                            increase_percent.append(i)
+                    #ramp up enforce counter until speaker is sampled, then reset once all speakers have spoken
+                    if len(increase_percent) > 0:
+                        speaker_dominance = increase_speaker_dominance(increase_percent, base_speaker_dominance, enforce_counter)
+                        enforce_counter += 1
+                    else:
+                        enforce = False
+                        speaker_dominance = base_speaker_dominance
+
                 # select speaker
                 speaker_turn = self._get_next_speaker(prev_speaker, speaker_dominance)
 
