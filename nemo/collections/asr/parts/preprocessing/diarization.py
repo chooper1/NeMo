@@ -76,8 +76,8 @@ class LibriSpeechGenerator(object):
     """
 
     def __init__(self, cfg):
-        self._params = OmegaConf.load(cfg)
-        self._cfg = cfg
+        self._params = cfg#OmegaConf.load(cfg)
+        # self._cfg = cfg
         print(self._params)
         print('manifest_path: ', self._params.data_simulator.manifest_path)
         self._manifest_path = manifest_path
