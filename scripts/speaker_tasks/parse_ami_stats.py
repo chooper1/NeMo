@@ -51,6 +51,9 @@ def main():
     total_sentence_lengths = {}
     total_num_speakers = {}
 
+    yes_turn = 0
+    no_turn = 0
+
     for key in list:
         meeting = list[key]
         prev_sp = None
@@ -83,12 +86,18 @@ def main():
                     total_sentence_lengths[str(current_sentence_lengths[str(sp)])] = 0
                 total_sentence_lengths[str(current_sentence_lengths[str(sp)])] += 1
                 current_sentence_lengths[str(sp)] = 1 #start new sentence
+
+                if prev_sp == sp:
+                    no_turn += 1
+                else:
+                    yes_turn += 1
             else:
                 #continue sentence
                 current_sentence_lengths[str(sp)] += 1
 
             prev_time_per_speaker[str(sp)] = end
             dominance_per_speaker[str(sp)] += end - start
+            prev_sp = sp
 
         timeline = np.zeros(int(largest_end_time*100))
 
@@ -133,6 +142,7 @@ def main():
     print('full_overlap_percent: ', np.mean(full_overlap_percent))
     print('full_dominance_var: ', np.mean(full_dominance_var))
     print('full_stddev_var: ', np.mean(full_stddev_var))
+    print('turn_prob: ', float(yes_turn) / (float(yes_turn)+float(no_turn)))
     print('full_num_speakers: ', total_num_speakers)
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
