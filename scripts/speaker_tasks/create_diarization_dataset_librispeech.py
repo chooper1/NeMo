@@ -41,7 +41,6 @@ def main(config_path):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
-    parser.add_argument("--config_path", help="path to config file", type=str, required=True)
     parser.add_argument("--num_sessions", help="number of sessions to generate", type=int, default=1)
     parser.add_argument("--random_seed", help="random seed", type=int, default=42)
     args = parser.parse_args()
