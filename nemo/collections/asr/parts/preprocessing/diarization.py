@@ -366,7 +366,7 @@ class LibriSpeechGenerator(object):
             else:
                 return start + silence_amount
 
-    def increase_speaker_dominance(increase_percent, base_speaker_dominance, factor):
+    def increase_speaker_dominance(self, increase_percent, base_speaker_dominance, factor):
         dominance = base_speaker_dominance
         for i in increase_percent:
             dominance[i] = dominance[i] * factor
