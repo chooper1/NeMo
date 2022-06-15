@@ -104,6 +104,7 @@ def main():
         full_overlap_percent.append(overlap_percent)
 
     print('full_silence_percent: ', silence_percent)
+    print('overlap_percent: ', overlap_percent)
     print('full_overlap_percent: ', overlap_percent)
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
