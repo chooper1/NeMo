@@ -30,7 +30,7 @@ TODO add manifest args?
 """
 
 @hydra_runner(config_path="conf", config_name="data_simulator.yaml")
-def main(config_path):
+def main(cfg):
     logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
 
     num_sessions = args.num_sessions
