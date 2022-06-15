@@ -405,6 +405,8 @@ class LibriSpeechGenerator(object):
             else:
                 enforce = False
 
+            print('enforce: ', enforce)
+
             ROOT = os.getcwd()
             rttm_filepath = os.path.join(ROOT, self._output_dir, filename + '.rttm')
             json_filepath = os.path.join(ROOT, self._output_dir, filename + '.json')
@@ -428,6 +430,7 @@ class LibriSpeechGenerator(object):
                         enforce = False
                         speaker_dominance = base_speaker_dominance
 
+
                 # select speaker
                 speaker_turn = self._get_next_speaker(prev_speaker, speaker_dominance)
 
@@ -442,6 +445,8 @@ class LibriSpeechGenerator(object):
                     break
                 if enforce:
                     max_sentence_duration_sr = ('inf')
+
+                print(max_sentence_duration_sr)
 
                 # initialize sentence, text, words, alignments
                 self._sentence = np.zeros(0)
