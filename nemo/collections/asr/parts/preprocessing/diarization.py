@@ -391,7 +391,8 @@ class LibriSpeechGenerator(object):
     def generate_session(self, num_sessions=1):
         for i in range(0, num_sessions):
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
-            speaker_dominance = base_speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
+            speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
+            base_speaker_dominance = np.copy(speaker_dominance)
             speaker_lists = self._get_speaker_samples(speaker_ids)  # get list of samples per speaker
 
             filename = self._output_filename + f"_{i}"
