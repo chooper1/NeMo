@@ -79,14 +79,14 @@ class LibriSpeechGenerator(object):
         self._params = cfg
 
         # internal params
-        self._manifest = read_manifest(manifest_path)
+        self._manifest = read_manifest(self._params.data_simulator.manifest_path)
         self._sentence = None
         self._text = ""
         self._words = []
         self._alignments = []
 
         #keep track of furthest sample per speaker to avoid overlapping same speaker
-        self._furthest_sample = [0 for n in range(0,num_speakers)]
+        self._furthest_sample = [0 for n in range(0,self._params.data_simulator.num_speakers)]
 
     # randomly select speaker ids from loaded dict
     def _get_speaker_ids(self):
