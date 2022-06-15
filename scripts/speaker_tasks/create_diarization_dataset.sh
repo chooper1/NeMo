@@ -12,8 +12,8 @@ python create_diarization_dataset_librispeech.py \
   --output_dir outputs \
   --output_filename diarization_session \
   --num_sessions 1 \
-  --num_speakers 3 \
-  --session_length 300 \
+  --num_speakers 6 \
+  --session_length 30 \
   --sentence_length_k 2.81 \
   --sentence_length_p 0.1 \
   --dominance_var 0.1 \
