@@ -40,7 +40,6 @@ def read_cmi_files(directory_path):
 def main():
     input_directory = args.input_directory
     list = read_cmi_files(input_directory)
-    print(list)
 
     sentence_break_time = 1.0 #1 second
 
