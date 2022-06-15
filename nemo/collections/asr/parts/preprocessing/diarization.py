@@ -481,9 +481,9 @@ class LibriSpeechGenerator(object):
                 prev_speaker = speaker_turn
                 prev_length_sr = length
 
-                print(speaker_turn)
-
             #TODO add error if speaker is missing?
+            print(self._furthest_sample)
+
             i = 0
             for i in range(0,len(self._furthest_sample)):
                 if self._furthest_sample[i] == 0:
