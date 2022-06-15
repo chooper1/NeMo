@@ -272,6 +272,20 @@ class LibriSpeechGenerator(object):
             dominance[i] = dominance[i] + dominance[i-1]
         return dominance
 
+    def _increase_speaker_dominance(self, increase_percent, base_speaker_dominance, factor):
+        dominance = base_speaker_dominance
+        for i in range(len(dominance)-1,0,-1):
+            dominance[i] = dominance[i] - dominance[i-1]
+        print(dominance)
+        dominance = base_speaker_dominance
+        for i in increase_percent:
+            dominance[i] = dominance[i] * factor
+        dominance = dominance / np.sum(dominance)
+
+        for i in range(1,len(dominance)):
+          dominance[i] = dominance[i] + dominance[i-1]
+        return dominance
+
     # get next speaker (accounting for turn probability, dominance distribution)
     def _get_next_speaker(self, prev_speaker, dominance):
         if random.uniform(0, 1) > self._turn_prob and prev_speaker != None:
@@ -366,12 +380,6 @@ class LibriSpeechGenerator(object):
             else:
                 return start + silence_amount
 
-    def increase_speaker_dominance(self, increase_percent, base_speaker_dominance, factor):
-        dominance = base_speaker_dominance
-        for i in increase_percent:
-            dominance[i] = dominance[i] * factor
-        return dominance / np.sum(dominance)
-
     """
     Generate diarization session
 
@@ -405,8 +413,6 @@ class LibriSpeechGenerator(object):
             else:
                 enforce = False
 
-            print('enforce: ', enforce)
-
             ROOT = os.getcwd()
             rttm_filepath = os.path.join(ROOT, self._output_dir, filename + '.rttm')
             json_filepath = os.path.join(ROOT, self._output_dir, filename + '.json')
@@ -424,7 +430,7 @@ class LibriSpeechGenerator(object):
                             increase_percent.append(i)
                     #ramp up enforce counter until speaker is sampled, then reset once all speakers have spoken
                     if len(increase_percent) > 0:
-                        speaker_dominance = self.increase_speaker_dominance(increase_percent, base_speaker_dominance, enforce_counter)
+                        speaker_dominance = self._increase_speaker_dominance(increase_percent, base_speaker_dominance, enforce_counter)
                         enforce_counter += 1
                     else:
                         enforce = False
@@ -445,8 +451,6 @@ class LibriSpeechGenerator(object):
                     break
                 if enforce:
                     max_sentence_duration_sr = float('inf')
-
-                print(max_sentence_duration_sr)
 
                 # initialize sentence, text, words, alignments
                 self._sentence = np.zeros(0)
