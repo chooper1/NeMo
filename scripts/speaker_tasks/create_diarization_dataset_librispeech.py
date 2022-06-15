@@ -67,6 +67,7 @@ def main():
     )
 
     lg.generate_session(num_sessions)
+    lg.write_config()
 
 
 if __name__ == "__main__":

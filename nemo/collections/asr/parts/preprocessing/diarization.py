@@ -85,7 +85,7 @@ class LibriSpeechGenerator(object):
         output_filename='librispeech_diarization',
         sentence_length_params=[2.81, 0.1],
         alignment_type='end',
-        dominance_var=0.1, 
+        dominance_var=0.1,
         min_dominance=0.05,
         turn_prob=0.9,
         mean_overlap=0.08,
@@ -157,22 +157,25 @@ class LibriSpeechGenerator(object):
     def write_config(self, config_path):
         conf = OmegaConf.create(
             {
-                "manifest_path": self._manifest_path,
-                "sr": self._sr,
-                "num_speakers": self._num_speakers,
-                "session_length": self._session_length,
-                "output_dir": self._output_dir,
-                "output_filename": self._output_filename,
-                "sentence_length_params": self._sentence_length_params,
-                "alignment_type": self._alignment_type,
-                "dominance_var": self._dominance_var,
-                "min_dominance": self._min_dominance,
-                "turn_prob": self._turn_prob,
-                "mean_overlap": self._mean_overlap,
-                "mean_silence": self._mean_silence,
-                "overlap_prob": self._overlap_prob,
-                "outputs": self._outputs,
-                "enforce_num_speakers": self._enforce_num_speakers
+            "data_simulator":
+                {
+                    "manifest_path": self._manifest_path,
+                    "sr": self._sr,
+                    "num_speakers": self._num_speakers,
+                    "session_length": self._session_length,
+                    "output_dir": self._output_dir,
+                    "output_filename": self._output_filename,
+                    "sentence_length_params": self._sentence_length_params,
+                    "alignment_type": self._alignment_type,
+                    "dominance_var": self._dominance_var,
+                    "min_dominance": self._min_dominance,
+                    "turn_prob": self._turn_prob,
+                    "mean_overlap": self._mean_overlap,
+                    "mean_silence": self._mean_silence,
+                    "overlap_prob": self._overlap_prob,
+                    "outputs": self._outputs,
+                    "enforce_num_speakers": self._enforce_num_speakers
+                }
             }
         )
         OmegaConf.save(config=conf, f=config_path)
