@@ -77,7 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("--mean_overlap", help="mean percentage of overlap", type=float, default=0.08)
     parser.add_argument("--mean_silence", help="mean percentage of silence", type=float, default=0.08)
     parser.add_argument("--overlap_prob", help="probability of overlap", type=float, default=0.3)
-    parser.add_argument("--enforce_num_speakers", help="whether to enforce that all speakers are included", type=bool, default=False)
+    parser.add_argument("--enforce_num_speakers", help="whether to enforce that all speakers are included", action='store_true', default=False)
     args = parser.parse_args()
 
     main()
