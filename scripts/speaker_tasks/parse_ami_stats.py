@@ -47,6 +47,7 @@ def main():
     full_silence_percent = []
     full_overlap_percent = []
     full_dominance_var = []
+    full_stddev_var = []
     total_sentence_lengths = {}
 
     for key in list:
@@ -117,13 +118,13 @@ def main():
 
 
         dvar = np.var(dominance_var)
-        print('dominance_var: ', dominance_var)
-        print('dvar: ', dvar)
         full_dominance_var.append(dvar)
+        full_stddev_var.append(np.sqrt(dvar))
 
     print('full_silence_percent: ', np.mean(full_silence_percent))
     print('full_overlap_percent: ', np.mean(full_overlap_percent))
     print('full_dominance_var: ', np.mean(full_dominance_var))
+    print('full_stddev_var: ', np.mean(full_stddev_var))
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
 
