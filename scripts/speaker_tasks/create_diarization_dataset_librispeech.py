@@ -77,7 +77,7 @@ if __name__ == "__main__":
     parser.add_argument("--session_length", help="length of each diarization session (seconds)", type=int, default=20)
     parser.add_argument("--num_speakers", help="number of speakers", type=int, default=2)
     parser.add_argument("--sentence_length_params", help="k,p for nb distribution for sentence length", type=list, default=[2.81, 0.1])
-    parser.add_argument("--dominance_var", help="distribution of speaker dominance", type=str, default="random")
+    parser.add_argument("--dominance_var", help="distribution of speaker dominance", type=float, default=0.1)
     parser.add_argument("--min_dominance", help="minimum dominance", type=float, default=0.05)
     parser.add_argument("--turn_prob", help="number of speakers", type=float, default=0.9)
     parser.add_argument("--mean_overlap", help="mean percentage of overlap", type=float, default=0.08)
