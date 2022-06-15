@@ -116,8 +116,9 @@ def main():
             dominance_var.append(dominance_per_speaker[k])
 
 
-
         dvar = np.var(dominance_var)
+        print('dominance_var: ', dominance_var)
+        print('dvar: ', dvar)
         full_dominance_var.append(dvar)
 
     print('full_silence_percent: ', np.mean(full_silence_percent))
