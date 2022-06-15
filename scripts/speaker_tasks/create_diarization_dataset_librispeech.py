@@ -58,6 +58,7 @@ def main():
         mean_overlap=mean_overlap,
         mean_silence=mean_silence,
         overlap_prob=overlap_prob,
+        enforce_num_speakers=enforce_num_speakers,
     )
 
     lg.generate_session(num_sessions)
