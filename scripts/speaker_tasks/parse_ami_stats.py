@@ -42,7 +42,8 @@ def main():
 
     sentence_break_time = 1.0 #1 second
 
-    for key,meeting in list:
+    for key in list:
+        meeting = list['key']
         sentence_lengths = {}
         prev_sp = None
         sentence_length = 0
