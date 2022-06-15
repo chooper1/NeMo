@@ -44,5 +44,4 @@ if __name__ == "__main__":
     parser.add_argument("--num_sessions", help="number of sessions to generate", type=int, default=1)
     parser.add_argument("--random_seed", help="random seed", type=int, default=42)
     args = parser.parse_args()
-
     main()
