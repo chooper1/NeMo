@@ -484,13 +484,13 @@ class LibriSpeechGenerator(object):
             #TODO add error if speaker is missing?
             print(self._furthest_sample)
 
-            i = 0
-            for i in range(0,self._num_speakers):
-                if self._furthest_sample[i] == 0:
-                    i += 1
+            k = 0
+            for k in range(0,self._num_speakers):
+                if self._furthest_sample[k] == 0:
+                    k += 1
                     print(i)
-            if i != 0:
-                warnings.warn(f"{self._num_speakers-i} speakers were included in the clip instead of the requested amount of {self._num_speakers}")
+            if k != 0:
+                warnings.warn(f"{self._num_speakers-k} speakers were included in the clip instead of the requested amount of {self._num_speakers}")
 
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
             sf.write(wavpath, array, self._sr)
