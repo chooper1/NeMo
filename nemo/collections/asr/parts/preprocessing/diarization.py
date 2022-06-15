@@ -346,7 +346,7 @@ class LibriSpeechGenerator(object):
         return sentence_duration+nw, len(self._sentence)
 
     # returns new overlapped (or shifted) start position
-    def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr):
+    def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr, enforce):
         overlap_prob = self._overlap_prob / (self._turn_prob)  # accounting for not overlapping the same speaker
         mean_overlap_percent = self._mean_overlap / self._overlap_prob
         mean_silence_percent = self._mean_silence / (1 - self._overlap_prob)
@@ -375,7 +375,8 @@ class LibriSpeechGenerator(object):
             if (silence_percent > 1):
                 silence_percent = 1
             silence_amount = int(length * silence_percent)
-            if start + length + silence_amount > session_length_sr:
+
+            if start + length + silence_amount > session_length_sr and not enforce:
                 return session_length_sr - length
             else:
                 return start + silence_amount
@@ -468,7 +469,7 @@ class LibriSpeechGenerator(object):
 
                 length = len(self._sentence)
                 start = self._add_silence_or_overlap(
-                    speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
+                    speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr, enforce
                 )
                 end = start + length
                 if end > len(array):
