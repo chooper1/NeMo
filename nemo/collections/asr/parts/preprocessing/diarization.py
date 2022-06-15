@@ -15,6 +15,7 @@
 import json
 import os
 import random
+import warnings
 
 import librosa
 import numpy as np
@@ -296,7 +297,7 @@ class LibriSpeechGenerator(object):
         nw = i = 0
 
         #ensure the desired number of words are added and the length of the output session isn't exceeded
-        while nw < remaining_duration and dur_sr < remaining_duration_sr and i < len(file['words']):
+        while (nw < remaining_duration and dur_sr < remaining_duration_sr and i < len(file['words'])):
             dur_sr = int(file['alignments'][i] * self._sr)
             if dur_sr > remaining_duration_sr:
                 break
@@ -398,7 +399,7 @@ class LibriSpeechGenerator(object):
 
             #hold enforce until all speakers have spoken
             enforce_counter = 2
-            enforce_time = random.uniform(0.5, 0.75)
+            enforce_time = random.uniform(0.25, 0.75)
             if self._enforce_num_speakers:
                 enforce = True
             else:
@@ -437,8 +438,10 @@ class LibriSpeechGenerator(object):
                 max_sentence_duration_sr = session_length_sr - running_length_sr
 
                 # only add if remaining length > 0.5 second
-                if session_length_sr - running_length_sr < 0.5 * self._sr:
+                if max_sentence_duration_sr < 0.5 * self._sr and not enforce:
                     break
+                if enforce:
+                    max_sentence_duration_sr = ('inf')
 
                 # initialize sentence, text, words, alignments
                 self._sentence = np.zeros(0)
@@ -454,11 +457,12 @@ class LibriSpeechGenerator(object):
                     sentence_duration,sentence_duration_sr = self._add_file(file, audio_file, sentence_duration, sl, max_sentence_duration_sr)
 
                 length = len(self._sentence)
-                # add overlap or silence
                 start = self._add_silence_or_overlap(
                     speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr
                 )
                 end = start + length
+                if end > len(array):
+                    array = np.pad(array, (0, end - len(array)))
                 array[start:end] += self._sentence
 
                 if 'r' in self._outputs:
@@ -476,6 +480,14 @@ class LibriSpeechGenerator(object):
                 self._furthest_sample[speaker_turn] = running_length_sr
                 prev_speaker = speaker_turn
                 prev_length_sr = length
+
+            #TODO add error if speaker is missing?
+            i = 0
+            for i in range(0,len(self._furthest_sample)):
+                if self._furthest_sample[i] == 0:
+                    i += 1
+            if i != 0:
+                warnings.warn(f"{self._num_speakers-i} speakers were included in the clip instead of the requested amount of {self._num_speakers}")
 
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
             sf.write(wavpath, array, self._sr)
