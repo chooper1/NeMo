@@ -75,25 +75,11 @@ class LibriSpeechGenerator(object):
         enforce_num_speakers (bool): enforce that all requested speakers are present in the output wav file
     """
 
-    def __init__(
-        self,
-        manifest_path=None,
-        sr=16000,
-        num_speakers=2,
-        session_length=60,
-        output_dir='output',
-        output_filename='librispeech_diarization',
-        sentence_length_params=[2.81, 0.1],
-        alignment_type='end',
-        dominance_var=0.1,
-        min_dominance=0.05,
-        turn_prob=0.9,
-        mean_overlap=0.08,
-        mean_silence=0.08,
-        overlap_prob=0.3,
-        outputs = "rjc",
-        enforce_num_speakers = False
-    ):
+    def __init__(self, cfg):
+        params = OmegaConf.load(config_path)
+        self._cfg = params
+        print(params)
+        print('manifest_path: ', params.data_simulator.manifest_path)
         self._manifest_path = manifest_path
         self._sr = sr
         self._num_speakers = num_speakers
@@ -121,64 +107,64 @@ class LibriSpeechGenerator(object):
         #keep track of furthest sample per speaker to avoid overlapping same speaker
         self._furthest_sample = [0 for n in range(0,num_speakers)]
 
-    """
-    Load all parameters from a config file (yaml)
+    # """
+    # Load all parameters from a config file (yaml)
+    #
+    # Args:
+    #     config_path (str): path to a valid config file
+    # """
 
-    Args:
-        config_path (str): path to a valid config file
-    """
+    # def load_config(self, config_path):
+    #     params = OmegaConf.load(config_path)
+    #     self._manifest_path = config["manifest_path"]
+    #     self._sr = config["sr"]
+    #     self._num_speakers = config["num_speakers"]
+    #     self._session_length = config["session_length"]
+    #     self._output_dir = config["output_dir"]
+    #     self._output_filename = config["output_filename"]
+    #     self._sentence_length_params = config["sentence_length_params"]
+    #     self._alignment_type = config["alignment_type"]
+    #     self._dominance_var = config["dominance_var"]
+    #     self._min_dominance = config["min_dominance"]
+    #     self._turn_prob = config["turn_prob"]
+    #     self._mean_overlap = config["mean_overlap"]
+    #     self._mean_silence = config["mean_silence"]
+    #     self._overlap_prob = config["overlap_prob"]
+    #     self._outputs = config["outputs"]
+    #     self._enforce_num_speakers = config["enforce_num_speakers"]
 
-    def load_config(self, config_path):
-        config = OmegaConf.load(config_path)
-        self._manifest_path = config["manifest_path"]
-        self._sr = config["sr"]
-        self._num_speakers = config["num_speakers"]
-        self._session_length = config["session_length"]
-        self._output_dir = config["output_dir"]
-        self._output_filename = config["output_filename"]
-        self._sentence_length_params = config["sentence_length_params"]
-        self._alignment_type = config["alignment_type"]
-        self._dominance_var = config["dominance_var"]
-        self._min_dominance = config["min_dominance"]
-        self._turn_prob = config["turn_prob"]
-        self._mean_overlap = config["mean_overlap"]
-        self._mean_silence = config["mean_silence"]
-        self._overlap_prob = config["overlap_prob"]
-        self._outputs = config["outputs"]
-        self._enforce_num_speakers = config["enforce_num_speakers"]
+    # """
+    # Write all parameters to a config file (yaml)
+    #
+    # Args:
+    #     config_path (str): target path for the config file
+    # """
 
-    """
-    Write all parameters to a config file (yaml)
-
-    Args:
-        config_path (str): target path for the config file
-    """
-
-    def write_config(self, config_path):
-        conf = OmegaConf.create(
-            {
-            "data_simulator":
-                {
-                    "manifest_path": self._manifest_path,
-                    "sr": self._sr,
-                    "num_speakers": self._num_speakers,
-                    "session_length": self._session_length,
-                    "output_dir": self._output_dir,
-                    "output_filename": self._output_filename,
-                    "sentence_length_params": self._sentence_length_params,
-                    "alignment_type": self._alignment_type,
-                    "dominance_var": self._dominance_var,
-                    "min_dominance": self._min_dominance,
-                    "turn_prob": self._turn_prob,
-                    "mean_overlap": self._mean_overlap,
-                    "mean_silence": self._mean_silence,
-                    "overlap_prob": self._overlap_prob,
-                    "outputs": self._outputs,
-                    "enforce_num_speakers": self._enforce_num_speakers
-                }
-            }
-        )
-        OmegaConf.save(config=conf, f=config_path)
+    # def write_config(self, config_path):
+    #     conf = OmegaConf.create(
+    #         {
+    #         "data_simulator":
+    #             {
+    #                 "manifest_path": self._manifest_path,
+    #                 "sr": self._sr,
+    #                 "num_speakers": self._num_speakers,
+    #                 "session_length": self._session_length,
+    #                 "output_dir": self._output_dir,
+    #                 "output_filename": self._output_filename,
+    #                 "sentence_length_params": self._sentence_length_params,
+    #                 "alignment_type": self._alignment_type,
+    #                 "dominance_var": self._dominance_var,
+    #                 "min_dominance": self._min_dominance,
+    #                 "turn_prob": self._turn_prob,
+    #                 "mean_overlap": self._mean_overlap,
+    #                 "mean_silence": self._mean_silence,
+    #                 "overlap_prob": self._overlap_prob,
+    #                 "outputs": self._outputs,
+    #                 "enforce_num_speakers": self._enforce_num_speakers
+    #             }
+    #         }
+    #     )
+    #     OmegaConf.save(config=conf, f=config_path)
 
     # randomly select speaker ids from loaded dict
     def _get_speaker_ids(self):
@@ -390,7 +376,8 @@ class LibriSpeechGenerator(object):
         num_sessions (int): number of diarization sessions to generate with the current configuration
     """
 
-    def generate_session(self, num_sessions=1):
+    def generate_session(self, num_sessions=1, random_seed=42):
+        random.seed(random_seed)
         for i in range(0, num_sessions):
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
             speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance

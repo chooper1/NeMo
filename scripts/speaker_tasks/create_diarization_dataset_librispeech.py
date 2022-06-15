@@ -17,77 +17,33 @@ import os
 import random
 import shutil
 
+from omegaconf import OmegaConf
+from nemo.core.config import hydra_runner
+from nemo.utils import logging
 from nemo.collections.asr.parts.preprocessing.diarization import LibriSpeechGenerator
-
-random.seed(42)
 
 """
 This script creates a synthetic diarization session using the LibriSpeech dataset.
+
+
+TODO add manifest args?
 """
 
+@hydra_runner(config_path="conf", config_name="data_simulator.yaml")
+def main(config_path):
+    logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
 
-def main():
-    input_manifest_filepath = args.input_manifest_filepath
-    output_dir = args.output_dir
     num_sessions = args.num_sessions
-    session_length = args.session_length
-    num_speakers = args.num_speakers
-    output_filename = args.output_filename
-    sentence_length_k = args.sentence_length_k
-    sentence_length_p = args.sentence_length_p
-    dominance_var = args.dominance_var
-    min_dominance = args.min_dominance
-    turn_prob = args.turn_prob
-    mean_overlap = args.mean_overlap
-    mean_silence = args.mean_silence
-    overlap_prob = args.overlap_prob
-    outputs = args.outputs
-    enforce_num_speakers = args.enforce_num_speakers
+    random_seed = args.random_seed
 
-    if os.path.exists(output_dir):
-        shutil.rmtree(output_dir)
-    os.mkdir(output_dir)
-
-    lg = LibriSpeechGenerator(
-        manifest_path=input_manifest_filepath,
-        sr=16000,
-        num_speakers=num_speakers,
-        session_length=session_length,
-        output_dir=output_dir,
-        output_filename=output_filename,
-        sentence_length_params=[sentence_length_k, sentence_length_p],
-        dominance_var=dominance_var,
-        min_dominance=min_dominance,
-        turn_prob=turn_prob,
-        mean_overlap=mean_overlap,
-        mean_silence=mean_silence,
-        overlap_prob=overlap_prob,
-        outputs=outputs,
-        enforce_num_speakers=enforce_num_speakers,
-    )
-
-    lg.generate_session(num_sessions)
-    lg.write_config("./config.yaml")
-
+    lg = LibriSpeechGenerator(cfg=cfg)
+    lg.generate_session(num_sessions, random_seed)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
-    parser.add_argument("--input_manifest_filepath", help="path to input manifest file", type=str, required=True)
-    parser.add_argument("--output_dir", help="path to output directory", type=str, required=True)
-    parser.add_argument("--output_filename", help="filename for wav and rttm files", type=str, default='diarization_session')
-    parser.add_argument("--num_sessions", help="number of diarization sessions", type=int, default=1)
-    parser.add_argument("--session_length", help="length of each diarization session (seconds)", type=int, default=20)
-    parser.add_argument("--num_speakers", help="number of speakers", type=int, default=2)
-    parser.add_argument("--sentence_length_k", help="k for nb distribution for sentence length", type=float, default=2.81)
-    parser.add_argument("--sentence_length_p", help="p for nb distribution for sentence length", type=float, default=0.1)
-    parser.add_argument("--dominance_var", help="distribution of speaker dominance", type=float, default=0.1)
-    parser.add_argument("--min_dominance", help="minimum dominance", type=float, default=0.05)
-    parser.add_argument("--turn_prob", help="number of speakers", type=float, default=0.9)
-    parser.add_argument("--mean_overlap", help="mean percentage of overlap", type=float, default=0.08)
-    parser.add_argument("--mean_silence", help="mean percentage of silence", type=float, default=0.08)
-    parser.add_argument("--overlap_prob", help="probability of overlap", type=float, default=0.3)
-    parser.add_argument("--outputs", help="which file types to output", type=str, default="rjc")
-    parser.add_argument("--enforce_num_speakers", help="whether to enforce that all speakers are included", type=bool, default=False)
+    parser.add_argument("--config_path", help="path to config file", type=str, required=True)
+    parser.add_argument("--num_sessions", help="number of sessions to generate", type=int, default=1)
+    parser.add_argument("--random_seed", help="random seed", type=int, default=42)
     args = parser.parse_args()
 
     main()
