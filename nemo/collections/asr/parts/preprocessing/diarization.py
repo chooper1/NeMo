@@ -424,7 +424,7 @@ class LibriSpeechGenerator(object):
                             increase_percent.append(i)
                     #ramp up enforce counter until speaker is sampled, then reset once all speakers have spoken
                     if len(increase_percent) > 0:
-                        speaker_dominance = increase_speaker_dominance(increase_percent, base_speaker_dominance, enforce_counter)
+                        speaker_dominance = self.increase_speaker_dominance(increase_percent, base_speaker_dominance, enforce_counter)
                         enforce_counter += 1
                     else:
                         enforce = False
