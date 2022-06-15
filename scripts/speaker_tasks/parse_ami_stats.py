@@ -49,6 +49,7 @@ def main():
     full_dominance_var = []
     full_stddev_var = []
     total_sentence_lengths = {}
+    total_num_speakers = {}
 
     for key in list:
         meeting = list[key]
@@ -121,10 +122,18 @@ def main():
         full_dominance_var.append(dvar)
         full_stddev_var.append(np.sqrt(dvar))
 
+        num_speakers = len(prev_time_per_speaker)
+        if str(num_speakers) not in total_num_speakers:
+            total_num_speakers[str(num_speakers)] = 1
+        else:
+            total_num_speakers[str(num_speakers)] += 1
+
+
     print('full_silence_percent: ', np.mean(full_silence_percent))
     print('full_overlap_percent: ', np.mean(full_overlap_percent))
     print('full_dominance_var: ', np.mean(full_dominance_var))
     print('full_stddev_var: ', np.mean(full_stddev_var))
+    print('full_num_speakers: ', total_num_speakers)
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
 
