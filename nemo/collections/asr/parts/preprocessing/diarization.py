@@ -273,7 +273,7 @@ class LibriSpeechGenerator(object):
         return dominance
 
     def _increase_speaker_dominance(self, increase_percent, base_speaker_dominance, factor):
-        dominance = base_speaker_dominance
+        dominance = np.copy(base_speaker_dominance)
         print('base: ', dominance)
         for i in range(len(dominance)-1,0,-1):
             dominance[i] = dominance[i] - dominance[i-1]
