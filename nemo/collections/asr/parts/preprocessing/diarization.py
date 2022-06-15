@@ -482,13 +482,12 @@ class LibriSpeechGenerator(object):
                 prev_length_sr = length
 
             #TODO add error if speaker is missing?
-            print(self._furthest_sample)
-
             k = 0
             for k in range(0,self._num_speakers):
                 if self._furthest_sample[k] == 0:
                     k += 1
-                    print(i)
+                    print(k)
+            print(k)
             if k != 0:
                 warnings.warn(f"{self._num_speakers-k} speakers were included in the clip instead of the requested amount of {self._num_speakers}")
 
