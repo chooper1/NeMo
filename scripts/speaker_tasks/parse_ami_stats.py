@@ -89,6 +89,11 @@ def main():
             end = int((start+dur)*100)
             timeline[start:end] += 1
 
+            print(start)
+            print(end)
+
+        print(timeline)
+
         speaking_time = np.sum(timeline > 0)
         silence_time = len(timeline) - speaking_time
         overlap_time = np.sum(timeline > 1)
