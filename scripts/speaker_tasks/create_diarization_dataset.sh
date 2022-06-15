@@ -23,6 +23,4 @@ python create_diarization_dataset_librispeech.py \
   --mean_silence 0.08 \
   --overlap_prob 0.3 \
   --outputs rjc
-
 # note: --enforce_num_speakers is store_true
-# also note:

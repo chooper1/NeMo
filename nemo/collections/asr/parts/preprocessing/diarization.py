@@ -72,6 +72,7 @@ class LibriSpeechGenerator(object):
         mean_overlap (float): mean proportion of overlap to speaking time
         mean_silence (float): mean proportion of silence to speaking time
         outputs (str): which files to output (r - rttm, j - json, c - ctm)
+        enforce_num_speakers (bool): enforce that all requested speakers are present in the output wav file
     """
 
     def __init__(
@@ -83,7 +84,7 @@ class LibriSpeechGenerator(object):
         output_dir='output',
         output_filename='librispeech_diarization',
         sentence_length_params=[2.81, 0.1],
-        alignment_type='end', 
+        alignment_type='end',
         dominance_var=0.1,
         min_dominance=0.05,
         turn_prob=0.9,
@@ -116,6 +117,8 @@ class LibriSpeechGenerator(object):
         self._text = ""
         self._words = []
         self._alignments = []
+
+        #keep track of furthest sample per speaker to avoid overlapping same speaker
         self._furthest_sample = [0 for n in range(0,num_speakers)]
 
     """
@@ -210,47 +213,6 @@ class LibriSpeechGenerator(object):
         file_id = random.randint(0, len(speaker_lists[str(speaker_id)]) - 1)
         file = speaker_lists[str(speaker_id)][file_id]
         return file
-
-    # add new entry to dict (to write to output rttm file)
-    def _create_new_rttm_entry(self, start, dur, speaker_id):
-        start = float(round(start,3))
-        dur = float(round(dur,3))
-        return str(start) + ' ' + str(dur) + ' ' + str(speaker_id)
-
-    # add new entry to dict (to write to output json file)
-    def _create_new_json_entry(self, wav_filename, start, dur, speaker_id, text, rttm_filepath, ctm_filepath):
-        start = float(round(start,3))
-        dur = float(round(dur,3))
-        dict = {"audio_filepath": wav_filename,
-                "offset": start,
-                "duration": dur,
-                "label": speaker_id,
-                "text": text,
-                "num_speakers": self._num_speakers,
-                "rttm_filepath": rttm_filepath,
-                "ctm_filepath": ctm_filepath,
-                "uem_filepath": None}
-        return dict
-
-    # add new entry to dict (to write to output ctm file)
-    def _create_new_ctm_entry(self, session_name, speaker_id, start):
-        arr = []
-        start = float(round(start,3))
-        for i in range(0, len(self._words)):
-            word = self._words[i]
-            if self._alignment_type == 'start':
-                align1 = float(round(self._alignments[i] + start, 3))
-                align2 = float(round(self._alignments[i+1] - self._alignments[i], 3))
-            elif self._alignment_type == 'end':
-                align1 = float(round(self._alignments[i-1] + start, 3))
-                align2 = float(round(self._alignments[i] - self._alignments[i-1], 3))
-            elif self._alignment_type == 'tuple':
-                align1 = float(round(self._alignments[i][0] + start, 3))
-                align2 = float(round(self._alignments[i][1] - self._alignments[i][0], 3))
-            if word != "": #note that using the current alignments the first word is always empty, so there is no error from indexing the array with i-1
-                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(align1) + ' ' + str(align2) + ' ' + str(word) + ' ' + '0' + '\n'
-                arr.append((align1, text))
-        return arr
 
     # get dominance for each speaker
     def _get_speaker_dominance(self):
@@ -377,6 +339,47 @@ class LibriSpeechGenerator(object):
             else:
                 return start + silence_amount
 
+    # add new entry to dict (to write to output rttm file)
+    def _create_new_rttm_entry(self, start, dur, speaker_id):
+        start = float(round(start,3))
+        dur = float(round(dur,3))
+        return str(start) + ' ' + str(dur) + ' ' + str(speaker_id)
+
+    # add new entry to dict (to write to output json file)
+    def _create_new_json_entry(self, wav_filename, start, dur, speaker_id, text, rttm_filepath, ctm_filepath):
+        start = float(round(start,3))
+        dur = float(round(dur,3))
+        dict = {"audio_filepath": wav_filename,
+                "offset": start,
+                "duration": dur,
+                "label": speaker_id,
+                "text": text,
+                "num_speakers": self._num_speakers,
+                "rttm_filepath": rttm_filepath,
+                "ctm_filepath": ctm_filepath,
+                "uem_filepath": None}
+        return dict
+
+    # add new entry to dict (to write to output ctm file)
+    def _create_new_ctm_entry(self, session_name, speaker_id, start):
+        arr = []
+        start = float(round(start,3))
+        for i in range(0, len(self._words)):
+            word = self._words[i]
+            if self._alignment_type == 'start':
+                align1 = float(round(self._alignments[i] + start, 3))
+                align2 = float(round(self._alignments[i+1] - self._alignments[i], 3))
+            elif self._alignment_type == 'end':
+                align1 = float(round(self._alignments[i-1] + start, 3))
+                align2 = float(round(self._alignments[i] - self._alignments[i-1], 3))
+            elif self._alignment_type == 'tuple':
+                align1 = float(round(self._alignments[i][0] + start, 3))
+                align2 = float(round(self._alignments[i][1] - self._alignments[i][0], 3))
+            if word != "": #note that using the current alignments the first word is always empty, so there is no error from indexing the array with i-1
+                text = str(session_name) + ' ' + str(speaker_id) + ' ' + str(align1) + ' ' + str(align2) + ' ' + str(word) + ' ' + '0' + '\n'
+                arr.append((align1, text))
+        return arr
+
     """
     Generate diarization session
 
@@ -488,11 +491,7 @@ class LibriSpeechGenerator(object):
                 prev_speaker = speaker_turn
                 prev_length_sr = length
 
-            #TODO add error if speaker is missing?
-            k = 0
-            for i in range(0,self._num_speakers):
-                if self._furthest_sample[i] == 0:
-                    k += 1
+            k = np.sum(self._furthest_sample == 0)
             if k != 0:
                 warnings.warn(f"{self._num_speakers-k} speakers were included in the clip instead of the requested amount of {self._num_speakers}")
 
