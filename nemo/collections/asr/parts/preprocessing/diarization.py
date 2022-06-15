@@ -85,7 +85,7 @@ class LibriSpeechGenerator(object):
         output_filename='librispeech_diarization',
         sentence_length_params=[2.81, 0.1],
         alignment_type='end',
-        dominance_var=0.1,
+        dominance_var=0.1, 
         min_dominance=0.05,
         turn_prob=0.9,
         mean_overlap=0.08,
