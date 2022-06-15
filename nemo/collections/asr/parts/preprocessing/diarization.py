@@ -229,7 +229,6 @@ class LibriSpeechGenerator(object):
             #if same speaker ends up overlapping, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
                 new_start = self._furthest_sample[speaker_turn]
-                #TODO should silence be added here
                 silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
                 silence_amount = int(length * silence_percent)
                 if new_start + length + silence_amount > session_length_sr:
@@ -403,9 +402,13 @@ class LibriSpeechGenerator(object):
                 prev_speaker = speaker_turn
                 prev_length_sr = length
 
-            k = np.sum(self._furthest_sample == 0)
-            if k != 0:
-                warnings.warn(f"{self._params.data_simulator.num_speakers-k} speakers were included in the clip instead of the requested amount of {self._params.data_simulator.num_speakers}")
+            num_missing = 0
+            for k in range(0,len(self._furthest_sample)):
+                if self._furthest_sample[k] == 0:
+                    num_missing += 1
+
+            if num_missing != 0:
+                warnings.warn(f"{self._params.data_simulator.num_speakers-num_missing} speakers were included in the clip instead of the requested amount of {self._params.data_simulator.num_speakers}")
 
             array = array / (1.0 * np.max(np.abs(array)))  # normalize wav file
             sf.write(wavpath, array, self._params.data_simulator.sr)
