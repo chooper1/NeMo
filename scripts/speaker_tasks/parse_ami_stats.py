@@ -46,6 +46,7 @@ def main():
 
     full_silence_percent = []
     full_overlap_percent = []
+    full_dominance_var = []
     total_sentence_lengths = {}
 
     for key in list:
@@ -106,17 +107,22 @@ def main():
         full_silence_percent.append(silence_percent)
         full_overlap_percent.append(overlap_percent)
 
+        dominance_var = []
         total_dominance = 0
         for k in dominance_per_speaker:
             total_dominance += dominance_per_speaker[k]
         for k in dominance_per_speaker:
             dominance_per_speaker[k] = dominance_per_speaker[k] / total_dominance
+            dominance_var.append(dominance_per_speaker[k])
 
 
-        print('dominance: ', dominance_per_speaker)
+
+        dvar = np.var(dominance_var)
+        full_dominance_var.append(dvar)
 
     print('full_silence_percent: ', np.mean(full_silence_percent))
     print('full_overlap_percent: ', np.mean(full_overlap_percent))
+    print('full_dominance_var: ', np.mean(full_dominance_var))
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
 
