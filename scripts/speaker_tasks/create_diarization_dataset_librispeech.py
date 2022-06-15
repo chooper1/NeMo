@@ -67,7 +67,7 @@ def main():
     )
 
     lg.generate_session(num_sessions)
-    lg.write_config()
+    lg.write_config("./config.yaml")
 
 
 if __name__ == "__main__":
