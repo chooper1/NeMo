@@ -69,7 +69,7 @@ def main():
                 current_sentence_lengths[str(sp)] = 1
             elif start - prev_time_per_speaker[str(sp)] > sentence_break_time:
                 #break sentence
-                if not total_sentence_lengths.has_key(current_sentence_lengths[str(sp)]):
+                if str(current_sentence_lengths[str(sp)]) not in total_sentence_lengths:
                     total_sentence_lengths[str(current_sentence_lengths[str(sp)])] = 0
                 total_sentence_lengths[str(current_sentence_lengths[str(sp)])] += 1
                 current_sentence_lengths[str(sp)] = 0
