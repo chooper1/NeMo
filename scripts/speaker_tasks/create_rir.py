@@ -37,7 +37,7 @@ def main():
     # parameter values explained here: https://github.com/DavidDiazGuerra/gpuRIR#simulatetrajectory
     room_sz = [3, 3, 2.5]  # Size of the room [m]
     nb_src = 2  # Number of sources
-    pos_src = np.array([[1, 2.9, 0.5], [1, 2, 0.5]])  # Positions of the sources ([m]
+    pos_src = np.array([[0.6, 1.1, 0.5], [1, 2, 0.5]])  # Positions of the sources ([m]
     nb_rcv = 1  # Number of receivers
     pos_rcv = np.array([[0.5, 1, 0.5]])  # Position of the receivers [m]
     orV_rcv = None  # Vectors pointing in the same direction than the receivers (None assumes omnidirectional)
