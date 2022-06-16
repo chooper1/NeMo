@@ -353,7 +353,8 @@ class LibriSpeechGenerator(object):
                 sl = np.random.negative_binomial(
                     self._params.data_simulator.sentence_length_params[0], self._params.data_simulator.sentence_length_params[1]
                 )
-                print(sl)
+                if sl == 0:
+                    sl = 1
                 max_sentence_duration_sr = session_length_sr - running_length_sr
 
                 # only add if remaining length > 0.5 second
