@@ -2,7 +2,7 @@ data_simulator:
   manifest_path: ./dev-clean-align.json
   sr: 16000
   num_speakers: 4
-  session_length: 240
+  session_length: 40
   output_dir: test
   output_filename: diarization_session
   sentence_length_params:
