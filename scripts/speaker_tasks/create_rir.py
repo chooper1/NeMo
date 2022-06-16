@@ -33,16 +33,18 @@ simulates the trajectory for a selected audio source in this room.
 
 
 def main():
+    input_audio_filepath = args.input_audio_filepath
+    output_path = args.output_path
     # from the example: https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/example.py
     # parameter values explained here: https://github.com/DavidDiazGuerra/gpuRIR#simulatetrajectory
     room_sz = [3, 3, 2.5]  # Size of the room [m]
-    nb_src = 2  # Number of sources
+    nb_src = 1  # Number of sources
     pos_src = np.array([[0.6, 1.1, 0.5], [1, 2, 0.5]])  # Positions of the sources ([m]
-    nb_rcv = 1  # Number of receivers
-    pos_rcv = np.array([[0.5, 1, 0.5]])  # Position of the receivers [m]
+    nb_rcv = 2  # Number of receivers
+    pos_rcv = np.array([[0.5, 1, 0.5],[1, 1, 0.5]])  # Position of the receivers [m]
     orV_rcv = None  # Vectors pointing in the same direction than the receivers (None assumes omnidirectional)
     mic_pattern = "omni"  # Receiver polar pattern
-    abs_weights = [0.9] * 5 + [0.5]  # Absortion coefficient ratios of the walls
+    abs_weights = [0.4] * 5 + [0.2] #[0.9] * 5 + [0.5]  # Absortion coefficient ratios of the walls
     T60 = 1  # Time for the RIR to reach 60dB of attenuation [s]
     att_diff = 15.0  # Attenuation when start using the diffuse reverberation model [dB]
     att_max = 60.0  # Attenuation at the end of the simulation [dB]
@@ -58,17 +60,19 @@ def main():
 
     # from https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/room.py#2216
     # need to convolve individual audio sources with separate RIRs
-    filepath = "/home/chooper/projects/datasets/LibriSpeech/LibriSpeech/dev-clean-processed/2277-149874-0000.wav"
-    input_wav, sr = librosa.load(filepath, sr=fs)
-    print(input_wav.shape)
+    input_wav, sr = librosa.load(input_audio_filepath, sr=fs)
 
     speaker_id = 0
-    print(RIR[0, speaker_id, : len(input_wav)].shape)
-    output_sound = convolve(input_wav, RIR[0, speaker_id, : len(input_wav)])
+    output_sound = []
+    for channel in nb_src:
+        output_sound.append(convolve(input_wav, RIR[0, speaker_id, : len(input_wav)]))
     output_sound = output_sound / np.max(np.abs(output_sound))  # normalize to [-1,1]
-    print(output_sound)
-    sf.write("test/diarization_session_0.wav", output_sound, int(fs))
+    sf.write(output_path, output_sound, int(fs))
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="RIR Creator")
+    parser.add_argument("--input_audio_filepath", help="path to input audio file", type=str, default="/home/chooper/projects/datasets/LibriSpeech/LibriSpeech/dev-clean-processed/2277-149874-0000.wav")
+    parser.add_argument("--output_path", help="path to output file", type=str, default="test/diarization_session_0.wav")
+    args = parser.parse_args()
     main()
