@@ -16,6 +16,6 @@ data_simulator:
   mean_silence: 0.185
   overlap_prob: 0.3
   outputs: rjc
-  enforce_num_speakers: true
+  enforce_num_speakers: false
   num_sessions: 1
   random_seed: 42
