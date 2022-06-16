@@ -69,6 +69,8 @@ def main():
     output_sound = []
     for channel in range(0,nb_src):
         out_channel = convolve(input_wav, RIR[channel, speaker_id, : len(input_wav)])
+        print(out_channel)
+        print(out_channel.shape)
         output_sound.append(out_channel)
     print(output_sound)
     print(output_sound.shape)
