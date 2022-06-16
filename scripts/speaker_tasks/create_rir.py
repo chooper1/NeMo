@@ -70,7 +70,7 @@ def main():
     for channel in range(0,nb_rcv):
         out_channel = convolve(input_wav, RIR[channel, speaker_id, : len(input_wav)]).tolist()
         output_sound.append(out_channel)
-    output_sound = np.ndarray(output_sound)
+    output_sound = np.array(output_sound)
     print(output_sound)
     print(output_sound.shape)
     output_sound = output_sound / np.max(np.abs(output_sound))  # normalize to [-1,1]
