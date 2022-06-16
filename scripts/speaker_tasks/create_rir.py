@@ -74,7 +74,7 @@ def main():
     print(output_sound)
     print(output_sound.shape)
     output_sound = output_sound / np.max(np.abs(output_sound))  # normalize to [-1,1]
-    sf.write(output_path, output_sound, int(fs))
+    sf.write(output_path, output_sound, int(fs), channels=nb_rcv)
 
 
 if __name__ == "__main__":
