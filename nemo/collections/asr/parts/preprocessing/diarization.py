@@ -73,6 +73,8 @@ class LibriSpeechGenerator(object):
         mean_silence (float): mean proportion of silence to speaking time
         outputs (str): which files to output (r - rttm, j - json, c - ctm)
         enforce_num_speakers (bool): enforce that all requested speakers are present in the output wav file
+        num_sessions (int): number of sessions
+        random_seed (int): random seed
     """
 
     def __init__(self, cfg):
@@ -84,7 +86,6 @@ class LibriSpeechGenerator(object):
         self._text = ""
         self._words = []
         self._alignments = []
-
         #keep track of furthest sample per speaker to avoid overlapping same speaker
         self._furthest_sample = [0 for n in range(0,self._params.data_simulator.num_speakers)]
 
@@ -292,14 +293,10 @@ class LibriSpeechGenerator(object):
 
     """
     Generate diarization session
-
-    Args:
-        num_sessions (int): number of diarization sessions to generate with the current configuration
     """
-
-    def generate_session(self, num_sessions=1, random_seed=42):
-        random.seed(random_seed)
-        for i in range(0, num_sessions):
+    def generate_session(self):
+        random.seed(self._params.data_simulator.random_seed)
+        for i in range(0, self._params.data_simulator.num_sessions):
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
             speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
             base_speaker_dominance = np.copy(speaker_dominance)

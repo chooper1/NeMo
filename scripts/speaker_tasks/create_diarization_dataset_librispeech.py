@@ -24,21 +24,19 @@ from nemo.collections.asr.parts.preprocessing.diarization import LibriSpeechGene
 
 """
 This script creates a synthetic diarization session using the LibriSpeech dataset.
+Usage:
+  python create_diarization_dataset_librispeech.py \
+    data_simulator.num_sessions=<number of sessions> \
+    data_simulator.random_seed=<random seed>
+Check out whole parameters in ./conf/data_simulator.yaml.
 """
 
 @hydra_runner(config_path="conf", config_name="data_simulator.yaml")
 def main(cfg):
     # logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
 
-    num_sessions = args.num_sessions
-    random_seed = args.random_seed
-
     lg = LibriSpeechGenerator(cfg=cfg)
-    lg.generate_session(num_sessions, random_seed)
+    lg.generate_session()
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="LibriSpeech Synthetic Diarization Generator")
-    parser.add_argument("--num_sessions", help="number of sessions to generate", type=int, default=1)
-    parser.add_argument("--random_seed", help="random seed", type=int, default=42)
-    args = parser.parse_args()
     main()
