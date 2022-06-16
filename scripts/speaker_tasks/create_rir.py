@@ -67,6 +67,7 @@ def main():
     for channel in range(0,nb_src):
         output_sound.append(convolve(input_wav, RIR[0, speaker_id, : len(input_wav)]))
     output_sound = output_sound / np.max(np.abs(output_sound))  # normalize to [-1,1]
+    print(output_sound)
     sf.write(output_path, output_sound, int(fs))
 
 
