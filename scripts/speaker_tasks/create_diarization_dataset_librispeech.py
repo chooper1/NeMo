@@ -24,8 +24,6 @@ from nemo.collections.asr.parts.preprocessing.diarization import LibriSpeechGene
 
 """
 This script creates a synthetic diarization session using the LibriSpeech dataset.
-
-
 """
 
 @hydra_runner(config_path="conf", config_name="data_simulator.yaml")

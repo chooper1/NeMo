@@ -8,6 +8,5 @@ python create_alignment_manifest.py \
   --output_path dev-clean-align.json
 # Create diarization session
 python create_diarization_dataset_librispeech.py \
-  --config_path ./conf/ \
   --num_sessions 1 \
   --random_seed 42
