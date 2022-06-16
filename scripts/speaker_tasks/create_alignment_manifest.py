@@ -72,7 +72,7 @@ def main():
     unaligned = get_unaligned_examples(unaligned_path, dataset)
     num_unaligned = len(unaligned)
 
-    # separate indices to manage source/destination manifest to manage missing alignments
+    # separate indices to manage source/destination manifest to handle missing alignments
     src_i = 0
     target_i = 0
     while src_i < len(manifest):
@@ -87,6 +87,7 @@ def main():
         # Parse each utterance present in the file
         alignment_file = open(alignment_fpath, "r")
         for line in alignment_file:
+
             # filter out unaligned examples
             file = manifest[src_i]
             fn = file['audio_filepath'].split('/')[-1]
@@ -102,10 +103,10 @@ def main():
             utterance_id, words, end_times = line.strip().split(' ')
             if utterance_id != line_id:
                 raise Exception("Mismatch between source and target utterance id")
-
             words = words.replace('\"', '').lower().split(',')
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
 
+            #build target manifest entry
             target_manifest.append({})
             target_manifest[target_i]['audio_filepath'] = file['audio_filepath']
             target_manifest[target_i]['duration'] = file['duration']
@@ -124,9 +125,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Alignment Manifest Creator")
     parser.add_argument("--input_manifest_filepath", help="path to input manifest file", type=str, required=True)
     parser.add_argument("--base_alignment_path", help="path to librispeech alignment dataset", type=str, required=True)
-    parser.add_argument(
-        "--dataset", help="which test/dev/training set to create a manifest for", type=str, required=True
-    )
+    parser.add_argument("--dataset", help="which test/dev/training set to create a manifest for", type=str, required=True)
     parser.add_argument("--output_path", help="path to output manifest file", type=str, required=True)
     args = parser.parse_args()
 

@@ -138,6 +138,7 @@ class LibriSpeechGenerator(object):
         if total == 0:
           for i in range(0,len(dominance)):
             dominance[i]+=min_dominance
+        #scale accounting for min_dominance which has to be added after
         dominance = (dominance / total)*(1-self._params.data_simulator.min_dominance*self._params.data_simulator.num_speakers)
         for i in range(0,len(dominance)):
           dominance[i]+=self._params.data_simulator.min_dominance
@@ -146,9 +147,11 @@ class LibriSpeechGenerator(object):
         return dominance
 
     def _increase_speaker_dominance(self, increase_percent, base_speaker_dominance, factor):
+        #extract original per-speaker probabilities
         dominance = np.copy(base_speaker_dominance)
         for i in range(len(dominance)-1,0,-1):
             dominance[i] = dominance[i] - dominance[i-1]
+        #increase specified speakers by the desired factor and renormalize
         for i in increase_percent:
             dominance[i] = dominance[i] * factor
         dominance = dominance / np.sum(dominance)
@@ -161,10 +164,7 @@ class LibriSpeechGenerator(object):
         if random.uniform(0, 1) > self._params.data_simulator.turn_prob and prev_speaker != None:
             return prev_speaker
         else:
-            rand = random.uniform(0, 1)
-            speaker_turn = 0
-            while rand > dominance[speaker_turn]:
-                speaker_turn += 1
+            speaker_turn = prev_speaker
             while speaker_turn == prev_speaker:
                 rand = random.uniform(0, 1)
                 speaker_turn = 0
@@ -227,7 +227,8 @@ class LibriSpeechGenerator(object):
             if (overlap_percent > 1):
                 overlap_percent = 1
             new_start = start - int(prev_length_sr * overlap_percent)
-            #if same speaker ends up overlapping, pad with silence instead
+
+            #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
                 new_start = self._furthest_sample[speaker_turn]
                 silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
@@ -303,7 +304,6 @@ class LibriSpeechGenerator(object):
             speaker_lists = self._get_speaker_samples(speaker_ids)  # get list of samples per speaker
 
             filename = self._params.data_simulator.output_filename + f"_{i}"
-            wavpath = os.path.join(self._params.data_simulator.output_dir, filename + '.wav')
             speaker_turn = 0  # assume alternating between speakers 1 & 2
             running_length_sr = 0  # starting point for each sentence
             prev_length_sr = 0  # for overlap
@@ -323,6 +323,7 @@ class LibriSpeechGenerator(object):
                 enforce = False
 
             ROOT = os.getcwd()
+            wavpath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.wav')
             rttm_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.rttm')
             json_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.json')
             ctm_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.ctm')
@@ -344,7 +345,6 @@ class LibriSpeechGenerator(object):
                     else:
                         enforce = False
                         speaker_dominance = base_speaker_dominance
-
 
                 # select speaker
                 speaker_turn = self._get_next_speaker(prev_speaker, speaker_dominance)
@@ -383,6 +383,7 @@ class LibriSpeechGenerator(object):
                     array = np.pad(array, (0, end - len(array)))
                 array[start:end] += self._sentence
 
+                #build entries for output files
                 if 'r' in self._params.data_simulator.outputs:
                     new_rttm_entry = self._create_new_rttm_entry(start / self._params.data_simulator.sr, end / self._params.data_simulator.sr, speaker_ids[speaker_turn])
                     rttm_list.append(new_rttm_entry)
@@ -399,11 +400,11 @@ class LibriSpeechGenerator(object):
                 prev_speaker = speaker_turn
                 prev_length_sr = length
 
+            #throw error if number of speakers is less than requested
             num_missing = 0
             for k in range(0,len(self._furthest_sample)):
                 if self._furthest_sample[k] == 0:
                     num_missing += 1
-
             if num_missing != 0:
                 warnings.warn(f"{self._params.data_simulator.num_speakers-num_missing} speakers were included in the clip instead of the requested amount of {self._params.data_simulator.num_speakers}")
 

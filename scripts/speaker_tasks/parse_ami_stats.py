@@ -17,9 +17,7 @@ import json
 import os
 import random
 import shutil
-
 import numpy as np
-from collections import OrderedDict
 
 random.seed(42)
 
@@ -40,14 +38,14 @@ def read_cmi_files(directory_path):
 
 def main():
     input_directory = args.input_directory
+    sentence_break_time = args.sentence_threshold
     list = read_cmi_files(input_directory)
 
-    sentence_break_time = 1.0 #1 second
-
+    #collect statistics across all AMI files
     full_silence_percent = []
     full_overlap_percent = []
     full_dominance_var = []
-    full_stddev_var = []
+    full_dominance_stddev = []
     total_sentence_lengths = {}
     total_num_speakers = {}
 
@@ -56,15 +54,13 @@ def main():
 
     for key in list:
         meeting = list[key]
-        prev_sp = None
-        sentence_length = 0
-        current_start = 0
-        prev_end = 0
 
         current_sentence_lengths = {}
-        prev_time_per_speaker = {}
-        dominance_per_speaker = {}
+        prev_time_per_speaker = {} #use for determining end of sentences
+        dominance_per_speaker = {} #track per-speaker speaking time
+        prev_sp = None
 
+        #used in second loop to get overlap / silence
         largest_end_time = 0
 
         for line in meeting:
@@ -76,31 +72,34 @@ def main():
             if(end > largest_end_time):
                 largest_end_time = end
 
+            #first time this speaker has spoken
             if str(sp) not in prev_time_per_speaker:
                 prev_time_per_speaker[str(sp)] = end
                 current_sentence_lengths[str(sp)] = 1
                 dominance_per_speaker[str(sp)] = 0
+
+            #break sentence if it has been one second since this speaker spoke
             elif start - prev_time_per_speaker[str(sp)] > sentence_break_time:
-                #break sentence
+                #record sentence length, whether there was a speaker turn
                 if str(current_sentence_lengths[str(sp)]) not in total_sentence_lengths:
                     total_sentence_lengths[str(current_sentence_lengths[str(sp)])] = 0
                 total_sentence_lengths[str(current_sentence_lengths[str(sp)])] += 1
-                current_sentence_lengths[str(sp)] = 1 #start new sentence
-
+                current_sentence_lengths[str(sp)] = 1
                 if prev_sp == sp:
                     no_turn += 1
                 else:
                     yes_turn += 1
+
+            #else continue sentence
             else:
-                #continue sentence
                 current_sentence_lengths[str(sp)] += 1
 
             prev_time_per_speaker[str(sp)] = end
             dominance_per_speaker[str(sp)] += end - start
             prev_sp = sp
 
+        #get speaking time, overlap, silence
         timeline = np.zeros(int(largest_end_time*100))
-
         for line in meeting:
             sp = line[1]
             start = int(float(line[2])*100)
@@ -118,18 +117,18 @@ def main():
         full_silence_percent.append(silence_percent)
         full_overlap_percent.append(overlap_percent)
 
-        dominance_var = []
+        #get speaker dominance variance
+        dominance = []
         total_dominance = 0
         for k in dominance_per_speaker:
             total_dominance += dominance_per_speaker[k]
         for k in dominance_per_speaker:
             dominance_per_speaker[k] = dominance_per_speaker[k] / total_dominance
-            dominance_var.append(dominance_per_speaker[k])
+            dominance.append(dominance_per_speaker[k])
 
-
-        dvar = np.var(dominance_var)
+        dvar = np.var(dominance)
         full_dominance_var.append(dvar)
-        full_stddev_var.append(np.sqrt(dvar))
+        full_dominance_stddev.append(np.sqrt(dvar))
 
         num_speakers = len(prev_time_per_speaker)
         if str(num_speakers) not in total_num_speakers:
@@ -137,31 +136,19 @@ def main():
         else:
             total_num_speakers[str(num_speakers)] += 1
 
-
+    #replace with logging?
     print('full_silence_percent: ', np.mean(full_silence_percent))
     print('full_overlap_percent: ', np.mean(full_overlap_percent))
     print('full_dominance_var: ', np.mean(full_dominance_var))
-    print('full_stddev_var: ', np.mean(full_stddev_var))
+    print('full_dominance_stddev: ', np.mean(full_dominance_stddev))
     print('turn_prob: ', float(yes_turn) / (float(yes_turn)+float(no_turn)))
     print('full_num_speakers: ', total_num_speakers)
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
-    #collected stats:
-    #   -sentence_length_params (must fit to sentence length dist'n)
-    #   -dominance_var
-    #   -turn_prob
-    #   -overlap_prob
-    #   -mean_overlap
-    #   -mean_silence
-
-    #TODO:
-    #   -overlap_prob
-    #   -dist'n of overlap
-    #   -dist'n of silence
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AMI CMI file parser")
     parser.add_argument("--input_directory", help="Path to input CMI file", type=str, required=True) #change eventually to loop over all files in directory
+    parser.add_argument("--sentence_threshold", help="Sentence Threshold", type=float, default=1.0)
     args = parser.parse_args()
 
     main()

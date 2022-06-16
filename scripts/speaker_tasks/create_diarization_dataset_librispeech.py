@@ -19,22 +19,17 @@ import shutil
 
 from omegaconf import OmegaConf
 from nemo.core.config import hydra_runner
-from nemo.utils import logging
 from nemo.collections.asr.parts.preprocessing.diarization import LibriSpeechGenerator
 
 """
 This script creates a synthetic diarization session using the LibriSpeech dataset.
 Usage:
-  python create_diarization_dataset_librispeech.py \
-    data_simulator.num_sessions=<number of sessions> \
-    data_simulator.random_seed=<random seed>
-Check out whole parameters in ./conf/data_simulator.yaml.
+  python create_diarization_dataset_librispeech.py
+Check out parameters in ./conf/data_simulator.yaml.
 """
 
 @hydra_runner(config_path="conf", config_name="data_simulator.yaml")
 def main(cfg):
-    # logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
-
     lg = LibriSpeechGenerator(cfg=cfg)
     lg.generate_session()
 
