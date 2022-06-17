@@ -221,7 +221,7 @@ class LibriSpeechGenerator(object):
                 window_amount = remaining_duration_sr - prev_dur_sr
             if self._params.data_simulator.window_type == 'hamming':
                 window = hamming(window_amount*2)[window_amount:]
-            self._sentence = np.append(self._sentence, np.multiply(audio_file[prev_dur_sr:window_amount], window))
+            self._sentence = np.append(self._sentence, np.multiply(audio_file[prev_dur_sr:prev_dur_sr+window_amount], window))
 
         #zero pad if close to end of the clip
         if dur_sr > remaining_duration_sr:
