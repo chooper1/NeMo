@@ -21,6 +21,7 @@ import shutil
 import librosa
 import numpy as np
 from scipy.stats import halfnorm
+from scipy.signal.windows import hamming
 import soundfile as sf
 from omegaconf import OmegaConf
 
@@ -212,6 +213,17 @@ class LibriSpeechGenerator(object):
 
         # add audio clip up to the final alignment
         self._sentence = np.append(self._sentence, audio_file[:prev_dur_sr])
+
+        #windowing
+        if i < len(file['words']) and self._params.data_simulator.window_type != None:
+            window_amount = int(self._params.data_simulator.window_size*self._params.data_simulator.sr)
+            if prev_dur_sr+window_amount > remaining_duration_sr:
+                window_amount = remaining_duration_sr - prev_dur_sr
+            if self._params.data_simulator.window_type == 'hamming':
+                window = hamming(window_amount*2)[window_amount:]
+            self._sentence = np.append(self._sentence, np.multiply(audio_file[prev_dur_sr:window_amount], window))
+
+        #zero pad if close to end of the clip
         if dur_sr > remaining_duration_sr:
             self._sentence = np.pad(self._sentence, (0, max_sentence_duration_sr - len(self._sentence)))
         return sentence_duration+nw, len(self._sentence)
