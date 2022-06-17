@@ -16,6 +16,7 @@ import json
 import os
 import random
 import warnings
+import shutil
 
 import librosa
 import numpy as np
@@ -297,6 +298,18 @@ class LibriSpeechGenerator(object):
     """
     def generate_session(self):
         random.seed(self._params.data_simulator.random_seed)
+
+        #delete output directory if it exists or throw warning
+        if os.path.isdir(self._params.data_simulator.output_dir) and os.listdir(path):
+            if self._params.data_simulator.overwrite_output:
+                shutil.rmtree(self._params.data_simulator.output_dir)
+                os.mkdir(self._params.data_simulator.output_dir)
+            else:
+                raise Exception("Output directory is nonempty and overwrite_output = false")
+        elif not os.path.isdir(self._params.data_simulator.output_dir):
+            os.mkdir(self._params.data_simulator.output_dir)
+
+
         for i in range(0, self._params.data_simulator.num_sessions):
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
             speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
@@ -322,6 +335,7 @@ class LibriSpeechGenerator(object):
             else:
                 enforce = False
 
+            #TODO only add root if paths are relative?
             ROOT = os.getcwd()
             wavpath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.wav')
             rttm_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.rttm')

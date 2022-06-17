@@ -5,6 +5,7 @@ data_simulator:
   session_length: 40
   output_dir: test
   output_filename: diarization_session
+  overwrite_output: true
   sentence_length_params:
   - 0.4
   - 0.05
