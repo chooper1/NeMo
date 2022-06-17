@@ -21,4 +21,4 @@ data_simulator:
   num_sessions: 1
   random_seed: 42
   window_type: hamming
-  window_size: 0.25
+  window_size: 0.1
