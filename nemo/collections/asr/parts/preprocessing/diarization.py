@@ -225,6 +225,8 @@ class LibriSpeechGenerator(object):
                 window = hann(window_amount*2)[window_amount:]
             elif self._params.data_simulator.window_type == 'cosine':
                 window = cosine(window_amount*2)[window_amount:]
+            if len(audio_file[prev_dur_sr:]) < window_amount:
+                self._sentence = np.pad(self._sentence, (0, window_amount - len(audio_file[prev_dur_sr:])))
             self._sentence = np.append(self._sentence, np.multiply(audio_file[prev_dur_sr:prev_dur_sr+window_amount], window))
 
         #zero pad if close to end of the clip
