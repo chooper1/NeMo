@@ -80,6 +80,6 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="RIR Creator")
     parser.add_argument("--input_audio_filepath", help="path to input audio file", type=str, default="/home/chooper/projects/datasets/LibriSpeech/LibriSpeech/dev-clean-processed/2277-149874-0000.wav")
-    parser.add_argument("--output_path", help="path to output file", type=str, default="test/diarization_session_0.wav")
+    parser.add_argument("--output_path", help="path to output file", type=str, default='./test/diarization_session_0.wav')
     args = parser.parse_args()
     main()
