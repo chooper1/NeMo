@@ -300,7 +300,7 @@ class LibriSpeechGenerator(object):
         random.seed(self._params.data_simulator.random_seed)
 
         #delete output directory if it exists or throw warning
-        if os.path.isdir(self._params.data_simulator.output_dir) and os.listdir(path):
+        if os.path.isdir(self._params.data_simulator.output_dir) and os.listdir(self._params.data_simulator.output_dir):
             if self._params.data_simulator.overwrite_output:
                 shutil.rmtree(self._params.data_simulator.output_dir)
                 os.mkdir(self._params.data_simulator.output_dir)
