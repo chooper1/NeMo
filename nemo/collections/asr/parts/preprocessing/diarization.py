@@ -309,7 +309,6 @@ class LibriSpeechGenerator(object):
         elif not os.path.isdir(self._params.data_simulator.output_dir):
             os.mkdir(self._params.data_simulator.output_dir)
 
-
         for i in range(0, self._params.data_simulator.num_sessions):
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
             speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
@@ -335,12 +334,16 @@ class LibriSpeechGenerator(object):
             else:
                 enforce = False
 
-            #TODO only add root if paths are relative?
-            ROOT = os.getcwd()
-            wavpath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.wav')
-            rttm_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.rttm')
-            json_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.json')
-            ctm_filepath = os.path.join(ROOT, self._params.data_simulator.output_dir, filename + '.ctm')
+            # only add root if paths are relative?
+            if not os.path.isabs(self._params.data_simulator.output_dir):
+                ROOT = os.getcwd()
+                basepath = os.path.join(ROOT, self._params.data_simulator.output_dir)
+            else:
+                basepath = self._params.data_simulator.output_dir
+            wavpath = os.path.join(basepath, filename + '.wav')
+            rttm_filepath = os.path.join(basepath, filename + '.rttm')
+            json_filepath = os.path.join(basepath, filename + '.json')
+            ctm_filepath = os.path.join(basepath, filename + '.ctm')
 
             session_length_sr = int((self._params.data_simulator.session_length * self._params.data_simulator.sr))
             array = np.zeros(session_length_sr)
