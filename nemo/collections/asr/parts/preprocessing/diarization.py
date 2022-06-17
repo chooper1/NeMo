@@ -407,6 +407,12 @@ class LibriSpeechGenerator(object):
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._params.data_simulator.sr)
                     sentence_duration,sentence_duration_sr = self._add_file(file, audio_file, sentence_duration, sl, max_sentence_duration_sr)
 
+                #per-speaker normalization
+                if self._params.data_simulator.normalization == 'equal':
+                    self._sentence = self._sentence / (np.random.normal(loc=1.0, scale=self._params.data_simulator.normalization_var) * 1.0 * np.max(np.abs(self._sentence)))
+                elif self._params.data_simulator.normalization == 'randomized':
+                    self._sentence = self._sentence / (1.0 * np.max(np.abs(self._sentence)))
+
                 length = len(self._sentence)
                 start = self._add_silence_or_overlap(
                     speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr, enforce
