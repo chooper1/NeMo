@@ -120,6 +120,8 @@ def main():
         silence_lengths = []
         silence_count = 0
         for i in range(0, len(timeline)):
+            print(timeline[i])
+
             if timeline[i] == 0:
                 silence_count += 1
             else:
