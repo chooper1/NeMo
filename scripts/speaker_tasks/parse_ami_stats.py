@@ -132,7 +132,7 @@ def main():
                 overlap_count += 1
             else:
                 if overlap_count > 0:
-                    silence_lengths.append(overlap_count)
+                    overlap_lengths.append(overlap_count)
                 overlap_count = 0
 
         silence_percent = silence_time / len(timeline)
@@ -165,8 +165,6 @@ def main():
 
     silence_binned = {}
     overlap_binned = {}
-    print(full_silence_lengths)
-    print(full_overlap_lengths)
 
     for i in range(0,len(full_silence_lengths)):
         length = full_silence_lengths[i]*1.0 / sample_rate
