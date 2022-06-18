@@ -250,7 +250,9 @@ class LibriSpeechGenerator(object):
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
                 new_start = self._furthest_sample[speaker_turn]
-                silence_percent = mean_silence_percent + np.random.uniform(-mean_silence_percent, mean_silence_percent)
+                silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
+                if (silence_percent > 1):
+                    silence_percent = 1
                 silence_amount = int(length * silence_percent)
                 if new_start + length + silence_amount > session_length_sr:
                     return session_length_sr - length
