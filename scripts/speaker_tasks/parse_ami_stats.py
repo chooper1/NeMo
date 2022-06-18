@@ -120,14 +120,14 @@ def main():
         silence_lengths = []
         silence_count = 0
         for i in range(0, len(timeline)):
-            if timeline == 0:
+            if timeline[i] == 0:
                 silence_count += 1
             else:
                 if silence_count > 0:
                     silence_lengths.append(silence_count)
                 silence_count = 0
 
-            if timeline > 1:
+            if timeline[i] > 1:
                 overlap_count += 1
             else:
                 if overlap_count > 0:
