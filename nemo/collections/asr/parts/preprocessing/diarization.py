@@ -50,7 +50,7 @@ def write_ctm(output_path, target_ctm):
             tgt = pair[1]
             outfile.write(tgt)
 
-def write_text(text_filepath, json_list):
+def write_text(output_path, json_list):
     with open(output_path, "w") as outfile:
         for txt in json_list:
             outfile.write(txt['text'] + ' ')
