@@ -50,6 +50,12 @@ def write_ctm(output_path, target_ctm):
             tgt = pair[1]
             outfile.write(tgt)
 
+def write_text(text_filepath, json_list):
+    with open(output_path, "w") as outfile:
+        for txt in json_list:
+            outfile.write(txt['text'] + ' ')
+
+
 class LibriSpeechGenerator(object):
     """
     Librispeech Diarization Session Generator.
@@ -364,6 +370,7 @@ class LibriSpeechGenerator(object):
             rttm_filepath = os.path.join(basepath, filename + '.rttm')
             json_filepath = os.path.join(basepath, filename + '.json')
             ctm_filepath = os.path.join(basepath, filename + '.ctm')
+            text_filepath = os.path.join(basepath, filename + '.txt')
 
             session_length_sr = int((self._params.data_simulator.session_length * self._params.data_simulator.sr))
             array = np.zeros(session_length_sr)
@@ -459,3 +466,5 @@ class LibriSpeechGenerator(object):
                 write_manifest(json_filepath, json_list)
             if 'c' in self._params.data_simulator.outputs:
                 write_ctm(ctm_filepath, ctm_list)
+            if 't' in self._params.data_simulator.outputs:
+                write_text(text_filepath, json_list)
