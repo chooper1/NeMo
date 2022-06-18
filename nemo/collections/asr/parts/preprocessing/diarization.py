@@ -50,10 +50,14 @@ def write_ctm(output_path, target_ctm):
             tgt = pair[1]
             outfile.write(tgt)
 
-def write_text(output_path, json_list):
+def write_text(output_path, target_ctm):
+    target_ctm.sort(key=lambda y: y[0])
     with open(output_path, "w") as outfile:
-        for txt in json_list:
-            outfile.write(txt['text'] + ' ')
+        for pair in target_ctm:
+            tgt = pair[1]
+            word = tgt.split(' ')[4]
+            outfile.write(word + ' ')
+        outfile.write('\n')
 
 
 class LibriSpeechGenerator(object):
@@ -467,4 +471,4 @@ class LibriSpeechGenerator(object):
             if 'c' in self._params.data_simulator.outputs:
                 write_ctm(ctm_filepath, ctm_list)
             if 't' in self._params.data_simulator.outputs:
-                write_text(text_filepath, json_list)
+                write_text(text_filepath, ctm_list)
