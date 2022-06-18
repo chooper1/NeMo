@@ -7,8 +7,10 @@ python create_alignment_manifest.py \
   --dataset dev-clean \
   --output_path dev-clean-align.json
 # Create diarization session
-for i in {1..100}
-do
-  python create_diarization_dataset_librispeech.py \
-    data_simulator.random_seed=$i
-done
+python create_diarization_dataset_librispeech.py \
+  data_simulator.random_seed=42
+# for i in {1..100}
+# do
+#   python create_diarization_dataset_librispeech.py \
+#     data_simulator.random_seed=$i
+# done
