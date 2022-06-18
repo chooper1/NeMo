@@ -39,11 +39,15 @@ def read_cmi_files(directory_path):
 def main():
     input_directory = args.input_directory
     sentence_break_time = args.sentence_threshold
+    sample_rate = args.sample_rate
+    bin_size = args.bin_size
     list = read_cmi_files(input_directory)
 
     #collect statistics across all AMI files
     full_silence_percent = []
     full_overlap_percent = []
+    full_silence_lengths = []
+    full_overlap_lengths = []
     full_dominance_var = []
     full_dominance_stddev = []
     total_sentence_lengths = {}
@@ -111,6 +115,25 @@ def main():
         silence_time = len(timeline) - speaking_time
         overlap_time = np.sum(timeline > 1)
 
+        overlap_lengths = []
+        overlap_count = 0
+        silence_lengths = []
+        silence_count = 0
+        for i in range(0, len(timeline)):
+            if timeline == 0:
+                silence_count += 1
+            else:
+                if silence_count > 0:
+                    silence_lengths.append(silence_count)
+                silence_count = 0
+
+            if timeline > 1:
+                overlap_count += 1
+            else:
+                if overlap_count > 0:
+                    silence_lengths.append(overlap_count)
+                overlap_count = 0
+
         silence_percent = silence_time / len(timeline)
         overlap_percent = overlap_time / speaking_time
 
@@ -136,6 +159,29 @@ def main():
         else:
             total_num_speakers[str(num_speakers)] += 1
 
+        full_silence_lengths += silence_lengths
+        full_overlap_lengths += overlap_lengths
+
+    silence_binned = {}
+    overlap_binned = {}
+
+    for i in range(0,len(full_silence_lengths)):
+        len = full_silence_lengths[i]*1.0 / sample_rate
+        len_rounded = round(len * (1.0/bin_size)) / (1.0/bin_size)
+
+        if str(len_rounded) not in silence_binned:
+            silence_binned[str(len_rounded)] = 0
+        silence_binned[str(len_rounded)] += 1
+
+    for i in range(0,len(full_overlap_lengths)):
+        len = full_overlap_lengths[i]*1.0 / sample_rate
+        len_rounded = round(len * (1.0/bin_size)) / (1.0/bin_size)
+
+        if str(len_rounded) not in overlap_binned:
+            overlap_binned[str(len_rounded)] = 0
+        overlap_binned[str(len_rounded)] += 1
+
+
     #replace with logging?
     print('full_silence_percent: ', np.mean(full_silence_percent))
     print('full_overlap_percent: ', np.mean(full_overlap_percent))
@@ -145,10 +191,15 @@ def main():
     print('full_num_speakers: ', total_num_speakers)
     print('full_total_sentence_lengths: ', total_sentence_lengths)
 
+    print('silence_binned: ', silence_binned)
+    print('overlap_binned: ', overlap_binned)
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AMI CMI file parser")
     parser.add_argument("--input_directory", help="Path to input CMI file", type=str, required=True) #change eventually to loop over all files in directory
     parser.add_argument("--sentence_threshold", help="Sentence Threshold", type=float, default=1.0)
+    parser.add_argument("--sample_rate", help="Sampling Rate", type=int, default=16000)
+    parser.add_argument("--bin_size", help="Bin Size", type=float, default=0.05)
     args = parser.parse_args()
 
     main()
