@@ -120,7 +120,6 @@ def main():
         silence_lengths = []
         silence_count = 0
         for i in range(0, len(timeline)):
-            print(timeline[i])
 
             if timeline[i] == 0:
                 silence_count += 1
@@ -166,6 +165,8 @@ def main():
 
     silence_binned = {}
     overlap_binned = {}
+    print(full_silence_lengths)
+    print(full_overlap_lengths)
 
     for i in range(0,len(full_silence_lengths)):
         length = full_silence_lengths[i]*1.0 / sample_rate
