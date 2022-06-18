@@ -166,16 +166,16 @@ def main():
     overlap_binned = {}
 
     for i in range(0,len(full_silence_lengths)):
-        len = full_silence_lengths[i]*1.0 / sample_rate
-        len_rounded = round(len * (1.0/bin_size)) / (1.0/bin_size)
+        length = full_silence_lengths[i]*1.0 / sample_rate
+        len_rounded = round(length * (1.0/bin_size)) / (1.0/bin_size)
 
         if str(len_rounded) not in silence_binned:
             silence_binned[str(len_rounded)] = 0
         silence_binned[str(len_rounded)] += 1
 
     for i in range(0,len(full_overlap_lengths)):
-        len = full_overlap_lengths[i]*1.0 / sample_rate
-        len_rounded = round(len * (1.0/bin_size)) / (1.0/bin_size)
+        length = full_overlap_lengths[i]*1.0 / sample_rate
+        len_rounded = round(length * (1.0/bin_size)) / (1.0/bin_size)
 
         if str(len_rounded) not in overlap_binned:
             overlap_binned[str(len_rounded)] = 0
