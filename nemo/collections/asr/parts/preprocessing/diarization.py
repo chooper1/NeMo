@@ -264,8 +264,6 @@ class LibriSpeechGenerator(object):
         mean_overlap_percent = self._params.data_simulator.mean_overlap / overlap_prob
         mean_silence_percent = self._params.data_simulator.mean_silence / (1 - overlap_prob)
 
-        #TODO scale overlap prob by chance of self overlap?
-
         self.speaking_time += len(self._sentence) / self._params.data_simulator.sr
 
         # overlap
