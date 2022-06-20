@@ -276,8 +276,6 @@ class LibriSpeechGenerator(object):
                 overlap_percent = 1
             new_start = start - int(prev_length_sr * overlap_percent)
 
-            self.overlap_time += prev_length_sr * overlap_percent / self._params.data_simulator.sr
-            self.speaking_time -= self.overlap_time
             # self.overlap_success += 1
 
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
@@ -293,6 +291,8 @@ class LibriSpeechGenerator(object):
                 else:
                     return new_start + silence_amount
             else:
+                self.overlap_time += (start - new_start) / self._params.data_simulator.sr
+                self.speaking_time -= (start - new_start) / self._params.data_simulator.sr
                 return new_start
             # return new_start
         else:
