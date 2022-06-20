@@ -197,7 +197,7 @@ def main():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="AMI RTTM file parser")
     parser.add_argument("--input_directory", help="Path to input CMI file", type=str, required=True) #change eventually to loop over all files in directory
-    parser.add_argument("--sentence_threshold", help="Sentence Threshold", type=float, default=1.0)
+    parser.add_argument("--sentence_threshold", help="Sentence Threshold", type=float, default=2.5)
     parser.add_argument("--sample_rate", help="Sampling Rate", type=int, default=16000)
     parser.add_argument("--bin_size", help="Bin Size", type=float, default=0.1)
     args = parser.parse_args()
