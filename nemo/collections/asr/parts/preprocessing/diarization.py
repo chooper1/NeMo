@@ -504,3 +504,20 @@ class LibriSpeechGenerator(object):
             # print('no_turn: ', self.no_turn)
             print('speaking_time: ', self.speaking_time)
             print('overlap_time: ', self.overlap_time)
+
+            timeline = np.zeros(len(array))
+            for line in rttm_list:
+                l = line.split(' ')
+                sp = l[2]
+                start = float(l[0])
+                start = int(start * self._params.data_simulator.sr)
+                dur = float(l[2])
+                dur = int(dur * self._params.data_simulator.sr)
+                end = start+dur
+                timeline[start:end] += 1
+
+            speaking_time = np.sum(timeline > 0)
+            overlap_time = np.sum(timeline > 1)
+            overlap_percent = overlap_time / speaking_time
+
+            print('overlap_percent: ', overlap_percent)
