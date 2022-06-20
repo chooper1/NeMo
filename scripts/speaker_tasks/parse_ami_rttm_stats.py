@@ -172,14 +172,14 @@ def main():
         length = full_silence_lengths[i]*1.0 / sample_rate
         len_rounded = math.ceil(length * (1.0/bin_size)) / (1.0/bin_size)
         if (len_rounded > 10):
-            len_rounded = 10
+            len_rounded = 10.0
         silence_binned[str(len_rounded)] += 1
 
     for i in range(0,len(full_overlap_lengths)):
         length = full_overlap_lengths[i]*1.0 / sample_rate
         len_rounded = math.ceil(length * (1.0/bin_size)) / (1.0/bin_size)
         if (len_rounded > 10):
-            len_rounded = 10
+            len_rounded = 10.0
         overlap_binned[str(len_rounded)] += 1
 
     #replace with logging?
