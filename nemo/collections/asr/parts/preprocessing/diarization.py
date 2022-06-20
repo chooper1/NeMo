@@ -106,6 +106,8 @@ class LibriSpeechGenerator(object):
         self.overlap_fail = 0
         self.yes_turn = 0
         self.no_turn = 0
+        self.speaking_time = 0
+        self.overlap_time = 0
 
     # randomly select speaker ids from loaded dict
     def _get_speaker_ids(self):
@@ -272,7 +274,10 @@ class LibriSpeechGenerator(object):
                 overlap_percent = 1
             new_start = start - int(prev_length_sr * overlap_percent)
 
+            self.overlap_time += prev_length_sr * overlap_percent / self._sr
+
             # self.overlap_success += 1
+            self.speaking_time += self._sentence / self._sr
 
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
@@ -494,5 +499,7 @@ class LibriSpeechGenerator(object):
 
             # print('overlap_success: ', self.overlap_success)
             # print('overlap_fail: ', self.overlap_fail)
-            print('yes_turn: ', self.yes_turn)
-            print('no_turn: ', self.no_turn)
+            # print('yes_turn: ', self.yes_turn)
+            # print('no_turn: ', self.no_turn)
+            print('speaking_time: ', self.speaking_time)
+            print('overlap_time: ', self.overlap_time)
