@@ -101,6 +101,9 @@ class LibriSpeechGenerator(object):
         #keep track of furthest sample per speaker to avoid overlapping same speaker
         self._furthest_sample = [0 for n in range(0,self._params.data_simulator.num_speakers)]
 
+        self.overlap_success = 0
+        self.overlap_fail = 0
+
     # randomly select speaker ids from loaded dict
     def _get_speaker_ids(self):
         speaker_ids = []
@@ -249,25 +252,23 @@ class LibriSpeechGenerator(object):
         # overlap_prob = self._params.data_simulator.overlap_prob / (self._params.data_simulator.turn_prob)  # accounting for not overlapping the same speaker
         # mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
         # mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
-
-        overlap_prob = self._params.data_simulator.overlap_prob  # accounting for not overlapping the same speaker
-        mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
-        mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
-
-        # print('mean_overlap_percent: ', mean_overlap_percent)
-        # print('mean_silence_percent: ', mean_silence_percent)
+        overlap_prob = self._params.data_simulator.overlap_prob / (self._params.data_simulator.turn_prob)  # accounting for not overlapping the same speaker
+        mean_overlap_percent = self._params.data_simulator.mean_overlap / overlap_prob
+        mean_silence_percent = self._params.data_simulator.mean_silence / (1 - overlap_prob)
 
         # overlap
-        if prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
-        # if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
+        if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
             overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             if (overlap_percent > 1):
                 overlap_percent = 1
             new_start = start - int(prev_length_sr * overlap_percent)
 
+            self.overlap_success += 1
+
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
-            # if (new_start < self._furthest_sample[speaker_turn]):
-            #     new_start = self._furthest_sample[speaker_turn]
+            if (new_start < self._furthest_sample[speaker_turn]):
+                new_start = self._furthest_sample[speaker_turn]
+                self.overlap_fail += 1
             #     silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             #     if (silence_percent > 1):
             #         silence_percent = 1
@@ -481,3 +482,6 @@ class LibriSpeechGenerator(object):
                 write_ctm(ctm_filepath, ctm_list)
             if 't' in self._params.data_simulator.outputs:
                 write_text(text_filepath, ctm_list)
+
+            print('overlap_success: ', self.overlap_success)
+            print('overlap_fail: ', self.overlap_fail)
