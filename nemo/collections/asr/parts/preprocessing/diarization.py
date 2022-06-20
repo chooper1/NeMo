@@ -521,4 +521,6 @@ class LibriSpeechGenerator(object):
             overlap_time = np.sum(timeline > 1)
             overlap_percent = overlap_time / speaking_time
 
-            print('overlap_percent: ', overlap_percent)
+            self.overlap_percent = (self.overlap_percent*(i)+overlap_percent)/(i+1)
+
+            print('overlap_percent: ', self.overlap_percent)
