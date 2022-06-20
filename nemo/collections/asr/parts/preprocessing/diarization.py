@@ -262,10 +262,12 @@ class LibriSpeechGenerator(object):
         mean_silence_percent = self._params.data_simulator.mean_silence / (1 - overlap_prob)
 
         #TODO scale overlap prob by chance of self overlap?
-        if prev_speaker == speaker_turn:
-            self.yes_turn += 1
-        else:
-            self.no_turn += 1
+        
+        # if prev_speaker == speaker_turn:
+        #     self.yes_turn += 1
+        # else:
+        #     self.no_turn += 1
+        self.speaking_time += self._sentence / self._params.data_simulator.sr
 
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
@@ -274,10 +276,8 @@ class LibriSpeechGenerator(object):
                 overlap_percent = 1
             new_start = start - int(prev_length_sr * overlap_percent)
 
-            self.overlap_time += prev_length_sr * overlap_percent / self._sr
-
+            self.overlap_time += prev_length_sr * overlap_percent / self._params.data_simulator.sr
             # self.overlap_success += 1
-            self.speaking_time += self._sentence / self._sr
 
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
