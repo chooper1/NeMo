@@ -101,8 +101,11 @@ class LibriSpeechGenerator(object):
         #keep track of furthest sample per speaker to avoid overlapping same speaker
         self._furthest_sample = [0 for n in range(0,self._params.data_simulator.num_speakers)]
 
+        #debugging stats
         self.overlap_success = 0
         self.overlap_fail = 0
+        self.yes_turn = 0
+        self.no_turn = 0
 
     # randomly select speaker ids from loaded dict
     def _get_speaker_ids(self):
@@ -256,6 +259,12 @@ class LibriSpeechGenerator(object):
         mean_overlap_percent = self._params.data_simulator.mean_overlap / overlap_prob
         mean_silence_percent = self._params.data_simulator.mean_silence / (1 - overlap_prob)
 
+        #TODO scale overlap prob by chance of self overlap?
+        if prev_speaker == speaker_turn:
+            self.yes_turn += 1
+        else:
+            self.no_turn += 1
+
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
             overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
@@ -263,23 +272,23 @@ class LibriSpeechGenerator(object):
                 overlap_percent = 1
             new_start = start - int(prev_length_sr * overlap_percent)
 
-            self.overlap_success += 1
+            # self.overlap_success += 1
 
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
                 new_start = self._furthest_sample[speaker_turn]
-                self.overlap_fail += 1
-            #     silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
-            #     if (silence_percent > 1):
-            #         silence_percent = 1
-            #     silence_amount = int(length * silence_percent)
-            #     if new_start + length + silence_amount > session_length_sr:
-            #         return session_length_sr - length
-            #     else:
-            #         return new_start + silence_amount
-            # else:
-            #     return new_start
-            return new_start
+                # self.overlap_fail += 1
+                silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
+                if (silence_percent > 1):
+                    silence_percent = 1
+                silence_amount = int(length * silence_percent)
+                if new_start + length + silence_amount > session_length_sr:
+                    return session_length_sr - length
+                else:
+                    return new_start + silence_amount
+            else:
+                return new_start
+            # return new_start
         else:
             # add silence
             silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
@@ -483,5 +492,7 @@ class LibriSpeechGenerator(object):
             if 't' in self._params.data_simulator.outputs:
                 write_text(text_filepath, ctm_list)
 
-            print('overlap_success: ', self.overlap_success)
-            print('overlap_fail: ', self.overlap_fail)
+            # print('overlap_success: ', self.overlap_success)
+            # print('overlap_fail: ', self.overlap_fail)
+            print('yes_turn: ', self.yes_turn)
+            print('no_turn: ', self.no_turn)
