@@ -262,12 +262,12 @@ class LibriSpeechGenerator(object):
         mean_silence_percent = self._params.data_simulator.mean_silence / (1 - overlap_prob)
 
         #TODO scale overlap prob by chance of self overlap?
-        
+
         # if prev_speaker == speaker_turn:
         #     self.yes_turn += 1
         # else:
         #     self.no_turn += 1
-        self.speaking_time += self._sentence / self._params.data_simulator.sr
+        self.speaking_time += len(self._sentence) / self._params.data_simulator.sr
 
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
