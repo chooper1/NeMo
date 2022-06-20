@@ -35,9 +35,9 @@ def read_rttm_files(directory_path):
         data[str(file)] = []
         with open(os.path.join(directory_path, file), 'r', encoding='utf-8') as f:
             for line in f:
-                data[str(file)].append(line.strip('\n').split(' '))
-                # if '' in data[str(file)]:
-                #     data[str(file)].remove('')
+                l = line.strip('\n').split(' ')
+                d = [i for i in l if i != '']
+                data[str(file)].append(d)
     return data
 
 
