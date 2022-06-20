@@ -507,7 +507,6 @@ class LibriSpeechGenerator(object):
 
             timeline = np.zeros(len(array))
             for line in rttm_list:
-                print(line)
                 l = line.split(' ')
                 sp = l[2]
                 start = float(l[0])
