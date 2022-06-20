@@ -36,8 +36,8 @@ def read_rttm_files(directory_path):
         with open(os.path.join(directory_path, file), 'r', encoding='utf-8') as f:
             for line in f:
                 data[str(file)].append(line.strip('\n').split(' '))
-                if '' in data[str(file)]:
-                    data[str(file)].remove('')
+                # if '' in data[str(file)]:
+                #     data[str(file)].remove('')
     return data
 
 
@@ -74,6 +74,7 @@ def main():
         largest_end_time = 0
 
         for line in meeting:
+            print(line)
             sp = line[7]
             start = float(line[3])
             dur = float(line[4])
