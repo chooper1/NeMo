@@ -18,6 +18,7 @@ import os
 import random
 import shutil
 import numpy as np
+import math
 
 random.seed(42)
 
@@ -162,28 +163,20 @@ def main():
     silence_binned = {}
     overlap_binned = {}
 
-    bins = np.linspace(0, 10, 100)
-    digitized = np.digitize(full_silence_lengths, bins)
-    silence_binned = [full_silence_lengths[digitized == i].mean() for i in range(1, len(bins))]
-    bins = np.linspace(0, 10, 100)
-    digitized = np.digitize(full_overlap_lengths, bins)
-    overlap_binned = [[full_overlap_lengths == i].mean() for i in range(1, len(bins))]
+    bins = np.linspace(0.1, 10, 100)
+    for b in bins:
+      silence_binned[str(round(b, 3))] = 0
+      overlap_binned[str(round(b, 3))] = 0
 
-    # for i in range(0,len(full_silence_lengths)):
-        # length = full_silence_lengths[i]*1.0 / sample_rate
-        # len_rounded = round(length * (1.0/bin_size)) / (1.0/bin_size)
-        #
-        # if str(len_rounded) not in silence_binned:
-        #     silence_binned[str(len_rounded)] = 0
-        # silence_binned[str(len_rounded)] += 1
+    for i in range(0,len(full_silence_lengths)):
+        length = full_silence_lengths[i]*1.0 / sample_rate
+        len_rounded = math.ceil(length * (1.0/bin_size)) / (1.0/bin_size)
+        silence_binned[str(len_rounded)] += 1
 
-    # for i in range(0,len(full_overlap_lengths)):
-    #     length = full_overlap_lengths[i]*1.0 / sample_rate
-        # len_rounded = round(length * (1.0/bin_size)) / (1.0/bin_size)
-        #
-        # if str(len_rounded) not in overlap_binned:
-        #     overlap_binned[str(len_rounded)] = 0
-        # overlap_binned[str(len_rounded)] += 1
+    for i in range(0,len(full_overlap_lengths)):
+        length = full_overlap_lengths[i]*1.0 / sample_rate
+        len_rounded = math.ceil(length * (1.0/bin_size)) / (1.0/bin_size)
+        overlap_binned[str(len_rounded)] += 1
 
     #replace with logging?
     print('full_silence_percent: ', np.mean(full_silence_percent))
