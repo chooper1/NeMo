@@ -252,7 +252,7 @@ class LibriSpeechGenerator(object):
 
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
-            overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
+            overlap_percent = mean_overlap_percent #halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             if (overlap_percent > 1):
                 overlap_percent = 1
             new_start = start - int(prev_length_sr * overlap_percent)
@@ -272,7 +272,7 @@ class LibriSpeechGenerator(object):
                 return new_start
         else:
             # add silence
-            silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
+            silence_percent = mean_silence_percent #halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             if (silence_percent > 1):
                 silence_percent = 1
             silence_amount = int(length * silence_percent)
