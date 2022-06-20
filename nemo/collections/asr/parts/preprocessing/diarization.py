@@ -507,12 +507,16 @@ class LibriSpeechGenerator(object):
 
             timeline = np.zeros(len(array))
             for line in rttm_list:
+                print(line)
                 l = line.split(' ')
                 sp = l[2]
                 start = float(l[0])
                 start = int(start * self._params.data_simulator.sr)
                 end = float(l[2])
                 end = int(end * self._params.data_simulator.sr)
+
+                print(start)
+                print(end)
                 # end = start+dur
                 timeline[start:end] += 1
 
