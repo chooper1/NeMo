@@ -280,12 +280,13 @@ class LibriSpeechGenerator(object):
                 #set new_start -= self._missing_overlap while int(prev_length_sr * overlap_percent) < int(prev_length_sr)
                 rand = int(prev_length_sr*random.uniform(0, 1-overlap_percent))
                 if rand > self._missing_overlap:
-                    new_start = start - self._missing_overlap
+                    new_start -= self._missing_overlap
                     self._missing_overlap = 0
                 else:
-                    new_start = start - rand
+                    new_start -= rand
                     self._missing_overlap -= rand
 
+            #avoid overlap at start of clip
             if new_start < 0:
                 self._missing_overlap += 0 - new_start
                 new_start = 0
