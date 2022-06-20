@@ -266,18 +266,15 @@ class LibriSpeechGenerator(object):
 
         #TODO scale overlap prob by chance of self overlap?
 
-        # if prev_speaker == speaker_turn:
-        #     self.yes_turn += 1
-        # else:
-        #     self.no_turn += 1
         self.speaking_time += len(self._sentence) / self._params.data_simulator.sr
 
         # overlap
-        if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
+        prob = np.random.uniform(0, 1)
+        if prev_speaker != speaker_turn and prev_speaker != None and prob < overlap_prob:
             overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             new_start = start - int(prev_length_sr * overlap_percent)
 
-            if self._missing_overlap > 0:
+            if self._missing_overlap > 0 and overlap_percent < 1:
                 #set new_start -= self._missing_overlap while int(prev_length_sr * overlap_percent) < int(prev_length_sr)
                 rand = int(prev_length_sr*random.uniform(0, 1-overlap_percent))
                 if rand > self._missing_overlap:
