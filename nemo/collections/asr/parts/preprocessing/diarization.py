@@ -108,6 +108,7 @@ class LibriSpeechGenerator(object):
         self.no_turn = 0
         self.speaking_time = 0
         self.overlap_time = 0
+        self.overlap_percent = 0
 
     # randomly select speaker ids from loaded dict
     def _get_speaker_ids(self):
