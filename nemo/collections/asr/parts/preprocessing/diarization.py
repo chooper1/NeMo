@@ -260,7 +260,9 @@ class LibriSpeechGenerator(object):
             overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             if (overlap_percent > 1):
                 overlap_percent = 1
-            new_start = start - int(prev_length_sr * overlap_percent)
+            # new_start = start - int(prev_length_sr * overlap_percent)
+
+            new_start = start - int(length * overlap_percent)
 
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             # if (new_start < self._furthest_sample[speaker_turn]):
