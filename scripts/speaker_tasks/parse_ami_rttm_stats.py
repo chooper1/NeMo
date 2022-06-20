@@ -162,21 +162,28 @@ def main():
     silence_binned = {}
     overlap_binned = {}
 
-    for i in range(0,len(full_silence_lengths)):
-        length = full_silence_lengths[i]*1.0 / sample_rate
-        len_rounded = round(length * (1.0/bin_size)) / (1.0/bin_size)
+    bins = np.linspace(0, 10, 100)
+    digitized = np.digitize(full_silence_lengths, bins)
+    silence_binned = [full_silence_lengths[digitized == i].mean() for i in range(1, len(bins))]
+    bins = np.linspace(0, 10, 100)
+    digitized = np.digitize(full_overlap_lengths, bins)
+    overlap_binned = [[full_overlap_lengths == i].mean() for i in range(1, len(bins))]
 
-        if str(len_rounded) not in silence_binned:
-            silence_binned[str(len_rounded)] = 0
-        silence_binned[str(len_rounded)] += 1
+    # for i in range(0,len(full_silence_lengths)):
+        # length = full_silence_lengths[i]*1.0 / sample_rate
+        # len_rounded = round(length * (1.0/bin_size)) / (1.0/bin_size)
+        #
+        # if str(len_rounded) not in silence_binned:
+        #     silence_binned[str(len_rounded)] = 0
+        # silence_binned[str(len_rounded)] += 1
 
-    for i in range(0,len(full_overlap_lengths)):
-        length = full_overlap_lengths[i]*1.0 / sample_rate
-        len_rounded = round(length * (1.0/bin_size)) / (1.0/bin_size)
-
-        if str(len_rounded) not in overlap_binned:
-            overlap_binned[str(len_rounded)] = 0
-        overlap_binned[str(len_rounded)] += 1
+    # for i in range(0,len(full_overlap_lengths)):
+    #     length = full_overlap_lengths[i]*1.0 / sample_rate
+        # len_rounded = round(length * (1.0/bin_size)) / (1.0/bin_size)
+        #
+        # if str(len_rounded) not in overlap_binned:
+        #     overlap_binned[str(len_rounded)] = 0
+        # overlap_binned[str(len_rounded)] += 1
 
     #replace with logging?
     print('full_silence_percent: ', np.mean(full_silence_percent))
@@ -185,17 +192,16 @@ def main():
     print('full_dominance_stddev: ', np.mean(full_dominance_stddev))
     print('turn_prob: ', float(yes_turn) / (float(yes_turn)+float(no_turn)))
     print('full_num_speakers: ', total_num_speakers)
-    print('full_total_sentence_lengths: ', total_sentence_lengths)
 
     print('silence_binned: ', silence_binned)
     print('overlap_binned: ', overlap_binned)
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="AMI CMI file parser")
+    parser = argparse.ArgumentParser(description="AMI RTTM file parser")
     parser.add_argument("--input_directory", help="Path to input CMI file", type=str, required=True) #change eventually to loop over all files in directory
     parser.add_argument("--sentence_threshold", help="Sentence Threshold", type=float, default=1.0)
     parser.add_argument("--sample_rate", help="Sampling Rate", type=int, default=16000)
-    parser.add_argument("--bin_size", help="Bin Size", type=float, default=0.001)
+    parser.add_argument("--bin_size", help="Bin Size", type=float, default=0.1)
     args = parser.parse_args()
 
     main()
