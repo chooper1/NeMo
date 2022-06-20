@@ -527,5 +527,5 @@ class LibriSpeechGenerator(object):
 
             self.overlap_percent = (self.overlap_percent*(i)+overlap_percent)/(i+1)
 
-            print('double_overlap: ', double_overlap)
+            print('double_overlap: ', double_overlap / speaking_time)
             print('overlap_percent: ', self.overlap_percent)
