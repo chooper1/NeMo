@@ -512,11 +512,9 @@ class LibriSpeechGenerator(object):
                 sp = l[2]
                 start = float(l[0])
                 start = int(start * self._params.data_simulator.sr)
-                end = float(l[2])
+                end = float(l[1])
                 end = int(end * self._params.data_simulator.sr)
 
-                print(start)
-                print(end)
                 # end = start+dur
                 timeline[start:end] += 1
 
