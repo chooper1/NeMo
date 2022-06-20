@@ -274,8 +274,6 @@ class LibriSpeechGenerator(object):
             overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             new_start = start - int(prev_length_sr * overlap_percent)
 
-            print(self._missing_overlap)
-
             if self._missing_overlap > 0 and overlap_percent < 1:
                 #set new_start -= self._missing_overlap while int(prev_length_sr * overlap_percent) < int(prev_length_sr)
                 rand = int(prev_length_sr*random.uniform(0, 1-overlap_percent))
