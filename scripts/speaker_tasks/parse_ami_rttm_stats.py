@@ -59,6 +59,7 @@ def main():
     no_turn = 0
 
     for key in list:
+        print(key)
         meeting = list[key]
 
         current_sentence_lengths = {}
