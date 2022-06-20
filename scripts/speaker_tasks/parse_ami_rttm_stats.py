@@ -74,7 +74,7 @@ def main():
         largest_end_time = 0
 
         for line in meeting:
-            print(line)
+            # print(line)
             sp = line[7]
             start = float(line[3])
             dur = float(line[4])
