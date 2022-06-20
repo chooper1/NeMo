@@ -292,8 +292,10 @@ class LibriSpeechGenerator(object):
                 else:
                     return new_start + silence_amount
             else:
-                self.overlap_time += np.min((start - new_start) / self._params.data_simulator.sr, length / self._params.data_simulator.sr)
-                # self.overlap_time += (start - new_start) / self._params.data_simulator.sr
+                if (start - new_start) > length:
+                    self.overlap_time += (length) / self._params.data_simulator.sr
+                else:
+                    self.overlap_time += (start - new_start) / self._params.data_simulator.sr
                 self.speaking_time -= (start - new_start) / self._params.data_simulator.sr
                 return new_start
             # return new_start
