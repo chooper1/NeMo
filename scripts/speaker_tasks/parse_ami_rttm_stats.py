@@ -96,11 +96,13 @@ def main():
             prev_sp = sp
 
         #get speaking time, overlap, silence
-        timeline = np.zeros(int(largest_end_time*16000))
+        timeline = np.zeros(int(largest_end_time*sample_rate))
         for line in meeting:
             sp = line[7]
             start = float(line[3])
+            start = int(start * sample_rate)
             dur = float(line[4])
+            dur = int(dur * sample_rate)
             end = start+dur
             timeline[start:end] += 1
 
