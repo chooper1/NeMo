@@ -261,8 +261,8 @@ class LibriSpeechGenerator(object):
         # mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
         # mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
         overlap_prob = self._params.data_simulator.overlap_prob / (self._params.data_simulator.turn_prob)  # accounting for not overlapping the same speaker
-        mean_overlap_percent = self._params.data_simulator.mean_overlap / overlap_prob
-        mean_silence_percent = self._params.data_simulator.mean_silence / (1 - overlap_prob)
+        mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
+        mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
 
         self.speaking_time += len(self._sentence) / self._params.data_simulator.sr
 
@@ -307,7 +307,7 @@ class LibriSpeechGenerator(object):
                 self.overlap_time += (length) / self._params.data_simulator.sr
                 self.speaking_time -= (length) / self._params.data_simulator.sr
                 self._missing_overlap += start - new_start - length
-            elif start - new_start > prev_length_sr:
+            elif (start - new_start) > prev_length_sr:
                 self.overlap_time += (prev_length_sr) / self._params.data_simulator.sr
                 self.speaking_time -= (prev_length_sr) / self._params.data_simulator.sr
                 self._missing_overlap += start - new_start - prev_length_sr
@@ -522,8 +522,7 @@ class LibriSpeechGenerator(object):
             if 't' in self._params.data_simulator.outputs:
                 write_text(text_filepath, ctm_list)
 
-            print('speaking_time: ', self.speaking_time)
-            print('overlap_time: ', self.overlap_time)
+            #OVERLAP
 
             timeline = np.zeros(len(array))
             for line in rttm_list:
@@ -544,6 +543,5 @@ class LibriSpeechGenerator(object):
 
             self.overlap_percent = (self.overlap_percent*(i)+overlap_percent)/(i+1)
 
-            print('double_overlap: ', double_overlap / speaking_time)
             print('overlap_percent: ', self.overlap_percent)
             print('missing_overlap: ', self._missing_overlap)
