@@ -377,6 +377,7 @@ class LibriSpeechGenerator(object):
             os.mkdir(self._params.data_simulator.output_dir)
 
         for i in range(0, self._params.data_simulator.num_sessions):
+            print(f"Generating Session Number {i}")
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
             speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
             base_speaker_dominance = np.copy(speaker_dominance)
@@ -616,6 +617,7 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
             os.mkdir(self._params.data_simulator.output_dir)
 
         for i in range(0, self._params.data_simulator.num_sessions):
+            print(f"Generating Session Number {i}")
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
             speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
             base_speaker_dominance = np.copy(speaker_dominance)
