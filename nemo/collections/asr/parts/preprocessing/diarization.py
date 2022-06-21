@@ -558,18 +558,18 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
         self._missing_overlap = 0
 
     def _generate_rir(self):
-        room_sz = np.array(self._params.rir_generation.room_sz)
-        pos_src = np.array(self._params.rir_generation.pos_src)
-        pos_rcv = np.array(self._params.rir_generation.pos_rcv)
-        orV_rcv = self._params.rir_generation.orV_rcv
+        room_sz = np.array(self._params.data_simulator.rir_generation.room_sz)
+        pos_src = np.array(self._params.data_simulator.rir_generation.pos_src)
+        pos_rcv = np.array(self._params.data_simulator.rir_generation.pos_rcv)
+        orV_rcv = self._params.data_simulator.rir_generation.orV_rcv
         if orV_rcv: #not needed for omni mics
             orV_rcv = np.array(orV_rcv)
-        mic_pattern = self._params.rir_generation.mic_pattern
-        abs_weights = self._params.rir_generation.abs_weights
-        T60 = self._params.rir_generation.T60
-        att_diff = self._params.rir_generation.att_diff
-        att_max = self._params.rir_generation.att_max
-        fs = self._params.rir_generation.fs
+        mic_pattern = self._params.data_simulator.rir_generation.mic_pattern
+        abs_weights = self._params.data_simulator.rir_generation.abs_weights
+        T60 = self._params.data_simulator.rir_generation.T60
+        att_diff = self._params.data_simulator.rir_generation.att_diff
+        att_max = self._params.data_simulator.rir_generation.att_max
+        fs = self._params.data_simulator.rir_generation.fs
 
         beta = beta_SabineEstimation(room_sz, T60, abs_weights=abs_weights)  # Reflection coefficients
         Tdiff = att2t_SabineEstimator(att_diff, T60)  # Time to start the diffuse reverberation model [s]

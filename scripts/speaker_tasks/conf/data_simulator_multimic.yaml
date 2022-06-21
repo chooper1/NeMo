@@ -25,43 +25,43 @@ data_simulator:
   normalization: equal
   normalization_var: 0.1
   num_channels: 2
-rir_generation:
-  room_sz:
-  - 3
-  - 3
-  - 2.5
-  nb_src: 4
-  pos_src:
-  - - 0.6
-    - 1.1
-    - 0.5
-  - - 1
-    - 2
-    - 0.5
-  - - 0.4
-    - 1.1
-    - 0.5
-  - - 1
-    - 2.1
-    - 0.5
-  nb_rcv: 2
-  pos_rcv:
-  - - 0.5
-    - 1
-    - 0.5
-  - - 1
-    - 1
-    - 0.5
-  orV_rcv: null
-  mic_pattern: omni
-  abs_weights:
-  - 0.9
-  - 0.9
-  - 0.9
-  - 0.9
-  - 0.9
-  - 0.9
-  T60: 0.1
-  att_diff: 15.0
-  att_max: 60.0
-  fs: 16000.0
+  rir_generation:
+    room_sz:
+    - 3
+    - 3
+    - 2.5
+    nb_src: 4
+    pos_src:
+    - - 0.6
+      - 1.1
+      - 0.5
+    - - 1
+      - 2
+      - 0.5
+    - - 0.4
+      - 1.1
+      - 0.5
+    - - 1
+      - 2.1
+      - 0.5
+    nb_rcv: 2
+    pos_rcv:
+    - - 0.5
+      - 1
+      - 0.5
+    - - 1
+      - 1
+      - 0.5
+    orV_rcv: null
+    mic_pattern: omni
+    abs_weights:
+    - 0.9
+    - 0.9
+    - 0.9
+    - 0.9
+    - 0.9
+    - 0.9
+    T60: 0.1
+    att_diff: 15.0
+    att_max: 60.0
+    fs: 16000.0
