@@ -37,20 +37,20 @@ simulates the trajectory for a selected audio source in this room.
 def main(cfg):
     # from the example: https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/example.py
     # parameter values explained here: https://github.com/DavidDiazGuerra/gpuRIR#simulatetrajectory
-    output_path = cfg.data_simulator.output_path
-    output_filename = cfg.data_simulator.output_filename
-    room_sz = cfg.data_simulator.num_speakers
-    nb_src = cfg.data_simulator.nb_src
-    pos_src = cfg.data_simulator.pos_src
-    nb_rcv = cfg.data_simulator.nb_rcv
-    pos_rcv = cfg.data_simulator.pos_rcv
-    orV_rcv = cfg.data_simulator.orV_rcv
-    mic_pattern = cfg.data_simulator.mic_pattern
-    abs_weights = cfg.data_simulator.abs_weights
-    T60 = cfg.data_simulator.T60
-    att_diff = cfg.data_simulator.att_diff
-    att_max = cfg.data_simulator.att_max
-    fs = cfg.data_simulator.fs
+    output_path = cfg.rir_generation.output_path
+    output_filename = cfg.rir_generation.output_filename
+    room_sz = cfg.rir_generation.num_speakers
+    nb_src = cfg.rir_generation.nb_src
+    pos_src = cfg.rir_generation.pos_src
+    nb_rcv = cfg.rir_generation.nb_rcv
+    pos_rcv = cfg.rir_generation.pos_rcv
+    orV_rcv = cfg.rir_generation.orV_rcv
+    mic_pattern = cfg.rir_generation.mic_pattern
+    abs_weights = cfg.rir_generation.abs_weights
+    T60 = cfg.rir_generation.T60
+    att_diff = cfg.rir_generation.att_diff
+    att_max = cfg.rir_generation.att_max
+    fs = cfg.rir_generation.fs
 
     beta = beta_SabineEstimation(room_sz, T60, abs_weights=abs_weights)  # Reflection coefficients
     Tdiff = att2t_SabineEstimator(att_diff, T60)  # Time to start the diffuse reverberation model [s]
