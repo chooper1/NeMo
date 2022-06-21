@@ -515,8 +515,7 @@ class LibriSpeechGenerator(object):
             if 't' in self._params.data_simulator.outputs:
                 write_text(text_filepath, ctm_list)
 
-            #OVERLAP
-
+            #CHECK OVERLAP
             timeline = np.zeros(len(array))
             for line in rttm_list:
                 l = line.split(' ')
@@ -541,30 +540,6 @@ class LibriSpeechGenerator(object):
 class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
     """
     Multi Microphone Librispeech Diarization Session Generator.
-
-    Args:
-        manifest_path (str): Manifest file with paths to librispeech audio files
-        sr (int): sampling rate of the audio files
-        num_speakers (int): number of unique speakers per diarization session
-        session_length (int): length of each diarization session (seconds)
-        output_dir (str): output directory
-        output_filename (str): output filename for the wav and rttm files
-        sentence_length_params (list): k,p values for negative_binomial distribution
-                              initial values are from page 209 of
-                              https://www.researchgate.net/publication/318396023_How_will_text_size_influence_the_length_of_its_linguistic_constituents
-        alignment_type (str): input alignment format
-                              end - end alignments passed
-                              start - start alignments passed
-                              tuple - alignments expected in (start,end) pairs
-        dominance_var (float): variance in speaker dominance
-        min_dominance (float): minimum percentage of speaking time per speaker
-        turn_prob (float): probability of switching speakers
-        mean_overlap (float): mean proportion of overlap to speaking time
-        mean_silence (float): mean proportion of silence to speaking time
-        outputs (str): which files to output (r - rttm, j - json, c - ctm)
-        enforce_num_speakers (bool): enforce that all requested speakers are present in the output wav file
-        num_sessions (int): number of sessions
-        random_seed (int): random seed
     """
 
     def __init__(self, cfg):
@@ -586,7 +561,6 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
         #debugging stats
         self.overlap_percent = 0
 
-
     def _select_rir(self):
         rir_filepath = self._rir_list[random.randint(0, len(self._rir_list) - 1)]
         return np.load(rir_filepath)
@@ -598,7 +572,6 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
             output_sound.append(out_channel)
         output_sound = np.array(output_sound).T
         return output_sound
-
 
     """
     Generate diarization session

@@ -24,6 +24,8 @@ import soundfile as sf
 from gpuRIR import att2t_SabineEstimator, beta_SabineEstimation, simulateRIR, t2n
 from scipy.signal import convolve  # note that scipy automatically uses fftconvolve if it is faster
 
+from nemo.core.config import hydra_runner
+
 random.seed(42)
 
 """
@@ -31,54 +33,36 @@ This script creates a room impulse response using the gpuRIR library and then
 simulates the trajectory for a selected audio source in this room.
 """
 
-
-def main():
-    input_audio_filepath = args.input_audio_filepath
-    output_path = args.output_path
+@hydra_runner(config_path="conf", config_name="rir_generation.yaml")
+def main(cfg):
     # from the example: https://github.com/DavidDiazGuerra/gpuRIR/blob/master/examples/example.py
     # parameter values explained here: https://github.com/DavidDiazGuerra/gpuRIR#simulatetrajectory
-    room_sz = [3, 3, 2.5]  # Size of the room [m]
-    nb_src = 4  # Number of sources
-    pos_src = np.array([[0.6, 1.1, 0.5], [1, 2, 0.5], [0.4, 1.1, 0.5], [1, 2.1, 0.5]])  # Positions of the sources ([m]
-    nb_rcv = 2  # Number of receivers
-    pos_rcv = np.array([[0.5, 1, 0.5],[1, 1, 0.5]])  # Position of the receivers [m]
-    orV_rcv = None  # Vectors pointing in the same direction than the receivers (None assumes omnidirectional)
-    mic_pattern = "omni"  # Receiver polar pattern
-    abs_weights = [0.4] * 5 + [0.2] #[0.9] * 5 + [0.5]  # Absortion coefficient ratios of the walls
-    T60 = 1  # Time for the RIR to reach 60dB of attenuation [s]
-    att_diff = 15.0  # Attenuation when start using the diffuse reverberation model [dB]
-    att_max = 60.0  # Attenuation at the end of the simulation [dB]
-    fs = 16000.0  # Sampling frequency [Hz]
+    output_path = cfg.data_simulator.output_path
+    output_filename = cfg.data_simulator.output_filename
+    room_sz = cfg.data_simulator.num_speakers
+    nb_src = cfg.data_simulator.nb_src
+    pos_src = cfg.data_simulator.pos_src
+    nb_rcv = cfg.data_simulator.nb_rcv
+    pos_rcv = cfg.data_simulator.pos_rcv
+    orV_rcv = cfg.data_simulator.orV_rcv
+    mic_pattern = cfg.data_simulator.mic_pattern
+    abs_weights = cfg.data_simulator.abs_weights
+    T60 = cfg.data_simulator.T60
+    att_diff = cfg.data_simulator.att_diff
+    att_max = cfg.data_simulator.att_max
+    fs = cfg.data_simulator.fs
 
     beta = beta_SabineEstimation(room_sz, T60, abs_weights=abs_weights)  # Reflection coefficients
     Tdiff = att2t_SabineEstimator(att_diff, T60)  # Time to start the diffuse reverberation model [s]
     Tmax = att2t_SabineEstimator(att_max, T60)  # Time to stop the simulation [s]
     nb_img = t2n(Tdiff, room_sz)  # Number of image sources in each dimension
-    RIR = simulateRIR(
-        room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern
-    )
+    RIR = simulateRIR(room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern)
 
-    os.mkdir('./RIR')
-    with open('./RIR/rir1.npy', 'wb') as f:
+    if not os.path.exists(output_path):
+      os.makedirs(output_path)
+
+    with open(os.path.join(output_path, output_filename), 'wb') as f:
         np.save(f, RIR)
 
-    # from https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/room.py#2216
-    # need to convolve individual audio sources with separate RIRs
-    input_wav, sr = librosa.load(input_audio_filepath, sr=fs)
-
-    speaker_id = 0
-    output_sound = []
-    for channel in range(0,nb_rcv):
-        out_channel = convolve(input_wav, RIR[channel, speaker_id, : len(input_wav)]).tolist()
-        output_sound.append(out_channel)
-    output_sound = np.array(output_sound).T
-    output_sound = output_sound / np.max(np.abs(output_sound))  # normalize to [-1,1]
-    sf.write(output_path, output_sound, int(fs))
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="RIR Creator")
-    parser.add_argument("--input_audio_filepath", help="path to input audio file", type=str, default="/home/chooper/projects/datasets/LibriSpeech/LibriSpeech/dev-clean-processed/2277-149874-0000.wav")
-    parser.add_argument("--output_path", help="path to output file", type=str, default='./test/diarization_session_0.wav')
-    args = parser.parse_args()
     main()
