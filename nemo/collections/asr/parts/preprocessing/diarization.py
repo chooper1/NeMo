@@ -257,23 +257,16 @@ class LibriSpeechGenerator(object):
 
     # returns new overlapped (or shifted) start position
     def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr, enforce):
-        # overlap_prob = self._params.data_simulator.overlap_prob / (self._params.data_simulator.turn_prob)  # accounting for not overlapping the same speaker
-        # mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
-        # mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
         overlap_prob = self._params.data_simulator.overlap_prob / (self._params.data_simulator.turn_prob)  # accounting for not overlapping the same speaker
         mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
         mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
 
-        self.speaking_time += len(self._sentence) / self._params.data_simulator.sr
-
         # overlap
-        prob = np.random.uniform(0, 1)
-        if prev_speaker != speaker_turn and prev_speaker != None and prob < overlap_prob:
+        if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
             overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             new_start = start - int(prev_length_sr * overlap_percent)
 
             if self._missing_overlap > 0 and overlap_percent < 1:
-                #set new_start -= self._missing_overlap while int(prev_length_sr * overlap_percent) < int(prev_length_sr)
                 rand = int(prev_length_sr*random.uniform(0, 1-overlap_percent))
                 if rand > self._missing_overlap:
                     new_start -= self._missing_overlap
@@ -287,39 +280,19 @@ class LibriSpeechGenerator(object):
                 self._missing_overlap += 0 - new_start
                 new_start = 0
 
-            # self.overlap_success += 1
-
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
                 self._missing_overlap += self._furthest_sample[speaker_turn] - new_start
                 new_start = self._furthest_sample[speaker_turn]
-                # self.overlap_fail += 1
-                # silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
-                # if (silence_percent > 1):
-                #     silence_percent = 1
-                # silence_amount = int(length * silence_percent)
-                # if new_start + length + silence_amount > session_length_sr:
-                #     return session_length_sr - length
-                # else:
-                #     return new_start + silence_amount
-            # else:
+            #TODO Check cases here
             if (start - new_start) > length:
-                self.overlap_time += (length) / self._params.data_simulator.sr
-                self.speaking_time -= (length) / self._params.data_simulator.sr
                 self._missing_overlap += start - new_start - length
-            elif (start - new_start) > prev_length_sr:
-                self.overlap_time += (prev_length_sr) / self._params.data_simulator.sr
-                self.speaking_time -= (prev_length_sr) / self._params.data_simulator.sr
+            if (start - new_start) > prev_length_sr:
                 self._missing_overlap += start - new_start - prev_length_sr
-            elif (start - new_start) > 0:
-                self.overlap_time += (start - new_start) / self._params.data_simulator.sr
-                self.speaking_time -= (start - new_start) / self._params.data_simulator.sr
             return new_start
         else:
             # add silence
             silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
-            if (silence_percent > 1):
-                silence_percent = 1
             silence_amount = int(length * silence_percent)
 
             if start + length + silence_amount > session_length_sr and not enforce:
@@ -542,6 +515,4 @@ class LibriSpeechGenerator(object):
             overlap_percent = overlap_time / speaking_time
 
             self.overlap_percent = (self.overlap_percent*(i)+overlap_percent)/(i+1)
-
             print('overlap_percent: ', self.overlap_percent)
-            print('missing_overlap: ', self._missing_overlap)
