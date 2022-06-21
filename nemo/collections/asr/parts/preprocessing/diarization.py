@@ -294,23 +294,23 @@ class LibriSpeechGenerator(object):
                 self._missing_overlap += self._furthest_sample[speaker_turn] - new_start
                 new_start = self._furthest_sample[speaker_turn]
                 # self.overlap_fail += 1
-                silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
-                if (silence_percent > 1):
-                    silence_percent = 1
-                silence_amount = int(length * silence_percent)
-                if new_start + length + silence_amount > session_length_sr:
-                    return session_length_sr - length
-                else:
-                    return new_start + silence_amount
-            else:
-                if (start - new_start) > length:
-                    self.overlap_time += (length) / self._params.data_simulator.sr
-                    self.speaking_time -= (length) / self._params.data_simulator.sr
-                    self._missing_overlap += start - new_start - length
-                else:
-                    self.overlap_time += (start - new_start) / self._params.data_simulator.sr
-                    self.speaking_time -= (start - new_start) / self._params.data_simulator.sr
-                return new_start
+                # silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
+                # if (silence_percent > 1):
+                #     silence_percent = 1
+                # silence_amount = int(length * silence_percent)
+                # if new_start + length + silence_amount > session_length_sr:
+                #     return session_length_sr - length
+                # else:
+                #     return new_start + silence_amount
+            # else:
+            if (start - new_start) > length:
+                self.overlap_time += (length) / self._params.data_simulator.sr
+                self.speaking_time -= (length) / self._params.data_simulator.sr
+                self._missing_overlap += start - new_start - length
+            elif (start - new_start) > 0:
+                self.overlap_time += (start - new_start) / self._params.data_simulator.sr
+                self.speaking_time -= (start - new_start) / self._params.data_simulator.sr
+            return new_start
         else:
             # add silence
             silence_percent = halfnorm(loc=0, scale=mean_silence_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
@@ -464,13 +464,14 @@ class LibriSpeechGenerator(object):
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._params.data_simulator.sr)
                     sentence_duration,sentence_duration_sr = self._add_file(file, audio_file, sentence_duration, sl, max_sentence_duration_sr)
 
-                #TODO fix randomized speaker variance (per-speaker volume selected at start of sentence)
-
                 #per-speaker normalization
                 if self._params.data_simulator.normalization == 'equal':
-                    self._sentence = self._sentence / (1.0 * np.max(np.abs(self._sentence)))
+                    if  np.max(np.abs(self._sentence)) > 0:
+                        self._sentence = self._sentence / (1.0 * np.max(np.abs(self._sentence)))
                 elif self._params.data_simulator.normalization == 'randomized':
-                    self._sentence = self._sentence / (np.random.normal(loc=1.0, scale=self._params.data_simulator.normalization_var) * 1.0 * np.max(np.abs(self._sentence)))
+                    #TODO fix randomized speaker variance (per-speaker volume selected at start of sentence)
+                    if  np.max(np.abs(self._sentence)) > 0:
+                        self._sentence = self._sentence / (np.random.normal(loc=1.0, scale=self._params.data_simulator.normalization_var) * 1.0 * np.max(np.abs(self._sentence)))
 
                 length = len(self._sentence)
                 start = self._add_silence_or_overlap(
@@ -517,10 +518,6 @@ class LibriSpeechGenerator(object):
             if 't' in self._params.data_simulator.outputs:
                 write_text(text_filepath, ctm_list)
 
-            # print('overlap_success: ', self.overlap_success)
-            # print('overlap_fail: ', self.overlap_fail)
-            # print('yes_turn: ', self.yes_turn)
-            # print('no_turn: ', self.no_turn)
             print('speaking_time: ', self.speaking_time)
             print('overlap_time: ', self.overlap_time)
 
