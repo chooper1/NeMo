@@ -58,6 +58,10 @@ def main():
         room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern
     )
 
+    os.mkdir('./RIR')
+    with open('./RIR/rir1.npy', 'wb') as f:
+        np.save(f, RIR)
+
     # from https://github.com/LCAV/pyroomacoustics/blob/master/pyroomacoustics/room.py#2216
     # need to convolve individual audio sources with separate RIRs
     input_wav, sr = librosa.load(input_audio_filepath, sr=fs)
