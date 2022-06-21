@@ -39,7 +39,7 @@ def main(cfg):
     # parameter values explained here: https://github.com/DavidDiazGuerra/gpuRIR#simulatetrajectory
     output_path = cfg.rir_generation.output_path
     output_filename = cfg.rir_generation.output_filename
-    room_sz = cfg.rir_generation.num_speakers
+    room_sz = cfg.rir_generation.room_sz
     nb_src = cfg.rir_generation.nb_src
     pos_src = cfg.rir_generation.pos_src
     nb_rcv = cfg.rir_generation.nb_rcv
