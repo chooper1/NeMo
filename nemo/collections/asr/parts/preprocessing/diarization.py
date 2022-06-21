@@ -264,31 +264,54 @@ class LibriSpeechGenerator(object):
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
             overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
-            new_start = start - int(prev_length_sr * overlap_percent)
+            desired_overlap_amount = int(prev_length_sr * overlap_percent)
+            new_start = start - desired_overlap_amount
 
             if self._missing_overlap > 0 and overlap_percent < 1:
                 rand = int(prev_length_sr*random.uniform(0, 1-overlap_percent))
                 if rand > self._missing_overlap:
                     new_start -= self._missing_overlap
+                    desired_overlap_amount += self._missing_overlap
                     self._missing_overlap = 0
                 else:
                     new_start -= rand
+                    desired_overlap_amount += rand
                     self._missing_overlap -= rand
 
             #avoid overlap at start of clip
             if new_start < 0:
                 self._missing_overlap += 0 - new_start
+                desired_overlap_amount -= 0 - new_start
                 new_start = 0
 
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
                 self._missing_overlap += self._furthest_sample[speaker_turn] - new_start
+                desired_overlap_amount -= self._furthest_sample[speaker_turn] - new_start
                 new_start = self._furthest_sample[speaker_turn]
-            #TODO Check cases here
-            if (start - new_start) > length:
-                self._missing_overlap += start - new_start - length
-            if (start - new_start) > prev_length_sr:
-                self._missing_overlap += start - new_start - prev_length_sr
+
+            if desired_overlap_amount < 0:
+                desired_overlap_amount = 0
+
+            # if (start - new_start) > length or (start - new_start) > prev_length_sr:
+            prev_start = start - prev_length_sr
+            prev_end = start
+            new_end = new_start + length
+            if prev_start < new_start and new_end > prev_end:
+                overlap_amount = prev_end - new_start
+            elif prev_start < new_start and new_end < prev_end:
+                overlap_amount = new_end - new_start
+            elif prev_start > new_start and new_end < prev_end:
+                overlap_amount = new_end - prev_start
+            elif prev_start > new_start and new_end > prev_end:
+                overlap_amount = prev_end - prev_start
+
+            if overlap_amount < 0:
+                overlap_amount = 0
+
+            if overlap_amount < desired_overlap_amount:
+                self._missing_overlap += desired_overlap_amount - overlap_amount
+
             return new_start
         else:
             # add silence
