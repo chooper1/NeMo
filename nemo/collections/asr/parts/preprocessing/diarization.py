@@ -593,10 +593,7 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
     def _convolve_rir(self, speaker_turn, RIR):
         output_sound = []
         for channel in range(0,self._params.data_simulator.num_channels):
-            print(channel)
-            print(speaker_turn)
-            print(RIR.shape)
-            out_channel = convolve(self._sentence, RIR[channel, speaker_turn, : len(self._sentence)]).tolist()
+            out_channel = convolve(self._sentence, RIR[speaker_turn, channel, : len(self._sentence)]).tolist()
             output_sound.append(out_channel)
         output_sound = np.array(output_sound).T
         return output_sound
