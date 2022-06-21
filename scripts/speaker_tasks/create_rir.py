@@ -58,6 +58,8 @@ def main():
         room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern
     )
 
+    print(RIR.shape)
+
     os.mkdir('./RIR')
     with open('./RIR/rir1.npy', 'wb') as f:
         np.save(f, RIR)
