@@ -96,7 +96,6 @@ class LibriSpeechGenerator(object):
         # internal params
         self._manifest = read_manifest(self._params.data_simulator.manifest_path)
         self._sentence = None
-        self._augmented_sentence = None
         self._text = ""
         self._words = []
         self._alignments = []
@@ -599,70 +598,6 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
         output_sound = np.array(output_sound).T
         return output_sound
 
-    # add audio file to current sentence
-    def _add_file(self, file, audio_file, sentence_duration, max_sentence_duration, max_sentence_duration_sr):
-        sentence_duration_sr = len(self._sentence)
-        remaining_duration_sr = max_sentence_duration_sr - sentence_duration_sr
-        remaining_duration = max_sentence_duration - sentence_duration
-        prev_dur_sr = dur_sr = 0
-        nw = i = 0
-
-        #ensure the desired number of words are added and the length of the output session isn't exceeded
-        while (nw < remaining_duration and dur_sr < remaining_duration_sr and i < len(file['words'])):
-            dur_sr = int(file['alignments'][i] * self._params.data_simulator.sr)
-            if dur_sr > remaining_duration_sr:
-                break
-
-            word = file['words'][i]
-            self._words.append(word)
-
-            if self._params.data_simulator.alignment_type == 'start':
-                self._alignments.append(int(sentence_duration_sr / self._params.data_simulator.sr) + file['alignments'][i])
-            elif self._params.data_simulator.alignment_type == 'end':
-                self._alignments.append(int(sentence_duration_sr / self._params.data_simulator.sr) + file['alignments'][i])
-            elif self._params.data_simulator.alignment_type == 'tuple':
-                start = int(sentence_duration_sr / self._params.data_simulator.sr) + file['alignments'][i][0]
-                end = int(sentence_duration_sr / self._params.data_simulator.sr) + file['alignments'][i][1]
-                self._alignments.append((start,end))
-
-            if word == "":
-                i+=1
-                continue
-            elif self._text == "":
-                self._text += word
-            else:
-                self._text += " " + word
-            i+=1
-            nw+=1
-            prev_dur_sr = dur_sr
-
-        # add audio clip up to the final alignment
-        self._sentence = np.append(self._sentence, audio_file[:prev_dur_sr])
-
-        #windowing
-        if i < len(file['words']) and self._params.data_simulator.window_type != None:
-            window_amount = int(self._params.data_simulator.window_size*self._params.data_simulator.sr)
-            if prev_dur_sr+window_amount > remaining_duration_sr:
-                window_amount = remaining_duration_sr - prev_dur_sr
-            if self._params.data_simulator.window_type == 'hamming':
-                window = hamming(window_amount*2)[window_amount:]
-            elif self._params.data_simulator.window_type == 'hann':
-                window = hann(window_amount*2)[window_amount:]
-            elif self._params.data_simulator.window_type == 'cosine':
-                window = cosine(window_amount*2)[window_amount:]
-            if len(audio_file[prev_dur_sr:]) < window_amount:
-                audio_file = np.pad(audio_file, (0, window_amount - len(audio_file[prev_dur_sr:])))
-            self._sentence = np.append(self._sentence, np.multiply(audio_file[prev_dur_sr:prev_dur_sr+window_amount], window))
-
-        #TODO: different sentence size after RIR
-        augmented_sentence = self._convolve_rir(speaker_turn, RIR)
-        self._augmented_sentence = np.append(self._augmented_sentence, augmented_sentence)
-
-        #zero pad if close to end of the clip
-        if dur_sr > remaining_duration_sr:
-            self._sentence = np.pad(self._sentence, (0, max_sentence_duration_sr - len(self._sentence)))
-        return sentence_duration+nw, len(self._sentence)
-
 
     """
     Generate diarization session
@@ -746,7 +681,10 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
                 sl = np.random.negative_binomial(
                     self._params.data_simulator.sentence_length_params[0], self._params.data_simulator.sentence_length_params[1]
                 ) + 1
-                max_sentence_duration_sr = session_length_sr - running_length_sr
+
+                #sentence will be RIR_len-1 longer than selected
+                RIR_pad = (RIR.shape[2] - 1)
+                max_sentence_duration_sr = session_length_sr - running_length_sr - RIR_pad
 
                 # only add if remaining length > 0.5 second
                 if max_sentence_duration_sr < 0.5 * self._params.data_simulator.sr and not enforce:
@@ -756,7 +694,6 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
 
                 # initialize sentence, text, words, alignments
                 self._sentence = np.zeros(0)
-                self._augmented_sentence = np.zeros(0)
                 self._text = ""
                 self._words = []
                 self._alignments = []
@@ -768,22 +705,21 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
                     audio_file, sr = librosa.load(file['audio_filepath'], sr=self._params.data_simulator.sr)
                     sentence_duration,sentence_duration_sr = self._add_file(file, audio_file, sentence_duration, sl, max_sentence_duration_sr)
 
+                #augment sentence
+                augmented_sentence = self._convolve_rir(speaker_turn, RIR)
+
                 #per-speaker normalization
                 if self._params.data_simulator.normalization == 'equal':
-                    if  np.max(np.abs(self._sentence)) > 0:
-                        self._sentence = self._sentence / (1.0 * np.max(np.abs(self._sentence)))
-                elif self._params.data_simulator.normalization == 'randomized':
-                    #TODO fix randomized speaker variance (per-speaker volume selected at start of sentence)
-                    if  np.max(np.abs(self._sentence)) > 0:
-                        self._sentence = self._sentence / (np.random.normal(loc=1.0, scale=self._params.data_simulator.normalization_var) * 1.0 * np.max(np.abs(self._sentence)))
+                    if  np.max(np.abs(augmented_sentence)) > 0:
+                        augmented_sentence = augmented_sentence / (1.0 * np.max(np.abs(augmented_sentence)))
 
-                length = len(self._sentence)
+                length = augmented_sentence.shape[0]
                 start = self._add_silence_or_overlap(
                     speaker_turn, prev_speaker, running_length_sr, length, session_length_sr, prev_length_sr, enforce
                 )
                 end = start + length
 
-                #TODO check for RIR running off end of clip
+                #TODO fix padding
                 if end > len(array):
                     array = np.pad(array, (0, end - len(array)))
 
