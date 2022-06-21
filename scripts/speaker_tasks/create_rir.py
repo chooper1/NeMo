@@ -54,10 +54,6 @@ def main(cfg):
     att_max = cfg.rir_generation.att_max
     fs = cfg.rir_generation.fs
 
-    print(room_sz)
-    print(pos_src)
-    print(pos_rcv)
-
     beta = beta_SabineEstimation(room_sz, T60, abs_weights=abs_weights)  # Reflection coefficients
     Tdiff = att2t_SabineEstimator(att_diff, T60)  # Time to start the diffuse reverberation model [s]
     Tmax = att2t_SabineEstimator(att_max, T60)  # Time to stop the simulation [s]
