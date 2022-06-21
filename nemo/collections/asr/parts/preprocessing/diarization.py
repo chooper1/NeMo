@@ -724,6 +724,11 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
 
                 #TODO: different sentence size after RIR
 
+                print(self._sentence.shape)
+                print(augmented_sentence.shape)
+                print(array.shape)
+                print(array[start:end, :].shape)
+
                 array[start:end, :] += augmented_sentence
 
                 #build entries for output files
