@@ -39,12 +39,14 @@ def main(cfg):
     # parameter values explained here: https://github.com/DavidDiazGuerra/gpuRIR#simulatetrajectory
     output_path = cfg.rir_generation.output_path
     output_filename = cfg.rir_generation.output_filename
-    room_sz = cfg.rir_generation.room_sz
+    room_sz = np.array(cfg.rir_generation.room_sz)
     nb_src = cfg.rir_generation.nb_src
-    pos_src = cfg.rir_generation.pos_src
+    pos_src = np.array(cfg.rir_generation.pos_src)
     nb_rcv = cfg.rir_generation.nb_rcv
-    pos_rcv = cfg.rir_generation.pos_rcv
+    pos_rcv = np.array(cfg.rir_generation.pos_rcv)
     orV_rcv = cfg.rir_generation.orV_rcv
+    if orV_rcv:
+        orV_rcv = np.array(orV_rcv)
     mic_pattern = cfg.rir_generation.mic_pattern
     abs_weights = cfg.rir_generation.abs_weights
     T60 = cfg.rir_generation.T60
