@@ -30,7 +30,7 @@ Check out parameters in ./conf/data_simulator.yaml.
 
 @hydra_runner(config_path="conf", config_name="data_simulator_multimic.yaml")
 def main(cfg):
-    lg = LibriSpeechGenerator(cfg=cfg)
+    lg = MultiMicLibriSpeechGenerator(cfg=cfg)
     lg.generate_session()
 
 if __name__ == "__main__":
