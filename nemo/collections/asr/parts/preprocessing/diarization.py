@@ -25,6 +25,7 @@ from scipy.signal.windows import hamming, hann, cosine
 from scipy.signal import convolve
 import soundfile as sf
 from omegaconf import OmegaConf
+from gpuRIR import att2t_SabineEstimator, beta_SabineEstimation, simulateRIR, t2n
 
 from nemo.collections.asr.parts.utils.speaker_utils import labels_to_rttmfile
 
