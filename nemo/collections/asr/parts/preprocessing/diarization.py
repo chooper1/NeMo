@@ -555,15 +555,27 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
         self._furthest_sample = [0 for n in range(0,self._params.data_simulator.num_speakers)]
         #use to ensure overlap percentage is correct
         self._missing_overlap = 0
-        #rir list
-        self._rir_list =  [os.path.abspath(os.path.join(self._params.data_simulator.rir_path, p)) for p in os.listdir(self._params.data_simulator.rir_path)]
 
-        #debugging stats
-        self.overlap_percent = 0
+    def _generate_rir(self):
+        room_sz = np.array(self._params.rir_generation.room_sz)
+        pos_src = np.array(self._params.rir_generation.pos_src)
+        pos_rcv = np.array(self._params.rir_generation.pos_rcv)
+        orV_rcv = self._params.rir_generation.orV_rcv
+        if orV_rcv: #not needed for omni mics
+            orV_rcv = np.array(orV_rcv)
+        mic_pattern = self._params.rir_generation.mic_pattern
+        abs_weights = self._params.rir_generation.abs_weights
+        T60 = self._params.rir_generation.T60
+        att_diff = self._params.rir_generation.att_diff
+        att_max = self._params.rir_generation.att_max
+        fs = self._params.rir_generation.fs
 
-    def _select_rir(self):
-        rir_filepath = self._rir_list[random.randint(0, len(self._rir_list) - 1)]
-        return np.load(rir_filepath)
+        beta = beta_SabineEstimation(room_sz, T60, abs_weights=abs_weights)  # Reflection coefficients
+        Tdiff = att2t_SabineEstimator(att_diff, T60)  # Time to start the diffuse reverberation model [s]
+        Tmax = att2t_SabineEstimator(att_max, T60)  # Time to stop the simulation [s]
+        nb_img = t2n(Tdiff, room_sz)  # Number of image sources in each dimension
+        RIR = simulateRIR(room_sz, beta, pos_src, pos_rcv, nb_img, Tmax, fs, Tdiff=Tdiff, orV_rcv=orV_rcv, mic_pattern=mic_pattern)
+        return RIR
 
     def _convolve_rir(self, speaker_turn, RIR):
         output_sound = []
@@ -609,7 +621,8 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
             self._missing_overlap = 0
 
             #Room Imulse Response
-            RIR = self._select_rir()
+            # RIR = self._select_rir()
+            RIR = self._generate_rir()
 
             #hold enforce until all speakers have spoken
             enforce_counter = 2
