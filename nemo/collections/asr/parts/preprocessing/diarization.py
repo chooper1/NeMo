@@ -297,6 +297,7 @@ class LibriSpeechGenerator(object):
             prev_start = start - prev_length_sr
             prev_end = start
             new_end = new_start + length
+            overlap_amount = 0
             if prev_start < new_start and new_end > prev_end:
                 overlap_amount = prev_end - new_start
             elif prev_start < new_start and new_end < prev_end:
