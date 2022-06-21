@@ -22,6 +22,7 @@ import librosa
 import numpy as np
 from scipy.stats import halfnorm
 from scipy.signal.windows import hamming, hann, cosine
+from scipy.signal import convolve 
 import soundfile as sf
 from omegaconf import OmegaConf
 
