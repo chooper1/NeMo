@@ -466,10 +466,7 @@ class LibriSpeechGenerator(object):
                 if self._params.data_simulator.normalization == 'equal':
                     if  np.max(np.abs(self._sentence)) > 0:
                         self._sentence = self._sentence / (1.0 * np.max(np.abs(self._sentence)))
-                elif self._params.data_simulator.normalization == 'randomized':
-                    #TODO fix randomized speaker variance (per-speaker volume selected at start of sentence)
-                    if  np.max(np.abs(self._sentence)) > 0:
-                        self._sentence = self._sentence / (np.random.normal(loc=1.0, scale=self._params.data_simulator.normalization_var) * 1.0 * np.max(np.abs(self._sentence)))
+                #TODO fix randomized speaker variance (per-speaker volume selected at start of sentence)
 
                 length = len(self._sentence)
                 start = self._add_silence_or_overlap(
