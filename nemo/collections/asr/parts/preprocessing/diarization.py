@@ -307,6 +307,10 @@ class LibriSpeechGenerator(object):
                 self.overlap_time += (length) / self._params.data_simulator.sr
                 self.speaking_time -= (length) / self._params.data_simulator.sr
                 self._missing_overlap += start - new_start - length
+            elif start - new_start > prev_length_sr:
+                self.overlap_time += (prev_length_sr) / self._params.data_simulator.sr
+                self.speaking_time -= (prev_length_sr) / self._params.data_simulator.sr
+                self._missing_overlap += start - new_start - prev_length_sr
             elif (start - new_start) > 0:
                 self.overlap_time += (start - new_start) / self._params.data_simulator.sr
                 self.speaking_time -= (start - new_start) / self._params.data_simulator.sr
