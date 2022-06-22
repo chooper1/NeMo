@@ -115,7 +115,7 @@ class LibriSpeechGenerator(object):
         speaker_ids = []
         s = 0
         while s < self._params.data_simulator.num_speakers:
-            file = self._manifest[random.randint(0, len(self._manifest) - 1)]
+            file = self._manifest[np.random.randint(0, len(self._manifest) - 1)]
             fn = file['audio_filepath'].split('/')[-1]
             speaker_id = fn.split('-')[0]
             # ensure speaker ids are not duplicated
@@ -143,7 +143,7 @@ class LibriSpeechGenerator(object):
     # load a sample for the selected speaker id
     def _load_speaker_sample(self, speaker_lists, speaker_ids, speaker_turn):
         speaker_id = speaker_ids[speaker_turn]
-        file_id = random.randint(0, len(speaker_lists[str(speaker_id)]) - 1)
+        file_id = np.random.randint(0, len(speaker_lists[str(speaker_id)]) - 1)
         file = speaker_lists[str(speaker_id)][file_id]
         return file
 
@@ -182,12 +182,12 @@ class LibriSpeechGenerator(object):
 
     # get next speaker (accounting for turn probability, dominance distribution)
     def _get_next_speaker(self, prev_speaker, dominance):
-        if random.uniform(0, 1) > self._params.data_simulator.turn_prob and prev_speaker != None:
+        if np.random.uniform(0, 1) > self._params.data_simulator.turn_prob and prev_speaker != None:
             return prev_speaker
         else:
             speaker_turn = prev_speaker
             while speaker_turn == prev_speaker:
-                rand = random.uniform(0, 1)
+                rand = np.random.uniform(0, 1)
                 speaker_turn = 0
                 while rand > dominance[speaker_turn]:
                     speaker_turn += 1
@@ -272,7 +272,7 @@ class LibriSpeechGenerator(object):
             #TODO Check why sum of missing_overlap and overlap_amount isn't desired_overlap_amount
 
             if self._missing_overlap > 0 and overlap_percent < 1:
-                rand = int(prev_length_sr*random.uniform(0, 1 - overlap_percent / (1+self._params.data_simulator.mean_overlap)))
+                rand = int(prev_length_sr * np.random.uniform(0, 1 - overlap_percent / (1+self._params.data_simulator.mean_overlap)))
                 if rand > self._missing_overlap:
                     new_start -= self._missing_overlap
                     desired_overlap_amount += self._missing_overlap
@@ -375,7 +375,7 @@ class LibriSpeechGenerator(object):
     Generate diarization session
     """
     def generate_session(self):
-        random.seed(self._params.data_simulator.random_seed)
+        np.random.seed(self._params.data_simulator.random_seed)
 
         #delete output directory if it exists or throw warning
         if os.path.isdir(self._params.data_simulator.output_dir) and os.listdir(self._params.data_simulator.output_dir):
@@ -412,7 +412,7 @@ class LibriSpeechGenerator(object):
 
             #hold enforce until all speakers have spoken
             enforce_counter = 2
-            enforce_time = random.uniform(0.25, 0.75)
+            enforce_time = np.random.uniform(0.25, 0.75)
             if self._params.data_simulator.enforce_num_speakers:
                 enforce = True
             else:
@@ -601,7 +601,7 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
     Generate diarization session
     """
     def generate_session(self):
-        random.seed(self._params.data_simulator.random_seed)
+        np.random.seed(self._params.data_simulator.random_seed)
 
         #delete output directory if it exists or throw warning
         if os.path.isdir(self._params.data_simulator.output_dir) and os.listdir(self._params.data_simulator.output_dir):
@@ -638,7 +638,7 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
 
             #hold enforce until all speakers have spoken
             enforce_counter = 2
-            enforce_time = random.uniform(0.25, 0.75)
+            enforce_time = np.random.uniform(0.25, 0.75)
             if self._params.data_simulator.enforce_num_speakers:
                 enforce = True
             else:
@@ -719,7 +719,6 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
                 )
                 end = start + length
 
-                #TODO fix padding
                 if end > len(array):
                     array = np.pad(array, (0, end - len(array)))
 
