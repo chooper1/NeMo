@@ -18,7 +18,7 @@ data_simulator:
   overlap_prob: 0.8
   outputs: rjct
   enforce_num_speakers: false
-  num_sessions: 5
+  num_sessions: 20
   random_seed: 42
   window_type: hamming
   window_size: 0.15
