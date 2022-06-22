@@ -273,19 +273,14 @@ class LibriSpeechGenerator(object):
 
             if self._missing_overlap > 0 and overlap_percent < 1:
                 rand = int(prev_length_sr * np.random.uniform(0, 1 - overlap_percent / (1+self._params.data_simulator.mean_overlap)))
-                print('rand: ', rand)
                 if rand > self._missing_overlap:
                     new_start -= self._missing_overlap
                     desired_overlap_amount += self._missing_overlap
                     self._missing_overlap = 0
                 else:
-                    print('new_start: ', new_start)
-                    print('desired_overlap_amount: ', desired_overlap_amount)
                     new_start -= rand
                     desired_overlap_amount += rand
                     self._missing_overlap -= rand
-                    print('new_start: ', new_start)
-                    print('desired_overlap_amount: ', desired_overlap_amount)
 
             #avoid overlap at start of clip
             if new_start < 0:
