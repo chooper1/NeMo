@@ -10,10 +10,10 @@ data_simulator:
   - 2.81
   - 0.1
   alignment_type: end
-  dominance_var: 0.1
+  dominance_var: 0.11
   min_dominance: 0.05
   turn_prob: 1
-  mean_overlap: 0.20
+  mean_overlap: 0.19
   mean_silence: 0.15
   overlap_prob: 0.7
   outputs: rjct
