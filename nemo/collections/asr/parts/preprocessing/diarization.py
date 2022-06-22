@@ -270,8 +270,6 @@ class LibriSpeechGenerator(object):
             self._desired_overlap_amount += desired_overlap_amount
             new_start = start - desired_overlap_amount
 
-            #TODO Check why sum of missing_overlap and overlap_amount isn't desired_overlap_amount
-
             if self._missing_overlap > 0 and overlap_percent < 1:
                 rand = int(prev_length_sr * np.random.uniform(0, 1 - overlap_percent / (1+self._params.data_simulator.mean_overlap)))
                 if rand > self._missing_overlap:
