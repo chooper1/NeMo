@@ -270,7 +270,7 @@ class LibriSpeechGenerator(object):
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
             overlap_percent = halfnorm(loc=0, scale=mean_overlap_percent*np.sqrt(np.pi)/np.sqrt(2)).rvs()
             desired_overlap_amount = int(prev_length_sr * overlap_percent / (1+self._params.data_simulator.mean_overlap))
-            self._desired_overlap_amount += int(prev_length_sr * mean_overlap_percent / (1+self._params.data_simulator.mean_overlap))
+            self._desired_overlap_amount += desired_overlap_amount # int(prev_length_sr * mean_overlap_percent / (1+self._params.data_simulator.mean_overlap))
             self._desired_overlap += mean_overlap_percent
             new_start = start - desired_overlap_amount
 
