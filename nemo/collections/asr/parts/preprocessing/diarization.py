@@ -254,10 +254,13 @@ class LibriSpeechGenerator(object):
     # returns new overlapped (or shifted) start position
     def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr, enforce):
         overlap_prob = self._params.data_simulator.overlap_prob / (self._params.data_simulator.turn_prob)  # accounting for not overlapping the same speaker
-        print('self._params.data_simulator.overlap_prob: ', self._params.data_simulator.overlap_prob)
-        print('overlap_prob: ', overlap_prob)
+        print('mean_overlap: ', self._params.data_simulator.mean_overlap)
+        print('mean_silence: ',self._params.data_simulator.mean_silence)
         mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
         mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
+
+        print('mean_overlap_percent: ', mean_overlap_percent)
+        print('mean_silence_percent: ', mean_silence_percent)
 
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
