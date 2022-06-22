@@ -269,12 +269,10 @@ class LibriSpeechGenerator(object):
             self._desired_overlap_amount += desired_overlap_amount
             new_start = start - desired_overlap_amount
 
-            #fix adding overlap - not using real % now?
-
             #TODO Check why sum of missing_overlap and overlap_amount isn't desired_overlap_amount
 
             if self._missing_overlap > 0 and overlap_percent < 1:
-                rand = int(prev_length_sr*random.uniform(0, 1-overlap_percent))
+                rand = int(prev_length_sr*random.uniform(0, 1 - overlap_percent / (1+self._params.data_simulator.mean_overlap)))
                 if rand > self._missing_overlap:
                     new_start -= self._missing_overlap
                     desired_overlap_amount += self._missing_overlap
@@ -286,14 +284,14 @@ class LibriSpeechGenerator(object):
 
             #avoid overlap at start of clip
             if new_start < 0:
-                # desired_overlap_amount -= 0 - new_start
-                # self._missing_overlap += 0 - new_start
+                desired_overlap_amount -= 0 - new_start
+                self._missing_overlap += 0 - new_start
                 new_start = 0
 
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
-                # desired_overlap_amount -= self._furthest_sample[speaker_turn] - new_start
-                # self._missing_overlap += self._furthest_sample[speaker_turn] - new_start
+                desired_overlap_amount -= self._furthest_sample[speaker_turn] - new_start
+                self._missing_overlap += self._furthest_sample[speaker_turn] - new_start
                 new_start = self._furthest_sample[speaker_turn]
 
             if desired_overlap_amount < 0:
