@@ -13,9 +13,9 @@ data_simulator:
   dominance_var: 0.11
   min_dominance: 0.05
   turn_prob: 1
-  mean_overlap: 0.205
+  mean_overlap: 0.20
   mean_silence: 0.15
-  overlap_prob: 0.75
+  overlap_prob: 0.7
   outputs: rjct
   enforce_num_speakers: false
   num_sessions: 40
