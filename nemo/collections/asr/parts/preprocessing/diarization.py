@@ -269,6 +269,8 @@ class LibriSpeechGenerator(object):
             self._desired_overlap_amount += desired_overlap_amount
             new_start = start - desired_overlap_amount
 
+            #fix adding overlap - not using real % now?
+
             if self._missing_overlap > 0 and overlap_percent < 1:
                 rand = int(prev_length_sr*random.uniform(0, 1-overlap_percent))
                 if rand > self._missing_overlap:
@@ -282,36 +284,34 @@ class LibriSpeechGenerator(object):
 
             #avoid overlap at start of clip
             if new_start < 0:
-                # self._missing_overlap += 0 - new_start
-                # desired_overlap_amount -= 0 - new_start
+                desired_overlap_amount -= 0 - new_start
+                self._missing_overlap += 0 - new_start
                 new_start = 0
 
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
-                # self._missing_overlap += self._furthest_sample[speaker_turn] - new_start
-                # desired_overlap_amount -= self._furthest_sample[speaker_turn] - new_start
+                desired_overlap_amount -= self._furthest_sample[speaker_turn] - new_start
+                self._missing_overlap += self._furthest_sample[speaker_turn] - new_start
                 new_start = self._furthest_sample[speaker_turn]
 
-            # if desired_overlap_amount < 0:
-            #     desired_overlap_amount = 0
+            if desired_overlap_amount < 0:
+                desired_overlap_amount = 0
 
             prev_start = start - prev_length_sr
             prev_end = start
             new_end = new_start + length
             overlap_amount = 0
-            if prev_start < new_start and new_end > prev_end:
+            if prev_start < new_start and new_end > prev_end: # 111111 2121 222222
                 overlap_amount = prev_end - new_start
-            elif prev_start < new_start and new_end < prev_end:
+            elif prev_start < new_start and new_end < prev_end: # 1111 21212 11111
                 overlap_amount = new_end - new_start
-            elif prev_start > new_start and new_end < prev_end:
+            elif prev_start > new_start and new_end < prev_end: # 2222 1212 1111
                 overlap_amount = new_end - prev_start
-            elif prev_start > new_start and new_end > prev_end:
+            elif prev_start > new_start and new_end > prev_end: # 2222 12121 2222
                 overlap_amount = prev_end - prev_start
 
             if overlap_amount < 0:
                 overlap_amount = 0
-
-            overlap_percent = 1.0*overlap_amount/desired_overlap_amount
 
             if overlap_amount < desired_overlap_amount:
                 self._missing_overlap += desired_overlap_amount - overlap_amount
