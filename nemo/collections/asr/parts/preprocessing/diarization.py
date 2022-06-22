@@ -288,7 +288,7 @@ class LibriSpeechGenerator(object):
             #if same speaker ends up overlapping from any previous clip, pad with silence instead
             if (new_start < self._furthest_sample[speaker_turn]):
                 self._missing_overlap += self._furthest_sample[speaker_turn] - new_start
-                desired_overlap_amount -= self._furthest_sample[speaker_turn] - new_start
+                # desired_overlap_amount -= self._furthest_sample[speaker_turn] - new_start
                 new_start = self._furthest_sample[speaker_turn]
 
             # if desired_overlap_amount < 0:
