@@ -109,6 +109,7 @@ class LibriSpeechGenerator(object):
         self._speaking_time = 0
         self._overlap_amount = 0
         self._desired_overlap_amount = 0
+        self._total_missing_overlap = 0
 
     # randomly select speaker ids from loaded dict
     def _get_speaker_ids(self):
@@ -390,6 +391,7 @@ class LibriSpeechGenerator(object):
         self._speaking_time = 0
         self._overlap_amount = 0
         self._desired_overlap_amount = 0
+        self._total_missing_overlap = 0
 
         for i in range(0, self._params.data_simulator.num_sessions):
             print(f"Generating Session Number {i}")
@@ -540,12 +542,14 @@ class LibriSpeechGenerator(object):
                 # end = start+dur
                 timeline[start:end] += 1
 
+            self._total_missing_overlap += self._missing_overlap
+
             speaking_time = np.sum(timeline > 0)
             overlap_time = np.sum(timeline > 1)
             double_overlap = np.sum(timeline > 2)
             overlap_percent = overlap_time / speaking_time
 
-            print('self._overlap_percent: ', 1.0*(self._overlap_amount + self._missing_overlap) / self._speaking_time)
+            print('self._overlap_percent: ', 1.0*(self._overlap_amount + self._total_missing_overlap) / self._speaking_time)
             print('self._desired_overlap_amount: ', 1.0*self._desired_overlap_amount / self._speaking_time)
 
 
