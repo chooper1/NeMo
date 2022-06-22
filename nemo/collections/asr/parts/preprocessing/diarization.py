@@ -271,6 +271,8 @@ class LibriSpeechGenerator(object):
 
             #fix adding overlap - not using real % now?
 
+            #TODO Check why sum of missing_overlap and overlap_amount isn't desired_overlap_amount
+
             if self._missing_overlap > 0 and overlap_percent < 1:
                 rand = int(prev_length_sr*random.uniform(0, 1-overlap_percent))
                 if rand > self._missing_overlap:
@@ -545,7 +547,7 @@ class LibriSpeechGenerator(object):
             double_overlap = np.sum(timeline > 2)
             overlap_percent = overlap_time / speaking_time
 
-            print('self._overlap_percent: ', 1.0*self._overlap_amount / self._speaking_time)
+            print('self._overlap_percent: ', 1.0*(self._overlap_amount+self._missing_overlap) / self._speaking_time)
             print('self._desired_overlap_amount: ', 1.0*self._desired_overlap_amount / self._speaking_time)
 
 
