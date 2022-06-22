@@ -254,13 +254,8 @@ class LibriSpeechGenerator(object):
     # returns new overlapped (or shifted) start position
     def _add_silence_or_overlap(self, speaker_turn, prev_speaker, start, length, session_length_sr, prev_length_sr, enforce):
         overlap_prob = self._params.data_simulator.overlap_prob / (self._params.data_simulator.turn_prob)  # accounting for not overlapping the same speaker
-        print('mean_overlap: ', self._params.data_simulator.mean_overlap)
-        print('mean_silence: ',self._params.data_simulator.mean_silence)
         mean_overlap_percent = self._params.data_simulator.mean_overlap / self._params.data_simulator.overlap_prob
         mean_silence_percent = self._params.data_simulator.mean_silence / (1 - self._params.data_simulator.overlap_prob)
-
-        print('mean_overlap_percent: ', mean_overlap_percent)
-        print('mean_silence_percent: ', mean_silence_percent)
 
         # overlap
         if prev_speaker != speaker_turn and prev_speaker != None and np.random.uniform(0, 1) < overlap_prob:
@@ -294,7 +289,6 @@ class LibriSpeechGenerator(object):
             if desired_overlap_amount < 0:
                 desired_overlap_amount = 0
 
-            # if (start - new_start) > length or (start - new_start) > prev_length_sr:
             prev_start = start - prev_length_sr
             prev_end = start
             new_end = new_start + length
@@ -310,6 +304,8 @@ class LibriSpeechGenerator(object):
 
             if overlap_amount < 0:
                 overlap_amount = 0
+
+            overlap_percent = 1.0*overlap_amount/desired_overlap_amount
 
             if overlap_amount < desired_overlap_amount:
                 self._missing_overlap += desired_overlap_amount - overlap_amount
@@ -538,6 +534,7 @@ class LibriSpeechGenerator(object):
 
             self.overlap_percent = (self.overlap_percent*(i)+overlap_percent)/(i+1)
             print('overlap_percent: ', self.overlap_percent)
+            print('self._missing_overlap: ', self._missing_overlap)
 
 
 class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
