@@ -7,8 +7,8 @@ data_simulator:
   output_filename: diarization_session
   overwrite_output: true
   sentence_length_params:
-  - 0.4
-  - 0.05
+  - 2.81
+  - 0.1
   alignment_type: end
   dominance_var: 0.1
   min_dominance: 0.05
