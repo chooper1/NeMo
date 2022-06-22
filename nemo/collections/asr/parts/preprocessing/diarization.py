@@ -315,7 +315,7 @@ class LibriSpeechGenerator(object):
             if overlap_amount < desired_overlap_amount:
                 self._missing_overlap += desired_overlap_amount - overlap_amount
 
-            self._speaking_time -= (orig_end - new_end)
+            self._speaking_time -= overlap_amount
 
             self._overlap_amount += desired_overlap_amount
 
