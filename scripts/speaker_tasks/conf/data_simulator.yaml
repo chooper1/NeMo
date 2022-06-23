@@ -12,7 +12,7 @@ data_simulator:
   alignment_type: end
   dominance_var: 0.11
   min_dominance: 0.05
-  turn_prob: 1
+  turn_prob: 0.875
   mean_overlap: 0.19
   mean_silence: 0.15
   overlap_prob: 0.3
