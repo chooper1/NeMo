@@ -19,7 +19,7 @@ data_simulator:
   outputs: rjct
   enforce_num_speakers: false
   num_sessions: 1
-  random_seed: 43
+  random_seed: 42
   window_type: hamming
   window_size: 0.1
   normalization: equal
