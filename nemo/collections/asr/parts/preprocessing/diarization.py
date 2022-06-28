@@ -391,6 +391,24 @@ class LibriSpeechGenerator(object):
         self._desired_overlap_amount = 0
         self._total_missing_overlap = 0
 
+        # only add root if paths are relative?
+        if not os.path.isabs(self._params.data_simulator.output_dir):
+            ROOT = os.getcwd()
+            basepath = os.path.join(ROOT, self._params.data_simulator.output_dir)
+        else:
+            basepath = self._params.data_simulator.output_dir
+
+        if 'l' in self._params.data_simulator.outputs:
+            wavlist = open("synthetic_wav.list", "w")
+            if 'r' in self._params.data_simulator.outputs:
+                rttmlist = open("synthetic_rttm.list", "w")
+            if 'j' in self._params.data_simulator.outputs:
+                jsonlist = open("synthetic_json.list", "w")
+            if 'c' in self._params.data_simulator.outputs:
+                ctmlist = open("synthetic_ctm.list", "w")
+            if 't' in self._params.data_simulator.outputs:
+                textlist = open("synthetic_txt.list", "w")
+
         for i in range(0, self._params.data_simulator.num_sessions):
             print(f"Generating Session Number {i}")
             speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
@@ -418,17 +436,22 @@ class LibriSpeechGenerator(object):
             else:
                 enforce = False
 
-            # only add root if paths are relative?
-            if not os.path.isabs(self._params.data_simulator.output_dir):
-                ROOT = os.getcwd()
-                basepath = os.path.join(ROOT, self._params.data_simulator.output_dir)
-            else:
-                basepath = self._params.data_simulator.output_dir
             wavpath = os.path.join(basepath, filename + '.wav')
             rttm_filepath = os.path.join(basepath, filename + '.rttm')
             json_filepath = os.path.join(basepath, filename + '.json')
             ctm_filepath = os.path.join(basepath, filename + '.ctm')
             text_filepath = os.path.join(basepath, filename + '.txt')
+
+            if 'l' in self._params.data_simulator.outputs:
+                wavlist.write(wavpath + '\n')
+                if 'r' in self._params.data_simulator.outputs:
+                    rttmlist.write(rttm_filepath + '\n')
+                if 'j' in self._params.data_simulator.outputs:
+                    jsonlist.write(json_filepath + '\n')
+                if 'c' in self._params.data_simulator.outputs:
+                    ctmlist.write(ctm_filepath + '\n')
+                if 't' in self._params.data_simulator.outputs:
+                    textlist.write(text_filepath + '\n')
 
             session_length_sr = int((self._params.data_simulator.session_length * self._params.data_simulator.sr))
             array = np.zeros(session_length_sr)
@@ -549,6 +572,18 @@ class LibriSpeechGenerator(object):
 
             print('self._overlap_percent: ', 1.0*(self._overlap_amount + self._total_missing_overlap) / self._speaking_time)
             print('self._desired_overlap_amount: ', 1.0*self._desired_overlap_amount / self._speaking_time)
+            #END CHECK OVERLAP
+
+        if 'l' in self._params.data_simulator.outputs:
+            wavlist.close()
+            if 'r' in self._params.data_simulator.outputs:
+                rttmlist.close()
+            if 'j' in self._params.data_simulator.outputs:
+                jsonlist.close()
+            if 'c' in self._params.data_simulator.outputs:
+                ctmlist.close()
+            if 't' in self._params.data_simulator.outputs:
+                textlist.close()
 
 
 class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
