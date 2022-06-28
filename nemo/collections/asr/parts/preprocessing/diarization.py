@@ -399,15 +399,15 @@ class LibriSpeechGenerator(object):
             basepath = self._params.data_simulator.output_dir
 
         if 'l' in self._params.data_simulator.outputs:
-            wavlist = open("synthetic_wav.list", "w")
+            wavlist = open(os.path.join(basepath, "synthetic_wav.list"), "w")
             if 'r' in self._params.data_simulator.outputs:
-                rttmlist = open("synthetic_rttm.list", "w")
+                rttmlist = open(os.path.join(basepath, "synthetic_rttm.list"), "w")
             if 'j' in self._params.data_simulator.outputs:
-                jsonlist = open("synthetic_json.list", "w")
+                jsonlist = open(os.path.join(basepath, "synthetic_json.list"), "w")
             if 'c' in self._params.data_simulator.outputs:
-                ctmlist = open("synthetic_ctm.list", "w")
+                ctmlist = open(os.path.join(basepath, "synthetic_ctm.list"), "w")
             if 't' in self._params.data_simulator.outputs:
-                textlist = open("synthetic_txt.list", "w")
+                textlist = open(os.path.join(basepath,"synthetic_txt.list"), "w")
 
         for i in range(0, self._params.data_simulator.num_sessions):
             print(f"Generating Session Number {i}")
@@ -651,15 +651,15 @@ class MultiMicLibriSpeechGenerator(LibriSpeechGenerator):
             os.mkdir(self._params.data_simulator.output_dir)
 
         if 'l' in self._params.data_simulator.outputs:
-            wavlist = open("synthetic_wav.list", "w")
+            wavlist = open(os.path.join(basepath, "synthetic_wav.list"), "w")
             if 'r' in self._params.data_simulator.outputs:
-                rttmlist = open("synthetic_rttm.list", "w")
+                rttmlist = open(os.path.join(basepath, "synthetic_rttm.list"), "w")
             if 'j' in self._params.data_simulator.outputs:
-                jsonlist = open("synthetic_json.list", "w")
+                jsonlist = open(os.path.join(basepath, "synthetic_json.list"), "w")
             if 'c' in self._params.data_simulator.outputs:
-                ctmlist = open("synthetic_ctm.list", "w")
+                ctmlist = open(os.path.join(basepath, "synthetic_ctm.list"), "w")
             if 't' in self._params.data_simulator.outputs:
-                textlist = open("synthetic_txt.list", "w")
+                textlist = open(os.path.join(basepath,"synthetic_txt.list"), "w")
 
         for i in range(0, self._params.data_simulator.num_sessions):
             print(f"Generating Session Number {i}")
