@@ -89,7 +89,7 @@ def extract_seg_info_from_rttm(uniq_id, rttm_lines, mapping_dict=None, target_sp
             spk_str = f'speaker_{spk_idx}'
             if spk_str in inv_map:
                 pairwise_infer_spks.append(inv_map[spk_str])
-    
+
     for rttm_line in rttm_lines:
         start, end, speaker = convert_rttm_line(rttm_line)
         if target_spks is None or speaker in pairwise_infer_spks:
@@ -125,7 +125,7 @@ def extract_seg_info_from_rttm(uniq_id, rttm_lines, mapping_dict=None, target_sp
             # spk_str = f'speaker_{spk_idx}'
             # if spk_str in inv_map:
                 # pairwise_infer_spks.append(inv_map[spk_str])
-    
+
     # for rttm_line in rttm_lines:
         # start, end, speaker = convert_rttm_line(rttm_line)
         # if target_spks is None or speaker in pairwise_infer_spks:
@@ -252,14 +252,25 @@ class _AudioMSDDTrainDataset(Dataset):
         emb_batch_size,
         pairwise_infer: bool,
         random_flip: bool = True,
+        synthetic: bool = False,
+        synthetic_cfg_path: str,
     ):
         super().__init__()
-        self.collection = DiarizationSpeechLabel(
-            manifests_files=manifest_filepath.split(','),
-            emb_dict=None,
-            clus_label_dict=None,
-            pairwise_infer=pairwise_infer,
-        )
+
+        if synthetic == True:
+            self.collection = SyntheticDiarizationSpeechLabel(
+                cfg_path=synthetic_cfg_path,
+                pairwise_infer=pairwise_infer,
+            )
+        else:
+            self.collection = DiarizationSpeechLabel(
+                manifests_files=manifest_filepath.split(','),
+                emb_dict=None,
+                clus_label_dict=None,
+                pairwise_infer=pairwise_infer,
+            )
+        self.synthetic = synthetic
+
         self.featurizer = featurizer
         self.multiscale_args_dict = multiscale_args_dict
         self.multiscale_timestamp_dict = multiscale_timestamp_dict
@@ -344,7 +355,7 @@ class _AudioMSDDTrainDataset(Dataset):
             if label_int_sess in sample.target_spks and torch.sum(soft_label_vec_sess) > 0:
                 label_int = sample.target_spks.index(label_int_sess)
             else:
-                label_int = -1 
+                label_int = -1
             label_vec = (soft_label_vec > self.soft_label_thres).float()
             seg_target_list.append(label_vec.detach())
             base_clus_label.append(label_int)
@@ -448,19 +459,14 @@ class _AudioMSDDTrainDataset(Dataset):
         sample = self.collection[index]
         if sample.offset is None:
             sample.offset = 0
-        #print('sample: ', sample)
         clus_label_index, targets, scale_mapping = self.parse_rttm_for_ms_targets(sample)
         features = self.featurizer.process(sample.audio_file, offset=sample.offset, duration=sample.duration)
-        #print('offset: ', sample.offset)
-        #print('duration: ', sample.duration)
-        #print('features: ', features)
         feature_length = torch.tensor(features.shape[0]).long()
         ms_seg_timestamps, ms_seg_counts = self.get_ms_seg_timestamps(sample)
         if self.random_flip:
             torch.manual_seed(index)
             flip = torch.cat([torch.randperm(self.max_spks), torch.tensor(-1).unsqueeze(0)])
             clus_label_index, targets = flip[clus_label_index], targets[:, flip[:self.max_spks]]
-        #print('feature_length: ', feature_length)
         return features, feature_length, ms_seg_timestamps, ms_seg_counts, clus_label_index, scale_mapping, targets
 
 
@@ -810,6 +816,8 @@ class AudioToSpeechMSDDTrainDataset(_AudioMSDDTrainDataset):
         window_stride,
         emb_batch_size,
         pairwise_infer: bool,
+        synthetic: bool,
+        synthetic_cfg_path: str,
     ):
         super().__init__(
             manifest_filepath=manifest_filepath,
@@ -820,6 +828,8 @@ class AudioToSpeechMSDDTrainDataset(_AudioMSDDTrainDataset):
             window_stride=window_stride,
             emb_batch_size=emb_batch_size,
             pairwise_infer=pairwise_infer,
+            synthetic=synthetic,
+            synthetic_cfg_path=synthetic_cfg_path,
         )
 
     def msdd_train_collate_fn(self, batch):

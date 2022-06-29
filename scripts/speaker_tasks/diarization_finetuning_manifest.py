@@ -18,7 +18,7 @@ import logging
 import os
 import random
 import numpy as np
-import copy 
+import copy
 import librosa as l
 from sklearn.model_selection import StratifiedShuffleSplit
 from tqdm import tqdm
@@ -41,10 +41,10 @@ from nemo.collections.asr.parts.utils.speaker_utils import (
 )
 
 """
-This scipt converts a scp file where each line contains  
-<absolute path of wav file> 
-to a manifest json file. 
-Args: 
+This scipt converts a scp file where each line contains
+<absolute path of wav file>
+to a manifest json file.
+Args:
 --scp: scp file name
 --id: index of speaker label in filename present in scp file that is separated by '/'
 --out: output manifest file name
@@ -102,13 +102,13 @@ def get_input_manifest_dict(input_manifest_path):
             input_manifest_dict[uniq_id] = dic
     return input_manifest_dict
 
-def write_truncated_subsegments(input_manifest_dict, _subsegment_dict, output_manifest_path, step_count, deci): 
+def write_truncated_subsegments(input_manifest_dict, _subsegment_dict, output_manifest_path, step_count, deci):
     with open(output_manifest_path, 'w') as output_manifest_fp:
         for uniq_id, subseg_dict in _subsegment_dict.items():
             print(f"Writing {uniq_id}")
             subseg_array = np.array(subseg_dict['ts'])
             subseg_array_idx = np.argsort(subseg_array, axis=0)
-            chunked_set_count = subseg_array_idx.shape[0] // step_count 
+            chunked_set_count = subseg_array_idx.shape[0] // step_count
 
             for idx in range(chunked_set_count-1):
                 chunk_index_stt = subseg_array_idx[:, 0][idx * step_count]
@@ -121,7 +121,7 @@ def write_truncated_subsegments(input_manifest_dict, _subsegment_dict, output_ma
                 meta['duration'] = dur
                 json.dump(meta, output_manifest_fp)
                 output_manifest_fp.write("\n")
- 
+
 def main(input_manifest_path, output_manifest_path, window, shift, step_count, deci):
     if '.json' not in input_manifest_path:
         raise ValueError("input_manifest_path file should be .json file format")
@@ -144,7 +144,7 @@ def main(input_manifest_path, output_manifest_path, window, shift, step_count, d
     subsegments_manifest_file = subsegment_manifest_path
     segments_manifest_to_subsegments_manifest(
         segments_manifest_file,
-        subsegments_manifest_file, 
+        subsegments_manifest_file,
         window,
         shift,
         min_subsegment_duration,
@@ -168,7 +168,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    main(args.input_manifest_path, 
+    main(args.input_manifest_path,
          args.output_manifest_path,
          args.window,
          args.shift,
