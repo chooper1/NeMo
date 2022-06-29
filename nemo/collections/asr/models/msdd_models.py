@@ -743,7 +743,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
             emb_batch_size=config['emb_batch_size'],
             pairwise_infer=False,
             synthetic=True,
-            synthetic_cfg_path='/home/chooper/projects/branch_nemo/NeMo/scripts/speaker_tasks/conf/data_simulator.yaml',
+            synthetic_cfg_path='/home/chooper/projects/ms_diar_decoder/NeMo/scripts/speaker_tasks/conf/data_simulator.yaml',
         )
 
         self.data_collection = dataset.collection
