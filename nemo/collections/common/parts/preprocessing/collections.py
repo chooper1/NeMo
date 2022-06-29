@@ -966,16 +966,6 @@ class SyntheticDiarizationSpeechLabel(_Collection):
             base_manifest = self.create_base_manifest(wav_path, text_path=text_path, rttm_path=rttm_path, ctm_path=ctm_path, manifest_filepath=manifest_filepath)
 
             #create segmented manifest
-            parser.add_argument("--input_manifest_path", help="input json file name", type=str, required=True)
-            parser.add_argument("--output_manifest_path", help="output manifest_file name", type=str, default=None, required=False)
-            parser.add_argument("--window", help="Window length for segmentation", type=float, required=True)
-            parser.add_argument("--shift", help="Shift length for segmentation", type=float, required=True)
-            parser.add_argument("--deci", help="Rounding decimals", type=int, default=3, required=False)
-            parser.add_argument(
-                "--step_count",
-                help="Number of the unit segments you want to create per utterance",
-                required=True,
-            )
             segment_manifest = os.path.join(basepath, 'segment_manifest.json')
             window = 0.5
             shift = 0.25

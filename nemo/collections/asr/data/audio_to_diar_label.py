@@ -20,7 +20,7 @@ from typing import Dict, Optional
 import torch
 
 from nemo.collections.asr.parts.utils.nmesc_clustering import get_argmin_mat
-from nemo.collections.common.parts.preprocessing.collections import DiarizationSpeechLabel
+from nemo.collections.common.parts.preprocessing.collections import DiarizationSpeechLabel, SyntheticDiarizationSpeechLabel
 from nemo.collections.asr.parts.utils.speaker_utils import convert_rttm_line
 from nemo.core.classes import Dataset
 from nemo.core.neural_types import (
