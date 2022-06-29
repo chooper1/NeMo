@@ -26,6 +26,7 @@ from nemo.collections.common.parts.preprocessing import manifest, parsers
 from nemo.utils import logging
 from nemo.collections.asr.parts.preprocessing.diarization import LibriSpeechGenerator
 
+from omegaconf import OmegaConf
 from collections import Counter
 from collections import OrderedDict as od
 from nemo.collections.asr.parts.utils.speaker_utils import (
@@ -870,7 +871,7 @@ class SyntheticDiarizationSpeechLabel(_Collection):
             Instantiates synthetic diarization session generator.
         """
         with open(cfg_path, 'r') as f:
-            self._params = yaml.safe_load(f)
+            self._params = OmegaConf.load(f)
         self.data_simulator = LibriSpeechGenerator(self._params) #includes tmp dir
         self.pairwise_infer = pairwise_infer
 
