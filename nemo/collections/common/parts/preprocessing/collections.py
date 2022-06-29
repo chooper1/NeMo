@@ -24,6 +24,7 @@ import yaml
 from nemo.collections.common.parts.preprocessing import manifest, parsers
 # from nemo.collections.asr.parts.utils.speaker_utils import get_rttm_speaker_index, rttm_to_labels
 from nemo.utils import logging
+from nemo.collections.asr.parts.preprocessing import LibriSpeechGenerator
 
 from collections import Counter
 from collections import OrderedDict as od
