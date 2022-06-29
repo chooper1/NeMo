@@ -22,8 +22,25 @@ import pandas as pd
 import yaml
 
 from nemo.collections.common.parts.preprocessing import manifest, parsers
-from nemo.collections.asr.parts.utils.speaker_utils import get_rttm_speaker_index, rttm_to_labels
+# from nemo.collections.asr.parts.utils.speaker_utils import get_rttm_speaker_index, rttm_to_labels
 from nemo.utils import logging
+
+from collections import Counter
+from collections import OrderedDict as od
+from nemo.collections.asr.parts.utils.speaker_utils import (
+    get_rttm_speaker_index,
+    audio_rttm_map,
+    get_subsegments,
+    get_embs_and_timestamps,
+    get_uniqname_from_filepath,
+    parse_scale_configs,
+    perform_clustering,
+    score_labels,
+    segments_manifest_to_subsegments_manifest,
+    write_rttm2manifest,
+    rttm_to_labels,
+    labels_to_pyannote_object
+)
 
 def write_file(name, lines, idx):
     with open(name, 'w') as fout:
