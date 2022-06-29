@@ -1,5 +1,5 @@
 data_simulator:
-  manifest_path: ./dev-clean-align.json
+  manifest_path: /home/chooper/projects/branch_nemo/NeMo/scripts/speaker_tasks/dev-clean-align.json
   sr: 16000
   num_speakers: 4
   session_length: 6000
