@@ -252,7 +252,7 @@ class _AudioMSDDTrainDataset(Dataset):
         emb_batch_size,
         pairwise_infer: bool,
         random_flip: bool = True,
-        synthetic: bool = False,
+        synthetic: bool = True,
         synthetic_cfg_path: str,
     ):
         super().__init__()
