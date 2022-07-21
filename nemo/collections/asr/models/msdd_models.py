@@ -549,6 +549,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         return None
 
     def __init__(self, cfg: DictConfig, trainer: Trainer = None):
+        self.trainer = trainer
         self.pairwise_infer = True
         self.cfg_msdd_model = cfg
         self.cfg_msdd_model.msdd_module.num_spks = self.cfg_msdd_model.max_num_of_spks
@@ -652,7 +653,8 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         os.makedirs(out_rttm_dir, exist_ok=True)
 
         # Speech Activity Detection part
-        _speaker_manifest_path = os.path.join(_speaker_dir, 'oracle_vad_manifest.json')
+        _speaker_manifest_path = os.path.join(_speaker_dir, f'oracle_vad_manifest_rank{self.trainer.global_rank}.json'
+        # _speaker_manifest_path = os.path.join(_speaker_dir, 'oracle_vad_manifest.json')
         _speaker_manifest_path = write_rttm2manifest(split_audio_rttm_map,
                                                      _speaker_manifest_path,
                                                      include_uniq_id=True)
@@ -750,6 +752,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 pairwise_infer=False,
                 emb_dir=self.cfg_msdd_model.train_ds.emb_dir,
                 ds_config=self.cfg_msdd_model,
+                trainer=self.trainer
             )
         else:
             dataset = AudioToSpeechMSDDTrainDataset(

@@ -975,6 +975,7 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         random_flip: bool = True,
         emb_dir: str,
         ds_config,
+        trainer
     ):
 
         self.featurizer = featurizer
@@ -988,6 +989,7 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.frame_per_sec = int(1 / window_stride)
         self.emb_batch_size = emb_batch_size
         self.random_flip = random_flip
+        self.trainer = trainer
 
         cfg = OmegaConf.create(ds_config)
         if cfg.data_simulator.rir_generation.use_rir:
@@ -1081,7 +1083,8 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         os.makedirs(out_rttm_dir, exist_ok=True)
 
         # Speech Activity Detection part
-        _speaker_manifest_path = os.path.join(_speaker_dir, 'oracle_vad_manifest.json')
+        # _speaker_manifest_path = os.path.join(_speaker_dir, 'oracle_vad_manifest.json')
+        _speaker_manifest_path = os.path.join(_speaker_dir, f'oracle_vad_manifest_rank{self.trainer.global_rank}.json'
         _speaker_manifest_path = write_rttm2manifest(split_audio_rttm_map,
                                                      _speaker_manifest_path,
                                                      include_uniq_id=True)
