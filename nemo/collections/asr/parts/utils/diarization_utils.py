@@ -29,8 +29,8 @@ from nemo.collections.asr.parts.utils.speaker_utils import (
     get_uniqname_from_filepath,
     labels_to_rttmfile,
     rttm_to_labels,
-    write_rttm2manifest,
 )
+from nemo.collections.asr.parts.utils.manifest_utils import write_rttm2manifest
 from nemo.utils import logging
 
 try:

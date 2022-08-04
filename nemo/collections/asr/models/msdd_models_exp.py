@@ -63,9 +63,8 @@ from nemo.collections.asr.parts.utils.speaker_utils import (
     perform_clustering,
     rttm_to_labels,
     score_labels,
-    segments_manifest_to_subsegments_manifest,
-    write_rttm2manifest,
 )
+from nemo.collections.asr.parts.utils.manifest_utils import write_rttm2manifest, segments_manifest_to_subsegments_manifest
 from nemo.collections.common.losses import CrossEntropyLoss as CELoss
 from nemo.collections.common.metrics import TopKClassificationAccuracy
 from nemo.collections.common.parts.preprocessing.collections import ASRSpeechLabel
@@ -1911,7 +1910,7 @@ class NeuralDiarizer:
             logging.info(f"Test Inference F1 score. {f1_score:.4f}, simple Acc. {simple_acc:.4f}")
         integrated_preds_list = self.get_integrated_preds_list(uniq_id_list, test_data_collection, preds_list)
         return integrated_preds_list, targets_list, signal_lengths_list
-    
+
     def run_overlap_aware_eval(self, preds_list, targets_list, signal_lengths_list):
 
         print("\n\n")

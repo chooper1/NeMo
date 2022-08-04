@@ -36,10 +36,9 @@ from nemo.collections.asr.parts.utils.speaker_utils import (
     parse_scale_configs,
     perform_clustering,
     score_labels,
-    segments_manifest_to_subsegments_manifest,
     validate_vad_manifest,
-    write_rttm2manifest,
 )
+from nemo.collections.asr.parts.utils.manifest_utils import write_rttm2manifest, segments_manifest_to_subsegments_manifest
 from nemo.collections.asr.parts.utils.vad_utils import (
     generate_overlap_vad_seq,
     generate_vad_segment_table,
@@ -74,10 +73,10 @@ def get_available_model_names(class_name):
 
 class ClusteringDiarizer(Model, DiarizationMixin):
     """
-    Inference model Class for offline speaker diarization. 
-    This class handles required functionality for diarization : Speech Activity Detection, Segmentation, 
-    Extract Embeddings, Clustering, Resegmentation and Scoring. 
-    All the parameters are passed through config file 
+    Inference model Class for offline speaker diarization.
+    This class handles required functionality for diarization : Speech Activity Detection, Segmentation,
+    Extract Embeddings, Clustering, Resegmentation and Scoring.
+    All the parameters are passed through config file
     """
 
     def __init__(self, cfg: DictConfig, load_speaker_model=True):
@@ -187,8 +186,8 @@ class ClusteringDiarizer(Model, DiarizationMixin):
 
     def _run_vad(self, manifest_file):
         """
-        Run voice activity detection. 
-        Get log probability of voice activity detection and smoothes using the post processing parameters. 
+        Run voice activity detection.
+        Get log probability of voice activity detection and smoothes using the post processing parameters.
         Using generated frame level predictions generated manifest file for later speaker embedding extraction.
         input:
         manifest_file (str) : Manifest file containing path to audio file and label as infer
@@ -327,7 +326,7 @@ class ClusteringDiarizer(Model, DiarizationMixin):
     def _extract_embeddings(self, manifest_file: str):
         """
         This method extracts speaker embeddings from segments passed through manifest_file
-        Optionally you may save the intermediate speaker embeddings for debugging or any use. 
+        Optionally you may save the intermediate speaker embeddings for debugging or any use.
         """
         logging.info("Extracting embeddings for Diarization")
         self._setup_spkr_test_data(manifest_file)
@@ -372,7 +371,7 @@ class ClusteringDiarizer(Model, DiarizationMixin):
             self._embeddings_file = name + f'_embeddings.pkl'
             pkl.dump(self.embeddings, open(self._embeddings_file, 'wb'))
             logging.info("Saved embedding files to {}".format(embedding_dir))
-    
+
     def path2audio_files_to_manifest(self, paths2audio_files, manifest_filepath):
         with open(manifest_filepath, 'w', encoding='utf-8') as fp:
             for audio_file in paths2audio_files:
@@ -427,7 +426,7 @@ class ClusteringDiarizer(Model, DiarizationMixin):
         self.embs_and_timestamps = get_embs_and_timestamps(
             self.multiscale_embeddings_and_timestamps, self.multiscale_args_dict
         )
-       
+
         # Clustering
         all_reference, all_hypothesis = perform_clustering(
             embs_and_timestamps=self.embs_and_timestamps,

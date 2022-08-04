@@ -89,6 +89,10 @@ def main():
             words = words.replace('\"', '').lower().split(',')
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
 
+            #get speaker ID
+            fn = file['audio_filepath'].split('/')[-1]
+            speaker_id = fn.split('-')[0]
+
             #build target manifest entry
             target_manifest.append({})
             target_manifest[target_i]['audio_filepath'] = file['audio_filepath']
@@ -96,6 +100,7 @@ def main():
             target_manifest[target_i]['text'] = file['text']
             target_manifest[target_i]['words'] = words
             target_manifest[target_i]['alignments'] = end_times
+            target_manifest[target_i]['speaker_id'] = speaker_id
 
             src_i += 1
             target_i += 1

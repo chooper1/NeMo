@@ -19,7 +19,7 @@ import shutil
 
 from omegaconf import OmegaConf
 from nemo.core.config import hydra_runner
-from nemo.collections.asr.data.data_simulation import LibriSpeechSimulator, RIRAugmentedLibriSpeechSimulator
+from nemo.collections.asr.data.data_simulation import MultiSpeakerSimulator, RIRMultiSpeakerSimulator
 
 """
 This script creates a synthetic diarization session using the LibriSpeech dataset.
@@ -31,9 +31,9 @@ Check out parameters in ./conf/data_simulator.yaml.
 @hydra_runner(config_path="conf", config_name="data_simulator.yaml")
 def main(cfg):
     if cfg.data_simulator.rir_generation.use_rir:
-        lg = RIRAugmentedLibriSpeechSimulator(cfg=cfg)
+        lg = RIRMultiSpeakerSimulator(cfg=cfg)
     else:
-        lg = LibriSpeechSimulator(cfg=cfg)
+        lg = MultiSpeakerSimulator(cfg=cfg)
     lg.generate_sessions()
 
 if __name__ == "__main__":

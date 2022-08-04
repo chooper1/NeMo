@@ -27,8 +27,9 @@ from nemo.collections.common.parts.preprocessing.collections import DiarizationS
 from nemo.core.classes import Dataset
 from nemo.core.neural_types import AudioSignal, EncodedRepresentation, LengthsType, NeuralType
 
-from nemo.collections.asr.data.data_simulation import LibriSpeechSimulator, RIRAugmentedLibriSpeechSimulator
-from nemo.collections.asr.parts.utils.speaker_utils import write_rttm2manifest, segments_manifest_to_subsegments_manifest, get_uniq_id_with_dur
+from nemo.collections.asr.data.data_simulation import MultiSpeakerSimulator, RIRMultiSpeakerSimulator
+from nemo.collections.asr.parts.utils.speaker_utils import get_uniq_id_with_dur
+from nemo.collections.asr.parts.utils.manifest_utils import write_rttm2manifest, segments_manifest_to_subsegments_manifest
 from nemo.utils import logging
 
 def get_audio_rttm_map(manifest):
@@ -960,9 +961,9 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         cfg = OmegaConf.create(ds_config)
         cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}"
         if cfg.data_simulator.rir_generation.use_rir:
-            self.data_simulator = RIRAugmentedLibriSpeechSimulator(cfg) #includes tmp dir
+            self.data_simulator = RIRMultiSpeakerSimulator(cfg) #includes tmp dir
         else:
-            self.data_simulator = LibriSpeechSimulator(cfg) #includes tmp dir
+            self.data_simulator = MultiSpeakerSimulator(cfg) #includes tmp dir
         self.emb_dir = emb_dir
 
         self.include_base_ds = cfg.train_ds.include_base_ds

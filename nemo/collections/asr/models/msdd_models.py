@@ -70,9 +70,8 @@ from nemo.collections.asr.parts.utils.speaker_utils import (
     perform_clustering,
     rttm_to_labels,
     score_labels,
-    segments_manifest_to_subsegments_manifest,
-    write_rttm2manifest,
 )
+from nemo.collections.asr.parts.utils.manifest_utils import write_rttm2manifest, segments_manifest_to_subsegments_manifest
 from nemo.collections.common.losses import CrossEntropyLoss as CELoss
 from nemo.collections.common.metrics import TopKClassificationAccuracy
 from nemo.collections.common.parts.preprocessing.collections import ASRSpeechLabel

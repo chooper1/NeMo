@@ -47,9 +47,9 @@ from nemo.collections.asr.parts.utils.manifest_utils import (
 )
 from nemo.utils import logging
 
-class LibriSpeechSimulator(object):
+class MultiSpeakerSimulator(object):
     """
-    Librispeech Diarization Session Simulator.
+    Multispeaker Audio Session Simulator.
 
     Args:
         cfg: OmegaConf configuration loaded from yaml file.
@@ -121,8 +121,9 @@ class LibriSpeechSimulator(object):
         s = 0
         while s < self._params.data_simulator.session_config.num_speakers:
             file = self._manifest[np.random.randint(0, len(self._manifest) - 1)]
-            fn = file['audio_filepath'].split('/')[-1]
-            speaker_id = fn.split('-')[0]
+            # fn = file['audio_filepath'].split('/')[-1]
+            # speaker_id = fn.split('-')[0]
+            speaker_id = file['speaker_id']
             if speaker_id not in speaker_ids: # ensure speaker ids are not duplicated
                 speaker_ids.append(speaker_id)
                 s += 1
@@ -142,8 +143,9 @@ class LibriSpeechSimulator(object):
             speaker_lists[str(speaker_ids[i])] = []
         # loop over manifest and add files corresponding to each speaker to each sublist
         for file in self._manifest:
-            fn = file['audio_filepath'].split('/')[-1]
-            new_speaker_id = fn.split('-')[0]
+            # fn = file['audio_filepath'].split('/')[-1]
+            # new_speaker_id = fn.split('-')[0]
+            new_speaker_id = file['speaker_id']
             for spid in speaker_ids:
                 if spid == new_speaker_id:
                     speaker_lists[str(spid)].append(file)
@@ -840,9 +842,9 @@ class LibriSpeechSimulator(object):
         ctmlist.close()
         textlist.close()
 
-class RIRAugmentedLibriSpeechSimulator(LibriSpeechSimulator):
+class RIRMultiSpeakerSimulator(MultiSpeakerSimulator):
     """
-    Multi Microphone Librispeech Diarization Session Simulator.
+    RIR Augmented Multispeaker Audio Session Simulator.
     """
 
     def _check_args(self):
