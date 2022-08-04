@@ -557,7 +557,7 @@ class MultiSpeakerSimulator(object):
         desired_avg_power_noise = power_array / ratio
         running_len = 0
         while running_len < len_array: #build background audio stream (the same length as the full file)
-            file_id = np.random.randint(0, len(bg_files) - 1)
+            file_id = np.random.randint(0, len(manifest) - 1)
             file = manifest[file_id]
             audio_file, sr = sf.read(file['audio_filepath'])
             audio_file = torch.from_numpy(audio_file)
