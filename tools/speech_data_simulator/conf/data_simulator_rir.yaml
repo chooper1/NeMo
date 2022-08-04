@@ -41,7 +41,7 @@ data_simulator:
 
   background_noise: #if bg noise is used, a noise source position must be passed
     add_bg: true
-    background_dir: null
+    background_manifest: null
     snr: 60
 
   speaker_enforcement:

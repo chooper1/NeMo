@@ -550,8 +550,7 @@ class MultiSpeakerSimulator(object):
             bg_array (tensor): Tensor containing background noise
         """
 
-        bg_dir = self._params.data_simulator.background_noise.background_dir
-        bg_files = os.listdir(bg_dir)
+        manifest = read_manifest(self._params.data_simulator.background_noise.background_manifest)
         bg_array = torch.zeros(len_array)
         desired_snr = self._params.data_simulator.background_noise.snr
         ratio = 10 ** (desired_snr / 20)
@@ -559,8 +558,8 @@ class MultiSpeakerSimulator(object):
         running_len = 0
         while running_len < len_array: #build background audio stream (the same length as the full file)
             file_id = np.random.randint(0, len(bg_files) - 1)
-            file = bg_files[file_id]
-            audio_file, sr = sf.read(os.path.join(bg_dir, file))
+            file = manifest[file_id]
+            audio_file, sr = sf.read(file['audio_filepath'])
             audio_file = torch.from_numpy(audio_file)
             if audio_file.ndim > 1:
                 audio_file = torch.mean(audio_file, 1, False)
