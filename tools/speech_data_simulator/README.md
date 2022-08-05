@@ -26,7 +26,7 @@ The simulator can be used in two modes: near field (no Room Impulse Response) as
 
 The simulator also has a speaker enforcement mode which ensures that the correct number of speakers appear in each session (which is not guaranteed since speaker turns are stochastic). In speaker enforcement mode, the length of the session or speaker probabilites may be adjusted to ensure all speakers are present.
 
-Required Datasets ()
+Required Datasets
 ------------
 
 * LibriSpeech (or another single-speaker dataset)
@@ -76,7 +76,16 @@ export PYTHONPATH=<NeMo base path>:$PYTHONPATH \
   --output_path train-clean-100-align.json
 ```
 
-4. Create audio sessions (near field)
+4. (Optional) Create the background noise manifest file
+
+```bash
+export PYTHONPATH=<NeMo base path>:$PYTHONPATH \
+&& python <NeMo base path>/scripts/speaker_tasks/pathfiles_to_diarize_manifest.py \
+--paths2audio_files <Path to noise list file> \
+--manifest_filepath bg_noise.json
+```
+
+5. Create audio sessions (near field)
 
 ```bash
 export PYTHONPATH=<NeMo base path>:$PYTHONPATH \
@@ -84,10 +93,10 @@ export PYTHONPATH=<NeMo base path>:$PYTHONPATH \
   data_simulator.random_seed=42 \
   data_simulator.manifest_path=./train-clean-100-align.json \
   data_simulator.outputs.output_dir=./test \
-  data_simulator.background_noise.background_dir=<Path to background noise directory>
+  data_simulator.background_noise.background_manifest=./bg_noise.json
 ```
 
-5. Create multi-microphone audio sessions (with synthetic RIR generation)
+6. Create multi-microphone audio sessions (with synthetic RIR generation)
 
 ```bash
 export PYTHONPATH=<NeMo base path>:$PYTHONPATH \
@@ -95,5 +104,5 @@ export PYTHONPATH=<NeMo base path>:$PYTHONPATH \
   data_simulator.random_seed=42 \
   data_simulator.manifest_path=./train-clean-100-align.json \
   data_simulator.outputs.output_dir=./test_rir \
-  data_simulator.background_noise.background_dir=<Path to background noise directory>
+  data_simulator.background_noise.background_manifest=./bg_noise.json
 ```
