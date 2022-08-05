@@ -821,6 +821,7 @@ def getSubRangeList(target_range, source_range_list) -> List:
                 out_range.append(ovl_range)
         return out_range
 
+
 def get_subsegments(offset: float, window: float, shift: float, duration: float):
     """
     Return subsegments from a segment of audio file

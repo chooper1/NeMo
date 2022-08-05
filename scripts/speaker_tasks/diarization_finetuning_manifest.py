@@ -18,9 +18,10 @@ import logging
 import os
 import random
 
+from nemo.collections.asr.parts.utils.manifest_utils import create_segment_manifest
+
 random.seed(42)
 
-from nemo.collections.asr.parts.utils.manifest_utils import create_segment_manifest
 
 """
 This scipt converts a scp file where each line contains
@@ -37,26 +38,23 @@ Args:
         you may not need this for test set, Defaults to False
 """
 
+
 def main(input_manifest_path, output_manifest_path, window, shift, step_count, deci):
     create_segment_manifest(input_manifest_path, output_manifest_path, window, shift, step_count, deci)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--input_manifest_path", help="input json file name", type=str, required=True)
-    parser.add_argument("--output_manifest_path", help="output manifest_file name", type=str, default=None, required=False)
+    parser.add_argument(
+        "--output_manifest_path", help="output manifest_file name", type=str, default=None, required=False
+    )
     parser.add_argument("--window", help="Window length for segmentation", type=float, required=True)
     parser.add_argument("--shift", help="Shift length for segmentation", type=float, required=True)
     parser.add_argument("--deci", help="Rounding decimals", type=int, default=3, required=False)
     parser.add_argument(
-        "--step_count",
-        help="Number of the unit segments you want to create per utterance",
-        required=True,
+        "--step_count", help="Number of the unit segments you want to create per utterance", required=True,
     )
     args = parser.parse_args()
 
-    main(args.input_manifest_path,
-         args.output_manifest_path,
-         args.window,
-         args.shift,
-         args.step_count,
-         args.deci)
+    main(args.input_manifest_path, args.output_manifest_path, args.window, args.shift, args.step_count, args.deci)

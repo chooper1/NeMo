@@ -17,6 +17,7 @@ import json
 import os
 import random
 import shutil
+
 from nemo.collections.asr.parts.utils.manifest_utils import read_manifest, write_manifest
 
 random.seed(42)
@@ -42,6 +43,7 @@ def get_unaligned_examples(unaligned_path, dataset):
                 skip_files.append(unaligned_file)
             i += 1
     return skip_files
+
 
 def main():
     input_manifest_filepath = args.input_manifest_filepath
@@ -89,11 +91,11 @@ def main():
             words = words.replace('\"', '').lower().split(',')
             end_times = [float(e) for e in end_times.replace('\"', '').split(',')]
 
-            #get speaker ID
+            # get speaker ID
             fn = file['audio_filepath'].split('/')[-1]
             speaker_id = fn.split('-')[0]
 
-            #build target manifest entry
+            # build target manifest entry
             target_manifest.append({})
             target_manifest[target_i]['audio_filepath'] = file['audio_filepath']
             target_manifest[target_i]['duration'] = file['duration']
@@ -113,7 +115,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="LibriSpeech Alignment Manifest Creator")
     parser.add_argument("--input_manifest_filepath", help="path to input manifest file", type=str, required=True)
     parser.add_argument("--base_alignment_path", help="path to librispeech alignment dataset", type=str, required=True)
-    parser.add_argument("--dataset", help="which test/dev/training set to create a manifest for", type=str, required=True)
+    parser.add_argument(
+        "--dataset", help="which test/dev/training set to create a manifest for", type=str, required=True
+    )
     parser.add_argument("--output_path", help="path to output manifest file", type=str, required=True)
     args = parser.parse_args()
 

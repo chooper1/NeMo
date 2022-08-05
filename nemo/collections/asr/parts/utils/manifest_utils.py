@@ -14,16 +14,18 @@
 
 import json
 import os
-import numpy as np
-
 from collections import Counter
 from collections import OrderedDict as od
+
+import numpy as np
+
 from nemo.collections.asr.parts.utils.speaker_utils import (
-    rttm_to_labels,
+    audio_rttm_map,
     get_subsegments,
     get_uniqname_from_filepath,
-    audio_rttm_map,
+    rttm_to_labels,
 )
+
 
 def rreplace(s, old, new):
     """
@@ -39,6 +41,7 @@ def rreplace(s, old, new):
     li = s.rsplit(old, 1)
     return new.join(li)
 
+
 def get_uniq_id_with_period(path):
     """
     Get file id.
@@ -51,6 +54,7 @@ def get_uniq_id_with_period(path):
     split_path = os.path.basename(path).split('.')[:-1]
     uniq_id = '.'.join(split_path) if len(split_path) > 1 else split_path[0]
     return uniq_id
+
 
 def get_subsegment_dict(subsegments_manifest_file, window, shift, deci):
     """
@@ -74,12 +78,13 @@ def get_subsegment_dict(subsegments_manifest_file, window, shift, deci):
             subsegments = get_subsegments(offset=offset, window=window, shift=shift, duration=duration)
             uniq_id = get_uniq_id_with_period(audio)
             if uniq_id not in _subsegment_dict:
-                _subsegment_dict[uniq_id] = {'ts' : [], 'json_dic': []}
+                _subsegment_dict[uniq_id] = {'ts': [], 'json_dic': []}
             for subsegment in subsegments:
                 start, dur = subsegment
-            _subsegment_dict[uniq_id]['ts'].append([round(start, deci), round(start+dur, deci)])
+            _subsegment_dict[uniq_id]['ts'].append([round(start, deci), round(start + dur, deci)])
             _subsegment_dict[uniq_id]['json_dic'].append(dic)
     return _subsegment_dict
+
 
 def get_input_manifest_dict(input_manifest_path):
     """
@@ -100,6 +105,7 @@ def get_input_manifest_dict(input_manifest_path):
             input_manifest_dict[uniq_id] = dic
     return input_manifest_dict
 
+
 def write_truncated_subsegments(input_manifest_dict, _subsegment_dict, output_manifest_path, step_count, deci):
     """
     Write subsegments to manifest filepath.
@@ -118,9 +124,9 @@ def write_truncated_subsegments(input_manifest_dict, _subsegment_dict, output_ma
             subseg_array_idx = np.argsort(subseg_array, axis=0)
             chunked_set_count = subseg_array_idx.shape[0] // step_count
 
-            for idx in range(chunked_set_count-1):
+            for idx in range(chunked_set_count - 1):
                 chunk_index_stt = subseg_array_idx[:, 0][idx * step_count]
-                chunk_index_end = subseg_array_idx[:, 1][(idx+1)* step_count]
+                chunk_index_end = subseg_array_idx[:, 1][(idx + 1) * step_count]
                 offset_sec = subseg_array[chunk_index_stt, 0]
                 end_sec = subseg_array[chunk_index_end, 1]
                 dur = round(end_sec - offset_sec, deci)
@@ -129,6 +135,7 @@ def write_truncated_subsegments(input_manifest_dict, _subsegment_dict, output_ma
                 meta['duration'] = dur
                 json.dump(meta, output_manifest_fp)
                 output_manifest_fp.write("\n")
+
 
 def write_file(name, lines, idx):
     """
@@ -145,6 +152,7 @@ def write_file(name, lines, idx):
             json.dump(dic, fout)
             fout.write('\n')
 
+
 def read_file(pathlist):
     """
     Read list of lines from target file.
@@ -156,6 +164,7 @@ def read_file(pathlist):
     """
     pathlist = open(pathlist, 'r').readlines()
     return sorted(pathlist)
+
 
 def get_dict_from_wavlist(pathlist):
     """
@@ -172,6 +181,7 @@ def get_dict_from_wavlist(pathlist):
         uniq_id = os.path.basename(line_path).split('.')[0]
         path_dict[uniq_id] = line_path
     return path_dict
+
 
 def get_dict_from_list(data_pathlist, uniqids):
     """
@@ -192,6 +202,7 @@ def get_dict_from_list(data_pathlist, uniqids):
             raise ValueError(f'uniq id {uniq_id} is not in wav filelist')
     return path_dict
 
+
 def get_path_dict(data_path, uniqids, len_wavs=None):
     """
     Create dictionary from list of lines (using the get_dict_from_list function)
@@ -211,6 +222,7 @@ def get_path_dict(data_path, uniqids, len_wavs=None):
     elif len_wavs is not None:
         data_pathdict = {uniq_id: None for uniq_id in uniqids}
     return data_pathdict
+
 
 def create_segment_manifest(input_manifest_path, output_manifest_path, window, shift, step_count, deci):
     """
@@ -234,7 +246,7 @@ def create_segment_manifest(input_manifest_path, output_manifest_path, window, s
     input_manifest_dict = get_input_manifest_dict(input_manifest_path)
     segment_manifest_path = rreplace(input_manifest_path, '.json', '_seg.json')
     subsegment_manifest_path = rreplace(input_manifest_path, '.json', '_subseg.json')
-    min_subsegment_duration=0.05
+    min_subsegment_duration = 0.05
     step_count = int(step_count)
 
     input_manifest_file = open(input_manifest_path, 'r').readlines()
@@ -244,18 +256,17 @@ def create_segment_manifest(input_manifest_path, output_manifest_path, window, s
     # print(segments_manifest_file)
     subsegments_manifest_file = subsegment_manifest_path
     segments_manifest_to_subsegments_manifest(
-        segments_manifest_file,
-        subsegments_manifest_file,
-        window,
-        shift,
-        min_subsegment_duration,
+        segments_manifest_file, subsegments_manifest_file, window, shift, min_subsegment_duration,
     )
     subsegments_dict = get_subsegment_dict(subsegments_manifest_file, window, shift, deci)
     write_truncated_subsegments(input_manifest_dict, subsegments_dict, output_manifest_path, step_count, deci)
     os.remove(segment_manifest_path)
     os.remove(subsegment_manifest_path)
 
-def create_manifest(wav_path, manifest_filepath, text_path=None, rttm_path=None, uem_path=None, ctm_path=None, add_duration=False):
+
+def create_manifest(
+    wav_path, manifest_filepath, text_path=None, rttm_path=None, uem_path=None, ctm_path=None, add_duration=False
+):
     """
     Create base manifest file
 
@@ -329,6 +340,7 @@ def create_manifest(wav_path, manifest_filepath, text_path=None, rttm_path=None,
 
     write_file(manifest_filepath, lines, range(len(lines)))
 
+
 def read_manifest(manifest):
     """
     Read manifest file
@@ -345,6 +357,7 @@ def read_manifest(manifest):
             data.append(item)
     return data
 
+
 def write_manifest(output_path, target_manifest):
     """
     Write to manifest file
@@ -357,6 +370,7 @@ def write_manifest(output_path, target_manifest):
         for tgt in target_manifest:
             json.dump(tgt, outfile)
             outfile.write('\n')
+
 
 def write_ctm(output_path, target_ctm):
     """
@@ -371,6 +385,7 @@ def write_ctm(output_path, target_ctm):
         for pair in target_ctm:
             tgt = pair[1]
             outfile.write(tgt)
+
 
 def write_text(output_path, target_ctm):
     """
@@ -387,6 +402,7 @@ def write_text(output_path, target_ctm):
             word = tgt.split(' ')[4]
             outfile.write(word + ' ')
         outfile.write('\n')
+
 
 def write_rttm2manifest(AUDIO_RTTM_MAP: str, manifest_file: str, include_uniq_id: bool = False, deci: int = 5) -> str:
     """
@@ -411,14 +427,14 @@ def write_rttm2manifest(AUDIO_RTTM_MAP: str, manifest_file: str, include_uniq_id
             rttm_file_path = AUDIO_RTTM_MAP[uniq_id]['rttm_filepath']
             rttm_lines = read_rttm_lines(rttm_file_path)
             offset, duration = get_offset_and_duration(AUDIO_RTTM_MAP, uniq_id, deci)
-            #print('offset: ', offset)
-            #print('duration: ', duration)
+            # print('offset: ', offset)
+            # print('duration: ', duration)
             vad_start_end_list_raw = []
             for line in rttm_lines:
                 start, dur = get_vad_out_from_rttm_line(line)
-                #if start + dur > duration: #COLEMAN CHANGE HERE
+                # if start + dur > duration: #COLEMAN CHANGE HERE
                 #    print('start+dur: ', start+dur)
-                #else:
+                # else:
                 vad_start_end_list_raw.append([start, start + dur])
             vad_start_end_list = combine_float_overlaps(vad_start_end_list_raw, deci)
             if len(vad_start_end_list) == 0:
@@ -431,6 +447,7 @@ def write_rttm2manifest(AUDIO_RTTM_MAP: str, manifest_file: str, include_uniq_id
                 )
                 write_overlap_segments(outfile, AUDIO_RTTM_MAP, uniq_id, overlap_range_list, include_uniq_id, deci)
     return manifest_file
+
 
 def segments_manifest_to_subsegments_manifest(
     segments_manifest_file: str,
@@ -452,8 +469,8 @@ def segments_manifest_to_subsegments_manifest(
     Returns:
         returns path to subsegment manifest file
     """
-    #print(segments_manifest_file)
-    #print(subsegments_manifest_file)
+    # print(segments_manifest_file)
+    # print(subsegments_manifest_file)
     if subsegments_manifest_file is None:
         pwd = os.getcwd()
         subsegments_manifest_file = os.path.join(pwd, 'subsegments.json')
@@ -463,7 +480,7 @@ def segments_manifest_to_subsegments_manifest(
     ) as subsegments_manifest:
         segments = segments_manifest.readlines()
         for segment in segments:
-            #print(segment)
+            # print(segment)
             segment = segment.strip()
             dic = json.loads(segment)
             audio, offset, duration, label = dic['audio_filepath'], dic['offset'], dic['duration'], dic['label']

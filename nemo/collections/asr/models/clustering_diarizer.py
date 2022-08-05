@@ -29,6 +29,10 @@ from tqdm import tqdm
 from nemo.collections.asr.models.classification_models import EncDecClassificationModel
 from nemo.collections.asr.models.label_models import EncDecSpeakerLabelModel
 from nemo.collections.asr.parts.mixins.mixins import DiarizationMixin
+from nemo.collections.asr.parts.utils.manifest_utils import (
+    segments_manifest_to_subsegments_manifest,
+    write_rttm2manifest,
+)
 from nemo.collections.asr.parts.utils.speaker_utils import (
     audio_rttm_map,
     get_embs_and_timestamps,
@@ -38,7 +42,6 @@ from nemo.collections.asr.parts.utils.speaker_utils import (
     score_labels,
     validate_vad_manifest,
 )
-from nemo.collections.asr.parts.utils.manifest_utils import write_rttm2manifest, segments_manifest_to_subsegments_manifest
 from nemo.collections.asr.parts.utils.vad_utils import (
     generate_overlap_vad_seq,
     generate_vad_segment_table,
