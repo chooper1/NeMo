@@ -79,7 +79,7 @@ class ClusteringDiarizer(Model, DiarizationMixin):
     All the parameters are passed through config file
     """
 
-    def __init__(self, cfg: DictConfig, load_speaker_model=True):
+    def __init__(self, cfg: DictConfig):
         cfg = model_utils.convert_model_config_to_dict_config(cfg)
         # Convert config to support Hydra 1.0+ instantiation
         cfg = model_utils.maybe_update_config_version(cfg)
@@ -97,13 +97,11 @@ class ClusteringDiarizer(Model, DiarizationMixin):
 
         # init speaker model
         self.multiscale_embeddings_and_timestamps = {}
-        if load_speaker_model:
-            self._init_speaker_model()
+        self._init_speaker_model()
         self._speaker_params = self._cfg.diarizer.speaker_embeddings.parameters
         self._speaker_dir = os.path.join(self._diarizer_params.out_dir, 'speaker_outputs')
-        # shutil.rmtree(self._speaker_dir, ignore_errors=True)
-        if not os.path.exists(self._speaker_dir):
-            os.makedirs(self._speaker_dir)
+        shutil.rmtree(self._speaker_dir, ignore_errors=True)
+        os.makedirs(self._speaker_dir)
 
         # Clustering params
         self._cluster_params = self._diarizer_params.clustering.parameters
@@ -425,13 +423,13 @@ class ClusteringDiarizer(Model, DiarizationMixin):
 
             self.multiscale_embeddings_and_timestamps[scale_idx] = [self.embeddings, self.time_stamps]
 
-        self.embs_and_timestamps = get_embs_and_timestamps(
+        embs_and_timestamps = get_embs_and_timestamps(
             self.multiscale_embeddings_and_timestamps, self.multiscale_args_dict
         )
 
         # Clustering
         all_reference, all_hypothesis = perform_clustering(
-            embs_and_timestamps=self.embs_and_timestamps,
+            embs_and_timestamps=embs_and_timestamps,
             AUDIO_RTTM_MAP=self.AUDIO_RTTM_MAP,
             out_rttm_dir=out_rttm_dir,
             clustering_params=self._cluster_params,
