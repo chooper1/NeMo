@@ -973,8 +973,9 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.trainer = trainer
 
         logging.info(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
-        if trainer.global_rank == 0:
-            self.regenerate_dataset()
+        # if trainer.global_rank == 0:
+            # self.regenerate_dataset()
+        self.regenerate_dataset()
 
     def _extract_timestamps(self, manifest_file: str):
         """
