@@ -891,8 +891,9 @@ class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
     Modified dataloader for refreshing synthetic dataset
     after a specified number of epochs.
     """
-    def __init__(self, trainer=None, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        trainer = kwargs['trainer']
         print(f"Dataloader rank is {trainer.global_rank}")
         logging.info(f"Dataloader rank is {trainer.global_rank}")
         if trainer.global_rank == 0:   #remove for working version
