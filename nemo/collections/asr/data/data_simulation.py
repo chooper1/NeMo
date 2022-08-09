@@ -15,7 +15,7 @@
 import os
 import shutil
 import warnings
-
+from tqdm import trange
 import numpy as np
 import pyroomacoustics as pra
 import soundfile as sf
@@ -823,15 +823,16 @@ class MultiSpeakerSimulator(object):
         self.segment_manifest_filepath = output_manifest_path
         return self.segment_manifest_filepath
 
-    def _generate_session(self, idx, basepath, filename):
+    def _generate_session(self, idx):
         """
         Generate diarization session
 
         Args:
             idx (int): Index for current session (out of total number of sessions).
-            basepath (str): Path to output directory.
-            filename (str): Filename for output files.
         """
+        filename = self._params.data_simulator.outputs.output_filename + f"_{i}"
+        basepath = self._params.data_simulator.outputs.output_dir
+
         speaker_ids = self._get_speaker_ids()  # randomly select speaker ids
         speaker_dominance = self._get_speaker_dominance()  # randomly determine speaker dominance
         base_speaker_dominance = np.copy(speaker_dominance)
@@ -919,6 +920,16 @@ class MultiSpeakerSimulator(object):
             prev_speaker = speaker_turn
             prev_length_sr = length
 
+        # throw error if number of speakers is less than requested
+        num_missing = 0
+        for k in range(0, len(self._furthest_sample)):
+            if self._furthest_sample[k] == 0:
+                num_missing += 1
+        if num_missing != 0:
+            warnings.warn(
+                f"{self._params.data_simulator.session_config.num_speakers-num_missing} speakers were included in the clip instead of the requested amount of {self._params.data_simulator.session_config.num_speakers}"
+            )
+
         # background noise augmentation
         if self._params.data_simulator.background_noise.add_bg:
             avg_power_array = torch.mean(array[is_bg == 1] ** 2)
@@ -953,40 +964,27 @@ class MultiSpeakerSimulator(object):
         # only add root if paths are relative
         if not os.path.isabs(output_dir):
             ROOT = os.getcwd()
-            basepath = os.path.join(ROOT, output_dir)
-        else:
-            basepath = output_dir
+            self._params.data_simulator.outputs.output_dir = os.path.join(ROOT, output_dir)
 
-        wavlist = open(os.path.join(basepath, "synthetic_wav.list"), "w")
-        rttmlist = open(os.path.join(basepath, "synthetic_rttm.list"), "w")
-        jsonlist = open(os.path.join(basepath, "synthetic_json.list"), "w")
-        ctmlist = open(os.path.join(basepath, "synthetic_ctm.list"), "w")
-        textlist = open(os.path.join(basepath, "synthetic_txt.list"), "w")
-
-        for i in range(0, self._params.data_simulator.session_config.num_sessions):
+        for i in trange(0, self._params.data_simulator.session_config.num_sessions):
             self._furthest_sample = [0 for n in range(0, self._params.data_simulator.session_config.num_speakers)]
             self._missing_overlap = 0
 
-            logging.info(f"Generating Session Number {i}")
+            self._generate_session(i)
+
+        # create list files
+        wavlist = open(os.path.join(self._params.data_simulator.outputs.output_dir, "synthetic_wav.list"), "w")
+        rttmlist = open(os.path.join(self._params.data_simulator.outputs.output_dir, "synthetic_rttm.list"), "w")
+        jsonlist = open(os.path.join(self._params.data_simulator.outputs.output_dir, "synthetic_json.list"), "w")
+        ctmlist = open(os.path.join(self._params.data_simulator.outputs.output_dir, "synthetic_ctm.list"), "w")
+        textlist = open(os.path.join(self._params.data_simulator.outputs.output_dir, "synthetic_txt.list"), "w")
+        for i in range(0, self._params.data_simulator.session_config.num_sessions):
             filename = self._params.data_simulator.outputs.output_filename + f"_{i}"
-            self._generate_session(i, basepath, filename)
-
-            wavlist.write(os.path.join(basepath, filename + '.wav\n'))
-            rttmlist.write(os.path.join(basepath, filename + '.rttm\n'))
-            jsonlist.write(os.path.join(basepath, filename + '.json\n'))
-            ctmlist.write(os.path.join(basepath, filename + '.ctm\n'))
-            textlist.write(os.path.join(basepath, filename + '.txt\n'))
-
-            # throw error if number of speakers is less than requested
-            num_missing = 0
-            for k in range(0, len(self._furthest_sample)):
-                if self._furthest_sample[k] == 0:
-                    num_missing += 1
-            if num_missing != 0:
-                warnings.warn(
-                    f"{self._params.data_simulator.session_config.num_speakers-num_missing} speakers were included in the clip instead of the requested amount of {self._params.data_simulator.session_config.num_speakers}"
-                )
-
+            wavlist.write(os.path.join(self._params.data_simulator.outputs.output_dir, filename + '.wav\n'))
+            rttmlist.write(os.path.join(self._params.data_simulator.outputs.output_dir, filename + '.rttm\n'))
+            jsonlist.write(os.path.join(self._params.data_simulator.outputs.output_dir, filename + '.json\n'))
+            ctmlist.write(os.path.join(self._params.data_simulator.outputs.output_dir, filename + '.ctm\n'))
+            textlist.write(os.path.join(self._params.data_simulator.outputs.output_dir, filename + '.txt\n'))
         wavlist.close()
         rttmlist.close()
         jsonlist.close()
