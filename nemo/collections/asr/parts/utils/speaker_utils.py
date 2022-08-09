@@ -30,6 +30,8 @@ from tqdm import tqdm
 from nemo.collections.asr.parts.utils.nmesc_clustering import COSclustering
 from nemo.utils import logging
 
+from functools import partial
+from multiprocessing import Pool
 
 """
 This file contains all the utility functions required for speaker embeddings part in diarization scripts
@@ -51,7 +53,7 @@ def get_uniq_id_with_dur(meta, deci=3):
     """
     Return basename with offset and end time labels
     """
-    bare_uniq_id = get_uniqname_from_filepath(meta['audio_filepath'])
+    bare_uniq_id = get_uniqname_from_filepath(meta['rttm_filepath'])
     if meta['offset'] is None and meta['duration'] is None:
         return bare_uniq_id
     if meta['offset']:
@@ -66,12 +68,11 @@ def get_uniq_id_with_dur(meta, deci=3):
     return uniq_id
 
 
-def audio_rttm_map(manifest):
+def audio_rttm_map(manifest, attach_dur=False):
     """
     This function creates AUDIO_RTTM_MAP which is used by all diarization components to extract embeddings,
     cluster and unify time stamps
     Args: manifest file that contains keys audio_filepath, rttm_filepath if exists, text, num_speakers if known and uem_filepath if exists
-
     returns:
     AUDIO_RTTM_MAP (dict) : A dictionary with keys of uniq id, which is being used to map audio files and corresponding rttm files
     """
@@ -94,8 +95,10 @@ def audio_rttm_map(manifest):
                 'uem_filepath': dic.get('uem_filepath', None),
                 'ctm_filepath': dic.get('ctm_filepath', None),
             }
-
-            uniqname = get_uniqname_from_filepath(filepath=meta['audio_filepath'])
+            if attach_dur:
+                uniqname = get_uniq_id_with_dur(meta)
+            else:
+                uniqname = get_uniqname_from_filepath(filepath=meta['audio_filepath'])
 
             if uniqname not in AUDIO_RTTM_MAP:
                 AUDIO_RTTM_MAP[uniqname] = meta
@@ -114,18 +117,15 @@ def parse_scale_configs(window_lengths_in_sec, shift_lengths_in_sec, multiscale_
     Check whether multiscale parameters are provided correctly. window_lengths_in_sec, shift_lengfhs_in_sec and
     multiscale_weights should be all provided in omegaconf.listconfig.ListConfig type. In addition, the scales
     should be provided in descending order, from the longest scale to the base scale (the shortest).
-
     Example:
         Single-scale setting:
             parameters.window_length_in_sec=1.5
             parameters.shift_length_in_sec=0.75
             parameters.multiscale_weights=null
-
         Multiscale setting (base scale - window_length 0.5 s and shift_length 0.25):
             parameters.window_length_in_sec=[1.5,1.0,0.5]
             parameters.shift_length_in_sec=[0.75,0.5,0.25]
             parameters.multiscale_weights=[0.33,0.33,0.33]
-
     In addition, you can also specify session-by-session multiscale weight. In this case, each dictionary key
     points to different weights.
     """
@@ -190,13 +190,11 @@ def get_embs_and_timestamps(multiscale_embeddings_and_timestamps, multiscale_arg
     The embeddings and timestamps in multiscale_embeddings_and_timestamps dictionary are
     indexed by scale index. This function rearranges the extracted speaker embedding and
     timestamps by unique ID to make the further processing more convenient.
-
     Args:
         multiscale_embeddings_and_timestamps (dict):
             Dictionary of embeddings and timestamps for each scale.
         multiscale_args_dict (dict):
             Dictionary of scale information: window, shift and multiscale weights.
-
     Returns:
         embs_and_timestamps (dict)
             A dictionary containing embeddings and timestamps of each scale, indexed by unique ID.
@@ -283,7 +281,6 @@ def labels_to_pyannote_object(labels, uniq_name=''):
 def uem_timeline_from_file(uem_file, uniq_name=''):
     """
     Generate pyannote timeline segments for uem file
-
      <UEM> file format
      UNIQ_SPEAKER_ID CHANNEL START_TIME END_TIME
     """
@@ -325,13 +322,11 @@ def string_to_float(x, round_digits):
 def convert_rttm_line(rttm_line, round_digits=3):
     """
     Convert a line in RTTM file to speaker label, start and end timestamps.
-
     Args:
         rttm_line (str):
             A line in RTTM formatted file containing offset and duration of each segment.
         round_digits (int):
             Number of digits to be rounded.
-
     Returns:
         start (float)
             Start timestamp in floating point number.
@@ -392,7 +387,6 @@ def write_cluster_labels(base_scale_idx, lines_cluster_labels, out_rttm_dir):
 def perform_clustering(embs_and_timestamps, AUDIO_RTTM_MAP, out_rttm_dir, clustering_params):
     """
     Performs spectral clustering on embeddings with time stamps generated from VAD output
-
     Args:
         embs_and_timestamps (dict): This dictionary contains the following items indexed by unique IDs.
             'embeddings' : Embeddings with key as unique_id
@@ -401,11 +395,9 @@ def perform_clustering(embs_and_timestamps, AUDIO_RTTM_MAP, out_rttm_dir, cluste
         out_rttm_dir (str): Path to write predicted rttms
         clustering_params (dict): clustering parameters provided through config that contains max_num_speakers (int),
         oracle_num_speakers (bool), max_rp_threshold(float), sparse_search_volume(int) and enhance_count_threshold (int)
-
     Returns:
         all_reference (list[uniq_name,Annotation]): reference annotations for score calculation
         all_hypothesis (list[uniq_name,Annotation]): hypothesis annotations for score calculation
-
     """
     all_hypothesis = []
     all_reference = []
@@ -418,7 +410,7 @@ def perform_clustering(embs_and_timestamps, AUDIO_RTTM_MAP, out_rttm_dir, cluste
         logging.warning("cuda=False, using CPU for Eigen decomposition. This might slow down the clustering process.")
         cuda = False
 
-    for uniq_id, value in tqdm(AUDIO_RTTM_MAP.items()):
+    for uniq_id, value in AUDIO_RTTM_MAP.items():
         if clustering_params.oracle_num_speakers:
             num_speakers = value.get('num_speakers', None)
             if num_speakers is None:
@@ -432,6 +424,7 @@ def perform_clustering(embs_and_timestamps, AUDIO_RTTM_MAP, out_rttm_dir, cluste
             max_num_speaker=max_num_speakers,
             enhanced_count_thres=clustering_params.enhanced_count_thres,
             max_rp_threshold=clustering_params.max_rp_threshold,
+            maj_vote_spk_count=clustering_params.maj_vote_spk_count,
             sparse_search_volume=clustering_params.sparse_search_volume,
             cuda=cuda,
         )
@@ -469,21 +462,17 @@ def perform_clustering(embs_and_timestamps, AUDIO_RTTM_MAP, out_rttm_dir, cluste
 def score_labels(AUDIO_RTTM_MAP, all_reference, all_hypothesis, collar=0.25, ignore_overlap=True):
     """
     Calculates DER, CER, FA and MISS
-
     Args:
         AUDIO_RTTM_MAP : Dictionary containing information provided from manifestpath
         all_reference (list[uniq_name,Annotation]): reference annotations for score calculation
         all_hypothesis (list[uniq_name,Annotation]): hypothesis annotations for score calculation
-
     Returns:
         metric (pyannote.DiarizationErrorRate): Pyannote Diarization Error Rate metric object. This object contains detailed scores of each audiofile.
         mapping (dict): Mapping dict containing the mapping speaker label for each audio input
-
     < Caveat >
     Unlike md-eval.pl, "no score" collar in pyannote.metrics is the maximum length of
     "no score" collar from left to right. Therefore, if 0.25s is applied for "no score"
     collar in md-eval.pl, 0.5s should be applied for pyannote.metrics.
-
     """
     metric = None
     if len(all_reference) == len(all_hypothesis):
@@ -537,7 +526,6 @@ def get_offset_and_duration(AUDIO_RTTM_MAP, uniq_id, deci=5):
     """
     Extract offset and duration information from AUDIO_RTTM_MAP dictionary.
     If duration information is not specified, a duration value is extracted from the audio file directly.
-
     Args:
         AUDIO_RTTM_MAP (dict):
             Dictionary containing RTTM file information, which is indexed by unique file id.
@@ -559,11 +547,33 @@ def get_offset_and_duration(AUDIO_RTTM_MAP, uniq_id, deci=5):
         offset = 0.0
     return offset, duration
 
+def make_overlap_segments(AUDIO_RTTM_MAP, uniq_id, overlap_range_list, include_uniq_id, deci=5):
+    """
+    Write the json dictionary into the specified manifest file.
+    Args:
+        AUDIO_RTTM_MAP (dict):
+            Dictionary containing the input manifest information
+        uniq_id (str):
+            Unique file id
+        overlap_range_list (list):
+            List containing overlapping ranges between target and source.
+    """
+    audio_path = AUDIO_RTTM_MAP[uniq_id]['audio_filepath']
+    meta_list = []
+    for (stt, end) in overlap_range_list:
+        meta = {
+            "audio_filepath": audio_path,
+            "offset": round(stt, deci),
+            "duration": round(end - stt, deci),
+            "label": 'UNK',
+            "uniq_id": uniq_id,
+        }
+        meta_list.append(meta)
+    return meta_list
 
 def write_overlap_segments(outfile, AUDIO_RTTM_MAP, uniq_id, overlap_range_list, include_uniq_id, deci=5):
     """
     Write the json dictionary into the specified manifest file.
-
     Args:
         outfile:
             File pointer that indicates output file path.
@@ -590,10 +600,8 @@ def write_overlap_segments(outfile, AUDIO_RTTM_MAP, uniq_id, overlap_range_list,
 def read_rttm_lines(rttm_file_path):
     """
     Read rttm files and return the rttm information lines.
-
     Args:
         rttm_file_path (str):
-
     Returns:
         lines (list):
             List containing the strings from the RTTM file.
@@ -672,7 +680,6 @@ def combine_float_overlaps(ranges, deci=5, margin=2):
     """
     Combine overlaps with floating point numbers. Since neighboring integers are considered as continuous range,
     we need to add margin to the starting range before merging then subtract margin from the result range.
-
     Args:
         ranges (list):
             List containing ranges.
@@ -682,7 +689,6 @@ def combine_float_overlaps(ranges, deci=5, margin=2):
         margin (int):
             margin for determining overlap of the two ranges when ranges are converted to integer ranges.
             Default is margin=2 which follows the python index convention.
-
         Examples:
             If margin is 0:
                 [(1, 10), (10, 20)] -> [(1, 20)]
@@ -693,7 +699,6 @@ def combine_float_overlaps(ranges, deci=5, margin=2):
             If margin is 2:
                 [(1, 10), (10, 20)] -> [(1, 10), (10, 20)]
                 [(1, 10), (11, 20)] -> [(1, 10), (11, 20)]
-
     Returns:
         merged_list (list):
             List containing the combined ranges.
@@ -718,9 +723,7 @@ def combine_int_overlaps(ranges):
     Note that neighboring numbers lead to a merged range.
     Example:
         [(1, 10), (11, 20)] -> [(1, 20)]
-
     Refer to the original code at https://stackoverflow.com/a/59378428
-
     Args:
         ranges(list):
             List containing ranges.
@@ -729,7 +732,6 @@ def combine_int_overlaps(ranges):
         merged_list (list):
             List containing the combined ranges.
             Example: [(102, 120)]
-
     """
     ranges = sorted(ranges, key=lambda x: x[0])
     merged_list = reduce(
@@ -759,7 +761,6 @@ def int2fl(x, deci=3):
 def getMergedRanges(label_list_A: List, label_list_B: List, deci: int = 3) -> List:
     """
     Calculate the merged ranges between label_list_A and label_list_B.
-
     Args:
         label_list_A (list):
             List containing ranges (start and end values)
@@ -768,7 +769,6 @@ def getMergedRanges(label_list_A: List, label_list_B: List, deci: int = 3) -> Li
     Returns:
         (list):
             List containing the merged ranges
-
     """
     if label_list_A == [] and label_list_B != []:
         return label_list_B
@@ -784,7 +784,6 @@ def getMergedRanges(label_list_A: List, label_list_B: List, deci: int = 3) -> Li
 def getSubRangeList(target_range, source_range_list) -> List:
     """
     Get the ranges that has overlaps with the target range from the source_range_list.
-
     Example:
         source range:
             |===--======---=====---====--|
@@ -792,7 +791,6 @@ def getSubRangeList(target_range, source_range_list) -> List:
             |--------================----|
         out_range:
             |--------===---=====---==----|
-
     Args:
         target_range (list):
             A range (a start and end value pair) that defines the target range we want to select.
@@ -814,6 +812,134 @@ def getSubRangeList(target_range, source_range_list) -> List:
                 ovl_range = getOverlapRange(s_range, target_range)
                 out_range.append(ovl_range)
         return out_range
+
+def write_rttm2manifest(AUDIO_RTTM_MAP: str, manifest_file: str, include_uniq_id: bool = False, deci: int = 5, num_workers: int = 1) -> str:
+    """
+    Write manifest files based on the given rttm files (or vad table out files). Thses manifest files will be used by speaker diarizer to compute embeddings
+    and cluster them. This function takes care of overlapping VAD timestamps and trimmed with the given offset and duration value.
+    Args:
+        AUDIO_RTTM_MAP (dict):
+            Dictionary containing keys to uniqnames, that contains audio filepath and rttm_filepath as its contents,
+            these are used to extract oracle vad timestamps.
+        manifest (str):
+            The path to the output manifest file.
+    Returns:
+        manifest (str):
+            The path to the output manifest file.
+    """
+    uniq_id_args = list(AUDIO_RTTM_MAP.keys())
+    logging.info(f"Extracting oracle VAD from {len(uniq_id_args)} RTTM files.")
+    total_json_lines = []
+    if num_workers > 1:
+        with Pool(processes=num_workers) as pool:
+            pool_total_json_lines = pool.map(partial(create_VAD_meta_dict, AUDIO_RTTM_MAP=AUDIO_RTTM_MAP), uniq_id_args)
+        for x in pool_total_json_lines:
+            total_json_lines.extend(x)
+    else:
+        for uniq_id in AUDIO_RTTM_MAP:
+            meta_list = create_VAD_meta_dict(uniq_id, AUDIO_RTTM_MAP)
+            total_json_lines.extend(meta_list)
+    write_json_lines_format(manifest_file, total_json_lines)
+    return manifest_file
+
+def create_VAD_meta_dict(uniq_id, AUDIO_RTTM_MAP, deci=3):
+    """
+    This function calculate overlapping VAD timestamps and trimmed with the given offset and duration value.
+    Args:
+        uniq_id (str):
+            Unique file id, unique name for each data sample entry.
+        AUDIO_RTTM_MAP (dict):
+            Dictionary containing keys to uniqnames, that contains audio filepath and rttm_filepath as its contents,
+            these are used to extract oracle vad timestamps.
+    Returns:
+        meta_list (list):
+            List containing meta dictionies from manifest files.
+    """
+    rttm_file_path = AUDIO_RTTM_MAP[uniq_id]['rttm_filepath']
+    rttm_lines = read_rttm_lines(rttm_file_path)
+    offset, duration = get_offset_and_duration(AUDIO_RTTM_MAP, uniq_id, deci)
+    vad_start_end_list_raw = []
+    for line in rttm_lines:
+        start, dur = get_vad_out_from_rttm_line(line)
+        vad_start_end_list_raw.append([start, start + dur])
+    vad_start_end_list = combine_float_overlaps(vad_start_end_list_raw, deci)
+    if len(vad_start_end_list) == 0:
+        logging.warning(f"File ID: {uniq_id}: The VAD label is not containing any speech segments.")
+    elif duration <= 0:
+        logging.warning(f"File ID: {uniq_id}: The audio file has negative or zero duration.")
+    else:
+        overlap_range_list = getSubRangeList(
+            source_range_list=vad_start_end_list, target_range=[offset, offset + duration]
+        )
+        meta_list = make_overlap_segments(AUDIO_RTTM_MAP, uniq_id, overlap_range_list, include_uniq_id=False)
+    return meta_list
+
+def segments_manifest_to_subsegments_manifest(
+    segments_manifest_file: str,
+    subsegments_manifest_file: str = None,
+    window: float = 1.5,
+    shift: float = 0.75,
+    min_subsegment_duration: float = 0.05,
+    include_uniq_id: bool = False,
+):
+    """
+    Generate subsegments manifest from segments manifest file
+    Args:
+        segments_manifest file (str): path to segments manifest file, typically from VAD output
+        subsegments_manifest_file (str): path to output subsegments manifest file (default (None) : writes to current working directory)
+        window (float): window length for segments to subsegments length
+        shift (float): hop length for subsegments shift
+        min_subsegments_duration (float): exclude subsegments smaller than this duration value
+    Returns:
+        returns path to subsegment manifest file
+    """
+    if subsegments_manifest_file is None:
+        pwd = os.getcwd()
+        subsegments_manifest_file = os.path.join(pwd, 'subsegments.json')
+
+    total_json_lines = []
+    with open(segments_manifest_file, 'r') as segments_manifest:
+        segments = segments_manifest.readlines()
+        for segment in segments:
+            segment = segment.strip()
+            dic = json.loads(segment)
+            audio, offset, duration, label = dic['audio_filepath'], dic['offset'], dic['duration'], dic['label']
+            subsegments = get_subsegments(offset=offset, window=window, shift=shift, duration=duration)
+            if include_uniq_id and 'uniq_id' in dic:
+                uniq_id = dic['uniq_id']
+            else:
+                uniq_id = None
+            subsegment_meta_list = []
+            for subsegment in subsegments:
+                start, dur = subsegment
+                if dur > min_subsegment_duration:
+                    meta = {
+                        "audio_filepath": audio,
+                        "offset": start,
+                        "duration": dur,
+                        "label": label,
+                        "uniq_id": uniq_id,
+                    }
+                subsegment_meta_list.append(meta)
+            total_json_lines.extend(subsegment_meta_list)
+    write_json_lines_format(subsegments_manifest_file, total_json_lines)
+    return subsegments_manifest_file
+
+def write_json_lines_format(out_filepath: str, total_json_lines: List[str]):
+    """
+    Write JSON-lines format to `out_filepath` filepath. This function aggregates all json input
+    to `string_dump` string variable and only call `write` function only once for faster writing speed.
+    Args:
+        out_filepath (str):
+            Path to output subsegments manifest file (default (None) : writes to current working directory).
+        total_json_lines (list):
+            List containing json lines in jsonl format.
+    """
+    with open(out_filepath, 'w', encoding='utf-8') as subsegments_manifest:
+        string_dump = ''
+        for meta in total_json_lines:
+            string_dump += json.dumps(meta) + '\n'
+        subsegments_manifest.write(string_dump)
 
 def get_subsegments(offset: float, window: float, shift: float, duration: float):
     """
