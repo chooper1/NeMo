@@ -189,7 +189,7 @@ trainer:
   max_steps: -1 # computed at runtime if not set
   num_nodes: 1
   strategy: ddp #dp
-  replace_sampler_ddp: False
+  # replace_sampler_ddp: False
   accumulate_grad_batches: 1
   deterministic: True
   enable_checkpointing: False
