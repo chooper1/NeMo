@@ -41,7 +41,6 @@ from nemo.collections.asr.data.audio_to_diar_label import (
     AudioToSpeechMSDDInferDataset,
     AudioToSpeechMSDDTrainDataset,
     AudioToSpeechMSDDSyntheticTrainDataset,
-    get_audio_rttm_map,
     SyntheticDataLoader,
 )
 from nemo.collections.asr.data.audio_to_text_dataset import convert_to_config_list
