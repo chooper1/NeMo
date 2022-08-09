@@ -891,10 +891,12 @@ class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
     Modified dataloader for refreshing synthetic dataset
     after a specified number of epochs.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, trainer=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        logging.info("Reloading dataset in synthetic dataloader")
-        self.dataset.regenerate_dataset()
+        logging.info("Dataloader rank is {trainer.global_rank}")
+        if trainer.global_rank == 0:
+            logging.info("Reloading dataset in synthetic dataloader")
+            self.dataset.regenerate_dataset()
 
 
 class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
@@ -959,7 +961,7 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.random_flip = random_flip
 
         cfg = OmegaConf.create(ds_config)
-        cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}"
+        # cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}"
         if cfg.data_simulator.rir_generation.use_rir:
             self.data_simulator = RIRMultiSpeakerSimulator(cfg) #includes tmp dir
         else:
@@ -970,8 +972,9 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.manifest_filepath = manifest_filepath
         self.trainer = trainer
 
-        logging.info("Initializing dataset in synthetic dataloader")
-        self.regenerate_dataset()
+        logging.info("Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
+        if trainer.global_rank == 0:
+            self.regenerate_dataset()
 
     def _extract_timestamps(self, manifest_file: str):
         """
