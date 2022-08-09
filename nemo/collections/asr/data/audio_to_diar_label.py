@@ -895,7 +895,7 @@ class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
         super().__init__(*args, **kwargs)
         print(f"Dataloader rank is {self.dataset.trainer.global_rank}")
         logging.info(f"Dataloader rank is {self.dataset.trainer.global_rank}")
-        if trainer.global_rank == 0:   #remove for working version
+        if self.dataset.trainer.global_rank == 0:   #remove for working version
             logging.info("Reloading dataset in synthetic dataloader")
             self.dataset.regenerate_dataset()
 
