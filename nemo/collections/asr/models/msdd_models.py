@@ -882,7 +882,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 ds_config=self.cfg_msdd_model,
                 trainer=self.trainer
             )
-            dataset.regenerate_dataset()
+            # dataset.regenerate_dataset()
         else:
             dataset = AudioToSpeechMSDDTrainDataset(
                 manifest_filepath=config['manifest_filepath'],
