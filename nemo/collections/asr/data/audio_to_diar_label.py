@@ -893,7 +893,7 @@ class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
     """
     def __init__(self, trainer=None, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        logging.info("Dataloader rank is {trainer.global_rank}")
+        logging.info(f"Dataloader rank is {trainer.global_rank}")
         if trainer.global_rank == 0:
             logging.info("Reloading dataset in synthetic dataloader")
             self.dataset.regenerate_dataset()
@@ -972,7 +972,7 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.manifest_filepath = manifest_filepath
         self.trainer = trainer
 
-        logging.info("Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
+        logging.info(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
         if trainer.global_rank == 0:
             self.regenerate_dataset()
 
