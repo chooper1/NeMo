@@ -900,7 +900,6 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         collate_fn = collate_ds.msdd_train_collate_fn
         batch_size = config['batch_size']
         if 'synthetic' in config and config['synthetic'] == True:
-            sampler = torch.utils.data.distributed.DistributedSampler(dataset, shuffle=True, num_replicas=1)
             sampler = torch.utils.data.SequentialSampler(dataset)
             return SyntheticDataLoader(
                 dataset=dataset,
