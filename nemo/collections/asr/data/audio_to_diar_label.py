@@ -19,6 +19,7 @@ from typing import Dict, Optional
 import json
 from omegaconf import OmegaConf
 import torch
+from pytorch_lightning.callbacks import Callback
 
 from nemo.collections.asr.parts.utils.nmesc_clustering import get_argmin_mat
 from nemo.collections.asr.parts.utils.speaker_utils import convert_rttm_line
@@ -30,6 +31,7 @@ from nemo.collections.asr.data.data_simulation import MultiSpeakerSimulator, RIR
 from nemo.collections.asr.parts.utils.speaker_utils import get_uniq_id_with_dur
 from nemo.collections.asr.parts.utils.manifest_utils import write_rttm2manifest, segments_manifest_to_subsegments_manifest
 from nemo.utils import logging
+
 
 def get_audio_rttm_map(manifest):
     """
@@ -867,6 +869,17 @@ class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
         logging.info(f"Reloading dataset in synthetic dataloader, rank is {self.dataset.trainer.global_rank}")
         # if self.dataset.trainer.global_rank == 0:   #remove for working version
             # logging.info("Reloading dataset in synthetic dataloader")
+        #self.dataset.regenerate_dataset()
+
+
+class RefreshDataset(Callback):
+    """
+    Refresh dataset (instead of in dataloader)
+    """
+    def __init__(self, dataset):
+        self.dataset = dataset
+
+    def on_train_epoch_end(self, *args, **kwargs):
         self.dataset.regenerate_dataset()
 
 
@@ -932,7 +945,7 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.random_flip = random_flip
 
         cfg = OmegaConf.create(ds_config)
-        cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}" #remove for working version
+        cfg.data_simulator.outputs.output_dir #+= f"_rank{trainer.global_rank}" #remove for working version
         if cfg.data_simulator.rir_generation.use_rir:
             self.data_simulator = RIRMultiSpeakerSimulator(cfg) #includes tmp dir
         else:
@@ -944,10 +957,10 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.trainer = trainer
 
         # print(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
-        logging.info(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
+        #logging.info(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
         # if trainer.global_rank == 0: #remove for working version
             # self.regenerate_dataset()
-        self.regenerate_dataset()
+        #self.regenerate_dataset()
 
     def _extract_timestamps(self, manifest_file: str):
         """

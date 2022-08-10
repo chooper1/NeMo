@@ -647,10 +647,13 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         """
         return None
 
-    def __init__(self, cfg: DictConfig, trainer: Trainer = None):
+    def __init__(self, cfg: DictConfig, trainer: Trainer = None, dataset=None):
         """
         Initialize an MSDD model and the specified speaker embedding model. In this init function, training and validation datasets are prepared.
         """
+        self.dataset = dataset
+        self._create_dataset(cfg)
+
         self.trainer = trainer
         self.pairwise_infer = False
         self.cfg_msdd_model = cfg
@@ -856,6 +859,29 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
 
         return timestamps_dict
 
+    def _create_dataset(self, config):
+
+        featurizer = WaveformFeaturizer(
+            sample_rate=config['sample_rate'], int_values=config.get('int_values', False), augmentor=None
+        )
+        self.dataset.featurizer = featurizer
+        self.dataset.trainer = self.trainer
+        self.dataset.regenerate_dataset()
+
+        #self.dataset = AudioToSpeechMSDDSyntheticTrainDataset(
+        #    manifest_filepath=config['manifest_filepath'],
+        #    multiscale_args_dict=self.multiscale_args_dict,
+        #    multiscale_timestamp_dict=self.train_multiscale_timestamp_dict,
+        #    soft_label_thres=config.soft_label_thres,
+        #    featurizer=featurizer,
+        #    window_stride=self.cfg_msdd_model.preprocessor.window_stride,
+        #    emb_batch_size=config['emb_batch_size'],
+        #    pairwise_infer=False,
+        #    emb_dir=self.cfg_msdd_model.train_ds.emb_dir,
+        #    ds_config=self.cfg_msdd_model,
+        #    trainer=self.trainer
+        #)
+
     def __setup_dataloader_from_config(self, config: Optional[Dict], multiscale_timestamp_dict):
 
         featurizer = WaveformFeaturizer(
@@ -868,20 +894,21 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
             logging.warning(f"Could not load dataset as `manifest_filepath` was None. Provided config : {config}")
             return None
         if 'synthetic' in config and config['synthetic'] == True:
-            dataset = AudioToSpeechMSDDSyntheticTrainDataset(
-                manifest_filepath=config['manifest_filepath'],
-                multiscale_args_dict=self.multiscale_args_dict,
-                multiscale_timestamp_dict=multiscale_timestamp_dict,
-                soft_label_thres=config.soft_label_thres,
-                featurizer=featurizer,
-                window_stride=self.cfg_msdd_model.preprocessor.window_stride,
-                emb_batch_size=config['emb_batch_size'],
-                pairwise_infer=False,
-                emb_dir=self.cfg_msdd_model.train_ds.emb_dir,
-                ds_config=self.cfg_msdd_model,
-                trainer=self.trainer
-            )
+            #dataset = AudioToSpeechMSDDSyntheticTrainDataset(
+            #    manifest_filepath=config['manifest_filepath'],
+            #    multiscale_args_dict=self.multiscale_args_dict,
+            #    multiscale_timestamp_dict=multiscale_timestamp_dict,
+            #    soft_label_thres=config.soft_label_thres,
+            #    featurizer=featurizer,
+            #    window_stride=self.cfg_msdd_model.preprocessor.window_stride,
+            #    emb_batch_size=config['emb_batch_size'],
+            #    pairwise_infer=False,
+            #    emb_dir=self.cfg_msdd_model.train_ds.emb_dir,
+            #    ds_config=self.cfg_msdd_model,
+            #    trainer=self.trainer
+            #)
             # dataset.regenerate_dataset()
+            dataset = self.dataset
         else:
             dataset = AudioToSpeechMSDDTrainDataset(
                 manifest_filepath=config['manifest_filepath'],
@@ -907,7 +934,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 shuffle=False,
                 num_workers=config.get('num_workers', 0),
                 pin_memory=config.get('pin_memory', False),
-                sampler=torch.utils.data.SequentialSampler(dataset),
+                #sampler=torch.utils.data.SequentialSampler(dataset),
             )
         else:
             return torch.utils.data.DataLoader(
