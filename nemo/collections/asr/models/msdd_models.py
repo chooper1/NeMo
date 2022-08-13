@@ -929,6 +929,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         collate_fn = collate_ds.msdd_train_collate_fn
         batch_size = config['batch_size']
         if 'synthetic' in config and config['synthetic'] == True:
+            print('train loader:')
             return SyntheticDataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
@@ -940,6 +941,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 sampler=torch.utils.data.SequentialSampler(dataset),
             )
         else:
+            print('val loader:')
             return torch.utils.data.DataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
