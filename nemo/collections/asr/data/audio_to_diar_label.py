@@ -18,7 +18,6 @@ from statistics import mode
 from typing import Dict, Optional
 import json
 from omegaconf import OmegaConf
-
 import torch
 
 from nemo.collections.asr.parts.utils.nmesc_clustering import get_argmin_mat
@@ -37,7 +36,6 @@ def get_audio_rttm_map(manifest):
     This function creates AUDIO_RTTM_MAP which is used by all diarization components to extract embeddings,
     cluster and unify time stamps
     input: manifest file that contains keys audio_filepath, rttm_filepath if exists, text, num_speakers if known and uem_filepath if exists
-
     returns:
         AUDIO_RTTM_MAP (dict) : A dictionary with keys of uniq id, which is being used to map audio files and corresponding rttm files
     """
@@ -76,21 +74,16 @@ def get_scale_mapping_list(uniq_timestamps):
     """
     Call get_argmin_mat function to find the index of the non-base-scale segment that is closest to the
     given base-scale segment. For each scale and each segment, a base-scale segment is assigned.
-
     Args:
         uniq_timestamps: (dict)
             The dictionary containing embeddings, timestamps and multiscale weights.
             If uniq_timestamps contains only one scale, single scale diarization is performed.
-
     Returns:
         scale_mapping_argmat (torch.tensor):
-
             The element at the m-th row and the n-th column of the scale mapping matrix indicates the (m+1)-th scale
             segment index which has the closest center distance with (n+1)-th segment in the base scale.
-
             Example:
                 scale_mapping_argmat[2][101] = 85
-
             In the above example, it means that 86-th segment in the 3rd scale (python index is 2) is mapped with
             102-th segment in the base scale. Thus, the longer segments bound to have more repeating numbers since
             multiple base scale segments (since the base scale has the shortest length) fall into the range of the
@@ -112,22 +105,17 @@ def extract_seg_info_from_rttm(uniq_id, rttm_lines, mapping_dict=None, target_sp
     Get RTTM lines containing speaker labels, start time and end time. target_spks contains two targeted
     speaker indices for creating groundtruth label files. Only speakers in target_spks variable will be
     included in the output lists.
-
     Args:
         uniq_id (str):
             Unique file ID that refers to an input audio file and corresponding RTTM (Annotation) file.
         rttm_lines (list):
             List containing RTTM lines in str format.
-
     Returns:
         rttm_tup (tuple):
             Tuple containing lists of start time, end time and speaker labels.
-
     """
     stt_list, end_list, speaker_list, pairwise_infer_spks = [], [], [], []
     if target_spks:
-        label_scale_idx = max(emb_dict.keys())
-        mapping_dict = emb_dict[label_scale_idx][uniq_id]['mapping']
         inv_map = {v: k for k, v in mapping_dict.items()}
         for spk_idx in target_spks:
             spk_str = f'speaker_{spk_idx}'
@@ -142,12 +130,12 @@ def extract_seg_info_from_rttm(uniq_id, rttm_lines, mapping_dict=None, target_sp
     rttm_tup = (stt_list, end_list, speaker_list)
     return rttm_tup
 
+
 def assign_frame_level_spk_vector(rttm_timestamps, round_digits, frame_per_sec, target_spks, min_spks=2):
     """
     Create a multi-dimensional vector sequence containing speaker timestamp information in RTTM.
     The unit-length is the frame shift length of the acoustic feature. The feature-level annotations
     fr_level_target will later be converted to base-segment level diarization label.
-
     Args:
         rttm_timestamps (list):
             List containing start and end time for each speaker segment label.
@@ -157,7 +145,6 @@ def assign_frame_level_spk_vector(rttm_timestamps, round_digits, frame_per_sec, 
         target_spks (tuple):
             Speaker indices that are generated from combinations. If there are only one or two speakers,
             only a single target_spks variable is generated.
-
     Returns:
         fr_level_target (torch.tensor):
             Tensor containing label for each feature level frame.
@@ -188,14 +175,12 @@ class _AudioMSDDTrainDataset(Dataset):
     RTTM files and number of speakers. This Dataset class is designed for
     training or fine-tuning speaker embedding extractor and diarization decoder
     at the same time.
-
     Example:
     {"audio_filepath": "/path/to/audio_0.wav", "num_speakers": 2,
     "rttm_filepath": "/path/to/diar_label_0.rttm}
     ...
     {"audio_filepath": "/path/to/audio_n.wav", "num_speakers": 2,
     "rttm_filepath": "/path/to/diar_label_n.rttm}
-
     Args:
         manifest_filepath (str):
             Path to input manifest json files.
@@ -272,7 +257,6 @@ class _AudioMSDDTrainDataset(Dataset):
         Assign the generated speaker labels from the base scale (the finest scale) to the longer scales.
         This process is needed to get the cluster labels for each scale. The cluster labels are needed to
         calculate the cluster-average speaker embedding for each scale.
-
         Args:
             uniq_id (str):
                 Unique sample ID for training.
@@ -283,7 +267,6 @@ class _AudioMSDDTrainDataset(Dataset):
                 Tensor variable containing the speaker labels for each segment in each scale.
                 Note that the total length of the speaker label sequence differs over scale since
                 each scale has a different number of segments for the same session.
-
             scale_mapping (torch.tensor):
                 Matrix containing the segment indices of each scale. scale_mapping is necessary for reshaping the
                 multiscale embeddings to form an input matrix for the MSDD model.
@@ -293,8 +276,8 @@ class _AudioMSDDTrainDataset(Dataset):
         uniq_scale_mapping = get_scale_mapping_list(self.multiscale_timestamp_dict[uniq_id])
         for scale_index in range(self.scale_n):
             new_clus_label = []
-            max_index = max(uniq_scale_mapping[scale_index])
-            for seg_idx in range(max_index + 1):
+            scale_seq_len = len(self.multiscale_timestamp_dict[uniq_id]["scale_dict"][scale_index]["time_stamps"])
+            for seg_idx in range(scale_seq_len):
                 if seg_idx in uniq_scale_mapping[scale_index]:
                     seg_clus_label = mode(base_scale_clus_label[uniq_scale_mapping[scale_index] == seg_idx])
                 else:
@@ -309,13 +292,11 @@ class _AudioMSDDTrainDataset(Dataset):
         Convert frame-level diarization target variable into segment-level target variable. Since the granularity is reduced
         from frame level (10ms) to segment level (100ms~500ms), we need a threshold value, soft_label_thres, which determines
         the label of each segment based on the overlap between a segment range (start and end time) and the frame-level target variable.
-
         Args:
             uniq_id (str):
                 Unique file ID that refers to an input audio file and corresponding RTTM (Annotation) file.
             fr_level_target (torch.tensor):
                 Tensor containing label for each feature-level frame.
-
         Returns:
             seg_target (torch.tensor):
                 Tensor containing binary speaker labels for base-scale segments.
@@ -329,6 +310,7 @@ class _AudioMSDDTrainDataset(Dataset):
         for line in subseg_time_stamp_list:
             line_split = line.split()
             seg_stt, seg_end = float(line_split[0]), float(line_split[1])
+            # seg_stt, seg_end = line
             seg_stt_fr, seg_end_fr = int(seg_stt * self.frame_per_sec), int(seg_end * self.frame_per_sec)
             soft_label_vec_sess = torch.sum(fr_level_target[seg_stt_fr:seg_end_fr, :], axis=0) / (
                 seg_end_fr - seg_stt_fr
@@ -351,17 +333,14 @@ class _AudioMSDDTrainDataset(Dataset):
         Generate target tensor variable by extracting groundtruth diarization labels from an RTTM file.
         This function converts (start, end, speaker_id) format into base-scale (the finest scale) segment level
         diarization label in a matrix form.
-
         Example of seg_target:
             [[0., 1.], [0., 1.], [1., 1.], [1., 0.], [1., 0.], ..., [0., 1.]]
-
         Args:
             sample:
                 DiarizationSpeechLabel instance containing sample information such as audio filepath and RTTM filepath.
             target_spks (tuple):
                 Speaker indices that are generated from combinations. If there are only one or two speakers,
                 only a single target_spks tuple is generated.
-
         Returns:
             clus_label_index (torch.tensor):
                 Groundtruth Clustering label (cluster index for each segment) from RTTM files for training purpose.
@@ -370,7 +349,6 @@ class _AudioMSDDTrainDataset(Dataset):
             scale_mapping (torch.tensor):
                 Matrix containing the segment indices of each scale. scale_mapping is necessary for reshaping the
                 multiscale embeddings to form an input matrix for the MSDD model.
-
         """
         rttm_lines = open(sample.rttm_file).readlines()
         uniq_id = self.get_uniq_id_with_range(sample)
@@ -387,16 +365,13 @@ class _AudioMSDDTrainDataset(Dataset):
         Generate unique training sample ID from unique file ID, offset and duration. The start-end time added
         unique ID is required for identifying the sample since multiple short audio samples are generated from a single
         audio file. The start time and end time of the audio stream uses millisecond units if deci=3.
-
         Args:
             sample:
                 DiarizationSpeechLabel instance from collections.
-
         Returns:
             uniq_id (str):
                 Unique sample ID which includes start and end time of the audio stream.
                 Example: abc1001_3122_6458
-
         """
         bare_uniq_id = os.path.splitext(os.path.basename(sample.rttm_file))[0]
         offset = str(int(round(sample.offset, deci) * pow(10, deci)))
@@ -407,7 +382,6 @@ class _AudioMSDDTrainDataset(Dataset):
     def get_ms_seg_timestamps(self, sample):
         """
         Get start and end time of segments in each scale.
-
         Args:
             sample:
                 DiarizationSpeechLabel instance from preprocessing.collections
@@ -427,6 +401,7 @@ class _AudioMSDDTrainDataset(Dataset):
             for k, line in enumerate(self.multiscale_timestamp_dict[uniq_id]["scale_dict"][scale_idx]["time_stamps"]):
                 line_split = line.split()
                 seg_stt, seg_end = float(line_split[0]), float(line_split[1])
+                # seg_stt, seg_end = line
                 stt, end = (
                     int((seg_stt - sample.offset) * self.frame_per_sec),
                     int((seg_end - sample.offset) * self.frame_per_sec),
@@ -454,6 +429,14 @@ class _AudioMSDDTrainDataset(Dataset):
             torch.manual_seed(index)
             flip = torch.cat([torch.randperm(self.max_spks), torch.tensor(-1).unsqueeze(0)])
             clus_label_index, targets = flip[clus_label_index], targets[:, flip[: self.max_spks]]
+        if clus_label_index.shape[0] != sum(ms_seg_counts).item():
+            print("wrong ms_seg_counts or clus_label_index list")
+            import ipdb; ipdb.set_trace()
+        if not ms_seg_timestamps.shape[1] == ms_seg_counts[-1] == scale_mapping.shape[1] == targets.shape[0]:
+            print("target length or base scale count is not consistant")
+            print(ms_seg_timestamps.shape[1], ms_seg_counts[-1], scale_mapping.shape[1], targets.shape[0])
+            import ipdb; ipdb.set_trace()
+
         return features, feature_length, ms_seg_timestamps, ms_seg_counts, clus_label_index, scale_mapping, targets
 
 
@@ -463,14 +446,12 @@ class _AudioMSDDInferDataset(Dataset):
     rttm files and number of speakers. This Dataset class is built for diarization inference and
     evaluation. Speaker embedding sequences, segment timestamps, cluster-average speaker embeddings
     are loaded from memory and fed into the dataloader.
-
     Example:
     {"audio_filepath": "/path/to/audio_0.wav", "num_speakers": 2,
     "rttm_filepath": "/path/to/diar_label_0.rttm}
     ...
     {"audio_filepath": "/path/to/audio_n.wav", "num_speakers": 2,
     "rttm_filepath": "/path/to/diar_label_n.rttm}
-
     Args:
         manifest_filepath (str):
              Path to input manifest json files.
@@ -548,7 +529,6 @@ class _AudioMSDDInferDataset(Dataset):
         Generate target tensor variable by extracting groundtruth diarization labels from an RTTM file.
         This function converts (start, end, speaker_id) format into base-scale (the finest scale) segment level
         diarization label in a matrix form.
-
         Args:
             sample:
                 DiarizationSpeechLabel instance containing sample information such as audio filepath and RTTM filepath.
@@ -578,20 +558,16 @@ class _AudioMSDDInferDataset(Dataset):
         ratios for each speaker into the soft_label_vec variable. Finally, soft_label_vec variable is compared with soft_label_thres
         to determine whether a label vector should contain 0 or 1 for each speaker bin. Note that seg_target variable has
         dimension of (number of base-scale segments x 2) dimension.
-
         Example of seg_target:
             [[0., 1.], [0., 1.], [1., 1.], [1., 0.], [1., 0.], ..., [0., 1.]]
-
         Args:
             uniq_id (str):
                 Unique file ID that refers to an input audio file and corresponding RTTM (Annotation) file.
             fr_level_target (torch.tensor):
                 frame-level binary speaker annotation (1: exist 0: non-exist) generated from RTTM file.
-
         Returns:
             seg_target (torch.tensor):
                 Tensor variable containing binary hard-labels of speaker activity in each base-scale segment.
-
         """
         if fr_level_target is None:
             return None
@@ -645,7 +621,6 @@ def _msdd_train_collate_fn(self, batch):
     """
     Collate batch of variables that are needed for raw waveform to diarization label training.
     The following variables are included in training/validation batch:
-
     Args:
         batch (tuple):
             Batch tuple containing the variables for the diarization training.
@@ -682,7 +657,8 @@ def _msdd_train_collate_fn(self, batch):
 
     max_raw_feat_len = max([x.shape[0] for x in features])
     max_target_len = max([x.shape[0] for x in targets])
-    max_total_seg_len = max([x.shape[0] for x in clus_label_index])
+    # max_total_seg_len = max([x.shape[0] for x in clus_label_index])
+    max_total_seg_len = max(torch.sum(torch.stack(ms_seg_counts), dim=1)).item()
 
     for feat, feat_len, ms_seg_ts, ms_seg_ct, scale_clus, scl_map, tgt in batch:
         seq_len = tgt.shape[0]
@@ -690,7 +666,8 @@ def _msdd_train_collate_fn(self, batch):
         pad_tgt = (0, 0, 0, max_target_len - seq_len)
         pad_sm = (0, max_target_len - seq_len)
         pad_ts = (0, 0, 0, max_target_len - seq_len)
-        pad_sc = (0, max_total_seg_len - scale_clus.shape[0])
+        # pad_sc = (0, max_total_seg_len - scale_clus.shape[0])
+        pad_sc = (0, max_total_seg_len - torch.sum(ms_seg_ct).item())
         padded_feat = torch.nn.functional.pad(feat, pad_feat)
         padded_tgt = torch.nn.functional.pad(tgt, pad_tgt)
         padded_sm = torch.nn.functional.pad(scl_map, pad_sm)
@@ -718,7 +695,6 @@ def _msdd_train_collate_fn(self, batch):
 def _msdd_infer_collate_fn(self, batch):
     """
     Collate batch of feats (speaker embeddings), feature lengths, target label sequences and cluster-average embeddings.
-
     Args:
         batch (tuple):
             Batch tuple containing feats, feats_len, targets and ms_avg_embs.
@@ -766,14 +742,12 @@ class AudioToSpeechMSDDTrainDataset(_AudioMSDDTrainDataset):
     rttm files and number of speakers. This Dataset class is designed for
     training or fine-tuning speaker embedding extractor and diarization decoder
     at the same time.
-
     Example:
     {"audio_filepath": "/path/to/audio_0.wav", "num_speakers": 2,
     "rttm_filepath": "/path/to/diar_label_0.rttm}
     ...
     {"audio_filepath": "/path/to/audio_n.wav", "num_speakers": 2,
     "rttm_filepath": "/path/to/diar_label_n.rttm}
-
     Args:
         manifest_filepath (str):
             Path to input manifest json files.
@@ -824,14 +798,12 @@ class AudioToSpeechMSDDInferDataset(_AudioMSDDInferDataset):
     """
     Dataset class that loads a json file containing paths to audio files,
     rttm files and number of speakers. The created labels are used for diarization inference.
-
     Example:
     {"audio_filepath": "/path/to/audio_0.wav", "num_speakers": 2,
     "rttm_filepath": "/path/to/diar_label_0.rttm}
     ...
     {"audio_filepath": "/path/to/audio_n.wav", "num_speakers": 2,
     "rttm_filepath": "/path/to/diar_label_n.rttm}
-
     Args:
         manifest_filepath (str):
             Path to input manifest json files.
@@ -884,7 +856,6 @@ class AudioToSpeechMSDDInferDataset(_AudioMSDDInferDataset):
 
     def msdd_infer_collate_fn(self, batch):
         return _msdd_infer_collate_fn(self, batch)
-
 
 class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
     """
