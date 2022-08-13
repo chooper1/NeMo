@@ -958,11 +958,11 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.trainer = trainer
 
         # print(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
-        if trainer:
-            logging.info(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
-            cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}" #remove for working version
-        else:
-            logging.info(f"Initializing dataset in synthetic dataloader ")
+        # if trainer:
+        #     logging.info(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
+        #     # cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}" #remove for working version
+        # else:
+        logging.info(f"Initializing dataset in synthetic dataloader ")
             # cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}" #remove for working version
         # if trainer.global_rank == 0: #remove for working version
             # self.regenerate_dataset()
