@@ -879,9 +879,15 @@ class RefreshDataset(Callback):
     def __init__(self, dataset):
         self.dataset = dataset
 
+    # def on_train_epoch_end(self, *args, **kwargs):
+    #     logging.info("REFRESH DATASET")
+    #     self.dataset.regenerate_dataset()
+    #     logging.info("REFRESH DATASET DONE")
+
     def on_train_epoch_end(self, *args, **kwargs):
         logging.info("REFRESH DATASET")
-        self.dataset.regenerate_dataset()
+        if self.dataset.trainer.global_rank == 0:
+            self.dataset.regenerate_dataset()
         logging.info("REFRESH DATASET DONE")
 
 
