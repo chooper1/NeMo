@@ -26,6 +26,8 @@ from nemo.core.config import hydra_runner
 from nemo.utils import logging
 from nemo.utils.exp_manager import exp_manager
 
+import torch
+
 """
 Basic run (on GPU for 10 epochs for 2 class training):
 EXP_NAME=sample_run
