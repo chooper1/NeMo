@@ -52,7 +52,7 @@ def main(cfg):
     trainer = pl.Trainer(**cfg.trainer)
     log_dir = exp_manager(trainer, cfg.get("exp_manager", None))
     msdd_model = EncDecDiarLabelModel(cfg=cfg.msdd_model, trainer=trainer)
-    print(msdd_model.trainer.train_dataloader)
+    msdd_model._train_dl.sampler = torch.utils.data.SequentialSampler(dataset) # hard overwriting DDP sampler
     trainer.fit(msdd_model)
 
 if __name__ == '__main__':
