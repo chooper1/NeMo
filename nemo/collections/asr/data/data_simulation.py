@@ -939,6 +939,7 @@ class MultiSpeakerSimulator(object):
         logging.info(f"Generating Diarization Sessions")
         np.random.seed(self._params.data_simulator.random_seed)
         output_dir = self._params.data_simulator.outputs.output_dir
+        print('output dir: ', output_dir)
 
         # delete output directory if it exists or throw warning
         if os.path.isdir(output_dir) and os.listdir(output_dir):
