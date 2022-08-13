@@ -58,7 +58,7 @@ msdd_model:
     batch_size: 2
     emb_batch_size: 50
     shuffle: True
-    synthetic: True
+    refresh_dataset: True
     include_base_ds: False
 
   data_simulator:
