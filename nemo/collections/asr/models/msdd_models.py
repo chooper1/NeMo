@@ -930,6 +930,8 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         batch_size = config['batch_size']
         if 'synthetic' in config and config['synthetic'] == True:
             print('train loader:')
+            sampler = torch.utils.data.SequentialSampler(dataset)
+            print(sampler)
             return SyntheticDataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
@@ -938,11 +940,11 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 shuffle=False,
                 num_workers=config.get('num_workers', 0),
                 pin_memory=config.get('pin_memory', False),
-                sampler=torch.utils.data.SequentialSampler(dataset),
+                sampler=sampler,
             )
         else:
             print('val loader:')
-            return torch.utils.data.DataLoader(
+            vl = torch.utils.data.DataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
                 collate_fn=collate_fn,
@@ -952,6 +954,8 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 pin_memory=config.get('pin_memory', False),
                 #sampler=torch.utils.data.distributed.DistributedSampler(dataset),
             )
+            print(vl.sampler)
+            return vl
 
     def __setup_dataloader_from_config_infer(
         self, config: Optional[Dict], emb_dict: Dict, emb_seq: Dict, clus_label_dict: Dict, pairwise_infer=False
