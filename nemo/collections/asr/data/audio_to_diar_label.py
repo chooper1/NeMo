@@ -882,6 +882,7 @@ class RefreshDataset(Callback):
     def on_train_epoch_end(self, *args, **kwargs):
         logging.info("REFRESH DATASET")
         self.dataset.regenerate_dataset()
+        logging.info("REFRESH DATASET DONE")
 
 
 class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
