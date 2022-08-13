@@ -677,6 +677,8 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         """
         Initialize an MSDD model and the specified speaker embedding model. In this init function, training and validation datasets are prepared.
         """
+        self.dataset = dataset
+
         self.trainer = trainer
         self.pairwise_infer = False
         self.cfg_msdd_model = cfg
@@ -717,8 +719,6 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         self._accuracy_train = MultiBinaryAccuracy()
         self._accuracy_valid = MultiBinaryAccuracy()
         self.labels = None
-
-        self.dataset = dataset
         # self.val_dataset = None
 
     def _init_segmentation_info(self):
