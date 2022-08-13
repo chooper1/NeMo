@@ -31,6 +31,8 @@ from nemo.collections.asr.parts.utils.speaker_utils import get_uniq_id_with_dur
 from nemo.collections.asr.parts.utils.manifest_utils import write_rttm2manifest, segments_manifest_to_subsegments_manifest
 from nemo.utils import logging
 
+from pytorch_lightning.callbacks import Callback
+
 def get_audio_rttm_map(manifest):
     """
     This function creates AUDIO_RTTM_MAP which is used by all diarization components to extract embeddings,
@@ -868,6 +870,16 @@ class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
         # if self.dataset.trainer.global_rank == 0:   #remove for working version
             # logging.info("Reloading dataset in synthetic dataloader")
         print(self.sampler)
+        self.dataset.regenerate_dataset()
+
+class RefreshDataset(Callback):
+    """
+    Refresh dataset (instead of in dataloader)
+    """
+    def __init__(self, dataset):
+        self.dataset = dataset
+
+    def on_train_epoch_end(self, *args, **kwargs):
         self.dataset.regenerate_dataset()
 
 
