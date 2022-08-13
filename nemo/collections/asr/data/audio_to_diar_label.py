@@ -964,7 +964,7 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
             # cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}" #remove for working version
         # if trainer.global_rank == 0: #remove for working version
             # self.regenerate_dataset()
-        self.regenerate_dataset()
+        # self.regenerate_dataset()
 
     def _extract_timestamps(self, manifest_file: str):
         """
