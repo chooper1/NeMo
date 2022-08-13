@@ -550,6 +550,7 @@ def get_offset_and_duration(AUDIO_RTTM_MAP, uniq_id, deci=5):
 def make_overlap_segments(AUDIO_RTTM_MAP, uniq_id, overlap_range_list, include_uniq_id, deci=5):
     """
     Write the json dictionary into the specified manifest file.
+
     Args:
         AUDIO_RTTM_MAP (dict):
             Dictionary containing the input manifest information
@@ -817,6 +818,7 @@ def write_rttm2manifest(AUDIO_RTTM_MAP: str, manifest_file: str, include_uniq_id
     """
     Write manifest files based on the given rttm files (or vad table out files). Thses manifest files will be used by speaker diarizer to compute embeddings
     and cluster them. This function takes care of overlapping VAD timestamps and trimmed with the given offset and duration value.
+
     Args:
         AUDIO_RTTM_MAP (dict):
             Dictionary containing keys to uniqnames, that contains audio filepath and rttm_filepath as its contents,
@@ -839,18 +841,20 @@ def write_rttm2manifest(AUDIO_RTTM_MAP: str, manifest_file: str, include_uniq_id
         for uniq_id in AUDIO_RTTM_MAP:
             meta_list = create_VAD_meta_dict(uniq_id, AUDIO_RTTM_MAP)
             total_json_lines.extend(meta_list)
-    write_json_lines_format(manifest_file, total_json_lines)
+    write_json_lines_format(manifest_file, total_json_lines) 
     return manifest_file
 
 def create_VAD_meta_dict(uniq_id, AUDIO_RTTM_MAP, deci=3):
     """
     This function calculate overlapping VAD timestamps and trimmed with the given offset and duration value.
+
     Args:
         uniq_id (str):
             Unique file id, unique name for each data sample entry.
         AUDIO_RTTM_MAP (dict):
             Dictionary containing keys to uniqnames, that contains audio filepath and rttm_filepath as its contents,
             these are used to extract oracle vad timestamps.
+
     Returns:
         meta_list (list):
             List containing meta dictionies from manifest files.
@@ -896,7 +900,7 @@ def segments_manifest_to_subsegments_manifest(
     if subsegments_manifest_file is None:
         pwd = os.getcwd()
         subsegments_manifest_file = os.path.join(pwd, 'subsegments.json')
-
+    
     total_json_lines = []
     with open(segments_manifest_file, 'r') as segments_manifest:
         segments = segments_manifest.readlines()
@@ -922,13 +926,14 @@ def segments_manifest_to_subsegments_manifest(
                     }
                 subsegment_meta_list.append(meta)
             total_json_lines.extend(subsegment_meta_list)
-    write_json_lines_format(subsegments_manifest_file, total_json_lines)
+    write_json_lines_format(subsegments_manifest_file, total_json_lines) 
     return subsegments_manifest_file
 
 def write_json_lines_format(out_filepath: str, total_json_lines: List[str]):
     """
     Write JSON-lines format to `out_filepath` filepath. This function aggregates all json input
     to `string_dump` string variable and only call `write` function only once for faster writing speed.
+
     Args:
         out_filepath (str):
             Path to output subsegments manifest file (default (None) : writes to current working directory).
