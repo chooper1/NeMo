@@ -718,6 +718,8 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         self._accuracy_valid = MultiBinaryAccuracy()
         self.labels = None
 
+        self.val_dataset = None
+
     def _init_segmentation_info(self):
         """Initialize segmentation settings: window, shift and multiscale weights.
         """
@@ -912,6 +914,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 trainer=self.trainer
             )
             # dataset.regenerate_dataset()
+
         else:
             dataset = AudioToSpeechMSDDTrainDataset(
                 manifest_filepath=config['manifest_filepath'],
@@ -923,6 +926,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 emb_batch_size=config['emb_batch_size'],
                 pairwise_infer=False,
             )
+            self.val_dataset = dataset
 
         self.data_collection = dataset.collection
         collate_ds = dataset
