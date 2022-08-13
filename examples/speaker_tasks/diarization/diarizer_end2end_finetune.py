@@ -74,7 +74,6 @@ def main(cfg):
     if cfg.msdd_model.train_ds.refresh_dataset:
         trainer = pl.Trainer(**cfg.trainer, callbacks=[RefreshDataset(dataset)])
         dataset.trainer = trainer
-        dataset.regenerate_dataset()
     else:
         trainer = pl.Trainer(**cfg.trainer)
 

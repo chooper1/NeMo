@@ -914,8 +914,11 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
             #     ds_config=self.cfg_msdd_model,
             #     trainer=self.trainer
             # )
+            self.dataset.multiscale_args_dict = self.multiscale_args_dict
+            self.dataset.multiscale_timestamp_dict = multiscale_timestamp_dict
+            self.dataset.featurizer = featurizer
+            self.dataset.regenerate_dataset()
             dataset = self.dataset
-            # dataset.regenerate_dataset()
 
         else:
             dataset = AudioToSpeechMSDDTrainDataset(
