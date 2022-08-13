@@ -876,9 +876,10 @@ class RefreshDataset(Callback):
     """
     Refresh dataset (instead of in dataloader)
     """
-    def __init__(self, dataset):
+    def __init__(self, dataset, n_epochs):
         self.dataset = dataset
         self.idx = 0
+        self.refresh_every_n_epochs = n_epochs
 
     # def on_train_epoch_end(self, *args, **kwargs):
     #     logging.info("REFRESH DATASET")
@@ -888,7 +889,7 @@ class RefreshDataset(Callback):
     def on_train_epoch_end(self, *args, **kwargs):
         logging.info("REFRESH DATASET")
         self.idx += 1
-        if self.dataset.trainer.global_rank == 0 and self.idx % self.dataset.trainer.reload_dataloaders_every_n_epochs == 0:
+        if self.dataset.trainer.global_rank == 0 and self.idx % self.refresh_every_n_epochs == 0:
             self.dataset.regenerate_dataset()
             self.idx = 0
         logging.info("REFRESH DATASET DONE")

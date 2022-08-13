@@ -60,6 +60,7 @@ msdd_model:
     shuffle: True
     synthetic: True
     refresh_dataset: True
+    refresh_every_n_epochs: 3
     include_base_ds: False
 
   data_simulator:
@@ -190,7 +191,7 @@ trainer:
   max_steps: -1 # computed at runtime if not set
   num_nodes: 1
   strategy: ddp
-  reload_dataloaders_every_n_epochs: 2
+  reload_dataloaders_every_n_epochs: 1
   replace_sampler_ddp: True
   accumulate_grad_batches: 1
   deterministic: True

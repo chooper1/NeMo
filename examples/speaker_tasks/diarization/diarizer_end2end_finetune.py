@@ -72,7 +72,7 @@ def main(cfg):
 
     logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
     if cfg.msdd_model.train_ds.refresh_dataset:
-        trainer = pl.Trainer(**cfg.trainer, callbacks=[RefreshDataset(dataset)])
+        trainer = pl.Trainer(**cfg.trainer, callbacks=[RefreshDataset(dataset, cfg.msdd_model.train_ds.refresh_every_n_epochs)])
         dataset.trainer = trainer
     else:
         trainer = pl.Trainer(**cfg.trainer)
