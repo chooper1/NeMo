@@ -60,7 +60,7 @@ msdd_model:
     shuffle: True
     synthetic: True
     refresh_dataset: True
-    refresh_every_n_epochs: 3
+    refresh_every_n_epochs: 5
     include_base_ds: False
 
   data_simulator:
