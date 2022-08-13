@@ -941,17 +941,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
             print('train loader:')
             # sampler = torch.utils.data.SequentialSampler(dataset)
             # print(sampler)
-            # return SyntheticDataLoader(
-            #     dataset=dataset,
-            #     batch_size=batch_size,
-            #     collate_fn=collate_fn,
-            #     drop_last=config.get('drop_last', False),
-            #     shuffle=False,
-            #     num_workers=config.get('num_workers', 0),
-            #     pin_memory=config.get('pin_memory', False),
-            #     # sampler=sampler,
-            # )
-            return torch.utils.data.DataLoader(
+            return SyntheticDataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
                 collate_fn=collate_fn,
