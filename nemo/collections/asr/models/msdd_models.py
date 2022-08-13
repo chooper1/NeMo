@@ -944,7 +944,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
             )
         else:
             print('val loader:')
-            sampler = torch.utils.data.distributed.DistributedSampler(dataset),
+            # sampler = torch.utils.data.distributed.DistributedSampler(dataset),
             vl = torch.utils.data.DataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
@@ -953,7 +953,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 shuffle=False,
                 num_workers=config.get('num_workers', 0),
                 pin_memory=config.get('pin_memory', False),
-                sampler=sampler,
+                # sampler=sampler,
             )
             print(vl.sampler)
             return vl
