@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from collections import OrderedDict
-from typing import Dict, List, Optional, Union
 
 import torch
 import torch.nn as nn
@@ -22,24 +21,15 @@ import torch.nn.functional as F
 from nemo.core.classes.common import typecheck
 from nemo.core.classes.exportable import Exportable
 from nemo.core.classes.module import NeuralModule
-from nemo.core.neural_types import (
-    AcousticEncodedRepresentation,
-    EncodedRepresentation,
-    LengthsType,
-    LogitsType,
-    LogprobsType,
-    NeuralType,
-    SpectrogramType,
-)
+from nemo.core.neural_types import EncodedRepresentation, LengthsType, NeuralType, SpectrogramType
 from nemo.core.neural_types.elements import ProbsType
 
-__all__ = ['LSTMDecoder', 'MSDD_module']
+__all__ = ['MSDD_module']
 
 
 class ConvLayer(nn.Module):
     def __init__(self, in_channels=1, out_channels=1, kernel_size=(3, 1), stride=(1, 1)):
         super(ConvLayer, self).__init__()
-        pad_size = (kernel_size[1] - 1) // 2
         self.cnn = nn.Sequential(
             nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride),
             nn.ReLU(),
@@ -53,7 +43,9 @@ class ConvLayer(nn.Module):
 
 class MSDD_module(NeuralModule, Exportable):
     """
-    Multiscale Diarization Decoder for overlap-aware diarization.
+    Multi-scale Diarization Decoder (MSDD) for overlap-aware diarization and improved diarization accuracy from clustering diarizer.
+    Based on the paper: Taejin Park et. al, "Multi-scale Speaker Diarization with Dynamic Scale Weighting", Interspeech 2022.
+    Arxiv version: https://arxiv.org/pdf/2203.15974.pdf
 
     Args:
         num_spks (int):
@@ -66,7 +58,7 @@ class MSDD_module(NeuralModule, Exportable):
             Dropout rate for linear layers, CNN and LSTM.
         cnn_output_ch (int):
             Number of channels per each CNN layer.
-        emb_sizes (int):
+        emb_dim (int):
             Dimension of the embedding vectors.
         scale_n (int):
             Number of scales in multi-scale system.
@@ -76,9 +68,9 @@ class MSDD_module(NeuralModule, Exportable):
             Number of CNN layers after the first CNN layer.
         weighting_scheme (str):
             Name of the methods for estimating the scale weights.
-        use_cos_sim_input (bool):
-            If True, cosine similarity values are used for the input of the sequence models.
-            If False, element-wise product values are used for the input of the sequence models.
+        context_vector_type (str):
+            If 'cos_sim', cosine similarity values are used for the input of the sequence models.
+            If 'elem_prod', element-wise product values are used for the input of the sequence models.
     """
 
     @property
@@ -127,18 +119,18 @@ class MSDD_module(NeuralModule, Exportable):
         num_lstm_layers: int = 2,
         dropout_rate: float = 0.5,
         cnn_output_ch: int = 16,
-        emb_sizes: int = 192,
-        scale_n: int = 1,
+        emb_dim: int = 192,
+        scale_n: int = 5,
         clamp_max: float = 1.0,
         conv_repeat: int = 1,
         weighting_scheme: str = 'conv_scale_weight',
-        use_cos_sim_input: bool = True,
+        context_vector_type: str = 'cos_sim',
     ):
         super().__init__()
         self._speaker_model = None
         self.batch_size: int = 1
         self.length: int = 50
-        self.emb_sizes: int = emb_sizes
+        self.emb_dim: int = emb_dim
         self.num_spks: int = num_spks
         self.scale_n: int = scale_n
         self.cnn_output_ch: int = cnn_output_ch
@@ -147,7 +139,7 @@ class MSDD_module(NeuralModule, Exportable):
         self.eps: float = 1e-6
         self.num_lstm_layers: int = num_lstm_layers
         self.weighting_scheme: str = weighting_scheme
-        self.use_cos_sim_input: bool = use_cos_sim_input
+        self.context_vector_type: bool = context_vector_type
 
         self.softmax = torch.nn.Softmax(dim=2)
         self.cos_dist = torch.nn.CosineSimilarity(dim=3, eps=self.eps)
@@ -179,22 +171,24 @@ class MSDD_module(NeuralModule, Exportable):
                 )
             self.conv_bn = nn.ModuleList()
             for conv_idx in range(self.conv_repeat + 1):
-                self.conv_bn.append(nn.BatchNorm2d(self.emb_sizes, affine=False))
-            self.conv_to_linear = nn.Linear(emb_sizes * cnn_output_ch, hidden_size)
+                self.conv_bn.append(nn.BatchNorm2d(self.emb_dim, affine=False))
+            self.conv_to_linear = nn.Linear(emb_dim * cnn_output_ch, hidden_size)
             self.linear_to_weights = nn.Linear(hidden_size, self.scale_n)
 
         elif self.weighting_scheme == 'attn_scale_weight':
-            self.W_a = nn.Linear(emb_sizes, emb_sizes, bias=False)
+            self.W_a = nn.Linear(emb_dim, emb_dim, bias=False)
             nn.init.eye_(self.W_a.weight)
         else:
             raise ValueError(f"No such weighting scheme as {self.weighting_scheme}")
 
         self.hidden_to_spks = nn.Linear(2 * hidden_size, self.num_spks)
-        if self.use_cos_sim_input:
+        if self.context_vector_type == "cos_sim":
             self.dist_to_emb = nn.Linear(self.scale_n * self.num_spks, hidden_size)
             self.dist_to_emb.apply(self.init_weights)
+        elif self.context_vector_type == "elem_prod":
+            self.product_to_emb = nn.Linear(self.emb_dim * self.num_spks, hidden_size)
         else:
-            self.product_to_emb = nn.Linear(self.emb_sizes * self.num_spks, hidden_size)
+            raise ValueError(f"No such context vector type as {self.context_vector_type}")
 
         self.dropout = nn.Dropout(dropout_rate)
         self.hidden_to_spks.apply(self.init_weights)
@@ -206,15 +200,18 @@ class MSDD_module(NeuralModule, Exportable):
         Core model that accepts multi-scale cosine similarity values and estimates per-speaker binary label.
 
         Args:
+            ms_emb_seq (Tensor):
+                Multiscale input embedding sequence
+                Shape: (batch_size, length, scale_n, emb_dim)
+            length (Tensor):
+                The actual length of embedding sequences without zero padding
+                Shape: (batch_size,)
+            ms_avg_embs (Tensor):
+                Cluster-average speaker embedding vectors.
+                Shape: (batch_size, scale_n, self.emb_dim, max_spks)
             targets (Tensor):
                 Ground-truth labels for the finest segment.
                 Shape: (batch_size, feats_len, max_spks)
-            avg_embs (Tensor):
-                Cluster-average speaker embedding vectors.
-                Shape: (batch_size, scale_n, self.emb_dim, max_spks)
-            ms_emb_seq (Tensor):
-                Multiscale input embedding sequence
-                Shape: (batch_size, feats_len, scale_n, emb_dim)
 
         Returns:
             preds (Tensor):
@@ -222,8 +219,7 @@ class MSDD_module(NeuralModule, Exportable):
                 Shape: (batch_size, feats_len, max_spks)
             scale_weights (Tensor):
                 Multiscale weights per each base-scale segment.
-                Shape: (batch_size, feats_len, scale_n, max_spks)
-
+                Shape: (batch_size, length, scale_n, max_spks)
         """
         self.batch_size = ms_emb_seq.shape[0]
         self.length = ms_emb_seq.shape[1]
@@ -243,14 +239,16 @@ class MSDD_module(NeuralModule, Exportable):
             raise ValueError(f"No such weighting scheme as {self.weighting_scheme}")
         scale_weights = scale_weights.to(ms_emb_seq.device)
 
-        if self.use_cos_sim_input:
+        if self.context_vector_type == "cos_sim":
             context_emb = self.cosine_similarity(scale_weights, ms_avg_embs, _ms_emb_seq)
-        else:
+        elif self.context_vector_type == "elem_prod":
             context_emb = self.element_wise_product(scale_weights, ms_avg_embs, _ms_emb_seq)
+        else:
+            raise ValueError(f"No such context vector type as {self.context_vector_type}")
 
         context_emb = self.dropout(F.relu(context_emb))
-        lstm_output, (hn, cn) = self.lstm(context_emb)
-        lstm_hidden_out = self.dropout(F.relu(lstm_output))
+        lstm_output = self.lstm(context_emb)
+        lstm_hidden_out = self.dropout(F.relu(lstm_output[0]))
         spk_preds = self.hidden_to_spks(lstm_hidden_out)
         preds = nn.Sigmoid()(spk_preds)
         return preds, scale_weights
@@ -258,7 +256,8 @@ class MSDD_module(NeuralModule, Exportable):
     def element_wise_product(self, scale_weights, ms_avg_embs, ms_emb_seq):
         """
         Calculate element wise product values among cluster-average embedding vectors and input embedding vector sequences.
-        `element_wise_product` method usually takes more time to converge compared to `cosine_similarity` method.
+        This function is selected by assigning `self.context_vector_type = "elem_prod"`. `elem_prod` method usually takes more
+        time to converge compared to `cos_sim` method.
 
         Args:
             scale_weights (Tensor):
@@ -267,8 +266,8 @@ class MSDD_module(NeuralModule, Exportable):
             ms_avg_embs_perm (Tensor):
                 Tensor containing cluster-average speaker embeddings for each scale.
                 Shape: (batch_size, length, scale_n, emb_dim)
-            _ms_emb_seq (Tensor):
-                Tensor containing multi-scale speaker embedding sequences. ms_emb_seq_single is input from the
+            ms_emb_seq (Tensor):
+                Tensor containing multi-scale speaker embedding sequences. `ms_emb_seq` is a single channel input from the
                 given audio stream input.
                 Shape: (batch_size, length, num_spks, emb_dim)
 
@@ -281,9 +280,7 @@ class MSDD_module(NeuralModule, Exportable):
             self.batch_size * self.length, self.scale_n, self.emb_dim, self.num_spks
         )
         ms_emb_seq_flatten = ms_emb_seq.reshape(-1, self.scale_n, self.emb_dim)
-        ms_emb_seq_flatten_rep = ms_emb_seq_flatten.unsqueeze(3).reshape(
-            -1, self.scale_n, self.emb_sizes, self.num_spks
-        )
+        ms_emb_seq_flatten_rep = ms_emb_seq_flatten.unsqueeze(3).reshape(-1, self.scale_n, self.emb_dim, self.num_spks)
         elemwise_product = ms_avg_embs_flatten * ms_emb_seq_flatten_rep
         context_vectors = torch.bmm(
             scale_weight_flatten.reshape(self.batch_size * self.num_spks * self.length, 1, self.scale_n),
@@ -296,6 +293,7 @@ class MSDD_module(NeuralModule, Exportable):
     def cosine_similarity(self, scale_weights, ms_avg_embs, _ms_emb_seq):
         """
         Calculate cosine similarity values among cluster-average embedding vectors and input embedding vector sequences.
+        This function is selected by assigning self.context_vector_type = "cos_sim".
 
         Args:
             scale_weights (Tensor):
@@ -305,7 +303,7 @@ class MSDD_module(NeuralModule, Exportable):
                 Tensor containing cluster-average speaker embeddings for each scale.
                 Shape: (batch_size, length, scale_n, emb_dim)
             _ms_emb_seq (Tensor):
-                Tensor containing multi-scale speaker embedding sequences. ms_emb_seq_single is input from the
+                Tensor containing multi-scale speaker embedding sequences. `ms_emb_seq` is a single channel input from the
                 given audio stream input.
                 Shape: (batch_size, length, num_spks, emb_dim)
 
@@ -315,7 +313,6 @@ class MSDD_module(NeuralModule, Exportable):
         """
         cos_dist_seq = self.cos_dist(_ms_emb_seq, ms_avg_embs)
         context_vectors = torch.mul(scale_weights, cos_dist_seq)
-        seq_input_sum = context_vectors.sum(axis=2).view(self.batch_size, self.length, -1)
         context_vectors = context_vectors.view(self.batch_size, self.length, -1)
         context_emb = self.dist_to_emb(context_vectors)
         return context_emb
@@ -323,21 +320,21 @@ class MSDD_module(NeuralModule, Exportable):
     def attention_scale_weights(self, ms_avg_embs_perm, ms_emb_seq):
         """
         Use weighted inner product for calculating each scale weight. W_a matrix has (emb_dim * emb_dim) learnable parameters
-        and W_a matrix is initialized with an identity matrix. Compared to "conv" method, this method shows more evenly
+        and W_a matrix is initialized with an identity matrix. Compared to "conv_scale_weight" method, this method shows more evenly
         distributed scale weights.
 
         Args:
             ms_avg_embs_perm (Tensor):
                 Tensor containing cluster-average speaker embeddings for each scale.
                 Shape: (batch_size, length, scale_n, emb_dim)
-            ms_emb_seq_single (Tensor):
-                Tensor containing multi-scale speaker embedding sequences. ms_emb_seq_single is input from the
+            ms_emb_seq (Tensor):
+                Tensor containing multi-scale speaker embedding sequences. `ms_emb_seq` is input from the
                 given audio stream input.
                 Shape: (batch_size, length, num_spks, emb_dim)
 
         Returns:
             scale_weights (Tensor):
-                Weight vectors that determines the weight of each scale.
+                Weight vectors that determine the weight of each scale.
                 Shape: (batch_size, length, num_spks, emb_dim)
         """
         self.W_a(ms_emb_seq.flatten(0, 1))
@@ -366,7 +363,7 @@ class MSDD_module(NeuralModule, Exportable):
 
         Returns:
             scale_weights (Tensor):
-                Weight vectors that determines the weight of each scale.
+                Weight vectors that determine the weight of each scale.
                 Shape: (batch_size, length, num_spks, emb_dim)
         """
         ms_cnn_input_seq = torch.cat([ms_avg_embs_perm, ms_emb_seq_single], dim=2)
@@ -392,7 +389,7 @@ class MSDD_module(NeuralModule, Exportable):
 
     def conv_forward(self, conv_input, conv_module, bn_module, first_layer=False):
         """
-        A module for Convolutional neural networks with 1-D filters. As a unit layer batch normalization, non-linear layer and dropout
+        A module for convolutional neural networks with 1-D filters. As a unit layer batch normalization, non-linear layer and dropout
         modules are included.
 
         Note:
@@ -408,7 +405,7 @@ class MSDD_module(NeuralModule, Exportable):
             bn_module (torch.nn.modules.batchnorm.BatchNorm2d):
                 Predefined Batchnorm module.
             first_layer (bool):
-                Boolean for switching between first layer and the others.
+                Boolean for switching between the first layer and the others.
                 Default: `False`
 
         Returns:
@@ -438,7 +435,7 @@ class MSDD_module(NeuralModule, Exportable):
         """
         device = next(self.parameters()).device
         lens = torch.full(size=(input_example.shape[0],), fill_value=123, device=device)
-        input_example = torch.randn(1, lens, self.scale_n, self.emb_sizes, device=device)
-        avg_embs = torch.randn(1, self.scale_n, self.emb_sizes, self.num_spks, device=device)
+        input_example = torch.randn(1, lens, self.scale_n, self.emb_dim, device=device)
+        avg_embs = torch.randn(1, self.scale_n, self.emb_dim, self.num_spks, device=device)
         targets = torch.randn(1, lens, self.num_spks).round().float()
         return tuple([input_example, lens, avg_embs, targets])
