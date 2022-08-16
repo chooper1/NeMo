@@ -249,17 +249,8 @@ if __name__ == "__main__":
     parser.add_argument("--shift", help="Shift length for segmentation", type=float, required=True)
     parser.add_argument("--deci", help="Rounding decimals", type=int, default=3, required=False)
     parser.add_argument(
-        "--step_count",
-        help="Number of the unit segments you want to create per utterance",
-        required=True,
+        "--step_count", help="Number of the unit segments you want to create per utterance", required=True,
     )
     args = parser.parse_args()
 
-    main(args.input_manifest_path, 
-         args.output_manifest_path,
-         args.pairwise_rttm_output_folder,
-         args.window,
-         args.shift,
-         args.step_count,
-         args.deci)
-
+    main(args.input_manifest_path, args.output_manifest_path, args.window, args.shift, args.step_count, args.deci)

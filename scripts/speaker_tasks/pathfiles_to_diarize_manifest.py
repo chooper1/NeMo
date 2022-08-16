@@ -1,4 +1,4 @@
-# Copyright (c) 2020, NVIDIA CORPORATION.  All rights reserved.
+# Copyright (c) 2022, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,7 @@
 # limitations under the License.
 
 import argparse
-import json
-import logging
-import os
 import random
-from collections import Counter
-from collections import OrderedDict as od
 
 from nemo.collections.asr.parts.utils.manifest_utils import create_manifest
 
@@ -31,8 +26,20 @@ Useful to get manifest when you have list of audio files and optionally rttm and
 Note: make sure basename for each file is unique and rttm files also has the corresponding base name for mapping
 """
 
-def main(wav_path, text_path=None, rttm_path=None, uem_path=None, ctm_path=None, manifest_filepath=None, add_duration=False):
-    create_manifest(wav_path, manifest_filepath, text_path=text_path, rttm_path=rttm_path, uem_path=uem_path, ctm_path=ctm_path, add_duration=add_duration)
+
+def main(
+    wav_path, text_path=None, rttm_path=None, uem_path=None, ctm_path=None, manifest_filepath=None, add_duration=False
+):
+    create_manifest(
+        wav_path,
+        manifest_filepath,
+        text_path=text_path,
+        rttm_path=rttm_path,
+        uem_path=uem_path,
+        ctm_path=ctm_path,
+        add_duration=add_duration,
+    )
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
