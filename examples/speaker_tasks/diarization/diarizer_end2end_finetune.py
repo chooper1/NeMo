@@ -26,10 +26,6 @@ from nemo.core.config import hydra_runner
 from nemo.utils import logging
 from nemo.utils.exp_manager import exp_manager
 
-# import torch
-from nemo.collections.asr.data.audio_to_diar_label import AudioToSpeechMSDDSyntheticTrainDataset, RefreshDataset
-
-
 """
 Basic run (on GPU for 10 epochs for 2 class training):
 EXP_NAME=sample_run
@@ -51,35 +47,9 @@ seed_everything(42)
 
 @hydra_runner(config_path="conf", config_name="msdd_training.ami.yaml")
 def main(cfg):
-
-    # logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
-    # trainer = pl.Trainer(**cfg.trainer)
-    print(cfg.msdd_model)
-    dataset = AudioToSpeechMSDDSyntheticTrainDataset(
-        manifest_filepath=cfg.msdd_model.train_ds.manifest_filepath,
-        multiscale_args_dict=None,
-        multiscale_timestamp_dict=None,
-        soft_label_thres=cfg.msdd_model.train_ds.soft_label_thres,
-        featurizer=None,
-        window_stride=cfg.msdd_model.preprocessor.window_stride,
-        emb_batch_size=cfg.msdd_model.train_ds.emb_batch_size,
-        pairwise_infer=False,
-        emb_dir=cfg.msdd_model.train_ds.emb_dir,
-        ds_config=cfg.msdd_model,
-        trainer=None,
-    )
-
-
-    logging.info(f'Hydra config: {OmegaConf.to_yaml(cfg)}')
-    if cfg.msdd_model.train_ds.refresh_dataset:
-        trainer = pl.Trainer(**cfg.trainer, callbacks=[RefreshDataset(dataset, cfg.msdd_model.train_ds.refresh_every_n_epochs)])
-        dataset.trainer = trainer
-    else:
-        trainer = pl.Trainer(**cfg.trainer)
-
+    trainer = pl.Trainer(**cfg.trainer)
     log_dir = exp_manager(trainer, cfg.get("exp_manager", None))
-    msdd_model = EncDecDiarLabelModel(cfg=cfg.msdd_model, trainer=trainer, dataset=dataset)
-    # msdd_model._validation_dl.sampler = torch.utils.data.distributed.DistributedSampler(msdd_model.val_dataset) # hard overwriting DDP sampler
+    msdd_model = EncDecDiarLabelModel(cfg=cfg.msdd_model, trainer=trainer)
     trainer.fit(msdd_model)
 
 if __name__ == '__main__':

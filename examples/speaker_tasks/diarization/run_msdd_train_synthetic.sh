@@ -1,8 +1,8 @@
 
 branch_name="chooper_dl_msdiar"
-cd /home/chooper/projects/$branch_name/NeMo
+cd /home/chooper/projects/$branch_name/NeMo-pr-dl/NeMo
 pwd
-BASEPATH=/home/chooper/projects/$branch_name/NeMo/examples/speaker_tasks/diarization
+BASEPATH=/home/chooper/projects/$branch_name/NeMo-pr-dl/NeMo/examples/speaker_tasks/diarization
 
 # emb_tag='ami_4_50segf_cos'
 # train_manifest='/home/chooper/projects/branch_nemo/NeMo/scripts/speaker_tasks/ami_mixheadset_test_input_manifest.json'
@@ -23,11 +23,11 @@ test_emb_dir='./speaker_outputs_test'
 emb_tag='sd'
 EXP_NAME="$emb_tag"
 EMB_BATCH_SIZE=0
-TRAIN_BATCHSIZE=4
+TRAIN_BATCHSIZE=2
 BATCHSIZE=$TRAIN_BATCHSIZE
 MAX_NUM_OF_SPKS=2
 export CUDA_VISIBLE_DEVICES="0,1"
-export PYTHONPATH=/home/chooper/projects/$branch_name/NeMo:$PYTHONPATH
+export PYTHONPATH=/home/chooper/projects/$branch_name/NeMo-pr-dl/NeMo:$PYTHONPATH
 MEMO=$emb_tag
 
 wandb login 7aff50100c43f8efc06542e5a9b0c5aaff35b4c1 \
@@ -38,7 +38,7 @@ wandb login 7aff50100c43f8efc06542e5a9b0c5aaff35b4c1 \
     diarizer.clustering.parameters.max_num_speakers=$MAX_NUM_OF_SPKS\
     diarizer.oracle_vad=True \
     batch_size=$EMB_BATCH_SIZE\
-    trainer.max_epochs=14\
+    trainer.max_epochs=20\
     trainer.max_steps=-1\
     trainer.reload_dataloaders_every_n_epochs=1\
     msdd_model.use_longest_scale_clus_avg_emb=False \
@@ -55,15 +55,15 @@ wandb login 7aff50100c43f8efc06542e5a9b0c5aaff35b4c1 \
     msdd_model.end_to_end_train=True\
     msdd_model.data_simulator.manifest_path="/home/chooper/projects/chooper_dl_msdiar/NeMo/scripts/speaker_tasks/train-clean-100-align.json"\
     msdd_model.data_simulator.outputs.output_dir="/home/chooper/projects/chooper_dl_msdiar/NeMo/examples/speaker_tasks/diarization/test"\
-    msdd_model.data_simulator.session_config.num_sessions=30 \
-    msdd_model.data_simulator.session_config.session_length=1800 \
+    msdd_model.data_simulator.session_config.num_sessions=5 \
+    msdd_model.data_simulator.session_config.session_length=300 \
     msdd_model.data_simulator.session_config.num_speakers=2 \
     msdd_model.data_simulator.session_params.mean_overlap=0.5 \
     msdd_model.data_simulator.session_params.overlap_prob=0.75 \
     msdd_model.data_simulator.background_noise.background_manifest='/home/chooper/projects/chooper_dl_msdiar/NeMo/scripts/speaker_tasks/bg_noise.json' \
     num_workers=24\
     msdd_model.base.num_workers=24 \
-    trainer.gpus=2\
+    trainer.gpus=1\
     exp_manager.name=$EXP_NAME \
     +exp_manager.use_datetime_version=False \
     exp_manager.create_wandb_logger=True \

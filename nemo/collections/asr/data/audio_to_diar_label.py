@@ -865,35 +865,10 @@ class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
     after a specified number of epochs.
     """
     def __init__(self, *args, **kwargs):
+        if kwargs['dataset'].trainer.global_rank == 0:   #remove for working version
+            logging.info(f"Reloading dataset in synthetic dataloader, rank is {kwargs['dataset'].trainer.global_rank}")
+            kwargs['dataset'].regenerate_dataset()
         super().__init__(*args, **kwargs)
-        logging.info(f"Reloading dataset in synthetic dataloader, rank is {self.dataset.trainer.global_rank}")
-        # if self.dataset.trainer.global_rank == 0:   #remove for working version
-            # logging.info("Reloading dataset in synthetic dataloader")
-        # print(self.sampler)
-        # self.dataset.regenerate_dataset()
-
-class RefreshDataset(Callback):
-    """
-    Refresh dataset (instead of in dataloader)
-    """
-    def __init__(self, dataset, n_epochs):
-        self.dataset = dataset
-        self.idx = 0
-        self.refresh_every_n_epochs = n_epochs
-
-    # def on_train_epoch_end(self, *args, **kwargs):
-    #     logging.info("REFRESH DATASET")
-    #     self.dataset.regenerate_dataset()
-    #     logging.info("REFRESH DATASET DONE")
-
-    def on_train_epoch_end(self, *args, **kwargs):
-        logging.info("REFRESH DATASET")
-        self.idx += 1
-        if self.dataset.trainer.global_rank == 0 and self.idx % self.refresh_every_n_epochs == 0:
-            self.dataset.regenerate_dataset()
-            self.idx = 0
-        logging.info("REFRESH DATASET DONE")
-
 
 class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
     """
@@ -967,16 +942,10 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         self.manifest_filepath = manifest_filepath
         self.trainer = trainer
 
-        # print(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
-        # if trainer:
-        #     logging.info(f"Initializing dataset in synthetic dataloader with rank: {trainer.global_rank} ")
-        #     # cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}" #remove for working version
-        # else:
         logging.info(f"Initializing dataset in synthetic dataloader ")
-            # cfg.data_simulator.outputs.output_dir += f"_rank{trainer.global_rank}" #remove for working version
-        # if trainer.global_rank == 0: #remove for working version
-            # self.regenerate_dataset()
-        # self.regenerate_dataset()
+        self.collection = None
+        if self.trainer.global_rank == 0:
+            self.regenerate_dataset()
 
     def _extract_timestamps(self, manifest_file: str):
         """

@@ -673,12 +673,10 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         """
         return None
 
-    def __init__(self, cfg: DictConfig, trainer: Trainer = None, dataset = None):
+    def __init__(self, cfg: DictConfig, trainer: Trainer = None):
         """
         Initialize an MSDD model and the specified speaker embedding model. In this init function, training and validation datasets are prepared.
         """
-        self.dataset = dataset
-
         self.trainer = trainer
         self.pairwise_infer = False
         self.cfg_msdd_model = cfg
@@ -689,6 +687,23 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         ClusterEmbedding.__init__(self, cfg_base=self.cfg_msdd_model.base, cfg_msdd_model=self.cfg_msdd_model)
         if trainer:
             self._init_segmentation_info()
+            if self.cfg_msdd_model.train_ds.synthetic:
+                featurizer = WaveformFeaturizer(
+                    sample_rate=cfg.base.sample_rate, int_values=cfg.get('int_values', False), augmentor=None
+                )
+                self.dataset = AudioToSpeechMSDDSyntheticTrainDataset(
+                    manifest_filepath=cfg.train_ds.manifest_filepath,
+                    multiscale_args_dict=self.multiscale_args_dict,
+                    multiscale_timestamp_dict=None,
+                    soft_label_thres=cfg.train_ds.soft_label_thres,
+                    featurizer=featurizer,
+                    window_stride=cfg.preprocessor.window_stride,
+                    emb_batch_size=cfg.train_ds.emb_batch_size,
+                    pairwise_infer=False,
+                    emb_dir=cfg.train_ds.emb_dir,
+                    ds_config=cfg,
+                    trainer=self.trainer,
+                )
             self.prepare_train_split()
             self.world_size = trainer.num_nodes * trainer.num_devices
             self.emb_batch_size = self.cfg_msdd_model.emb_batch_size
@@ -719,7 +734,6 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         self._accuracy_train = MultiBinaryAccuracy()
         self._accuracy_valid = MultiBinaryAccuracy()
         self.labels = None
-        # self.val_dataset = None
 
     def _init_segmentation_info(self):
         """Initialize segmentation settings: window, shift and multiscale weights.
@@ -764,8 +778,7 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
         self.emb_seq_test = cluster_embeddings.emb_seq_test
 
     def prepare_train_split(self):
-        device = torch.cuda.current_device()
-        if self.cfg_msdd_model.train_ds.synthetic: # and not self.cfg_msdd_model.train_ds.include_base_ds:
+        if self.cfg_msdd_model.train_ds.synthetic: 
             self.train_multiscale_timestamp_dict = None
         else:
             self.train_multiscale_timestamp_dict = self.prepare_split_data(
@@ -895,31 +908,24 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
             sample_rate=config['sample_rate'], int_values=config.get('int_values', False), augmentor=None
         )
 
-        print('__setup_dataloader_from_config RANK: ', self.trainer.global_rank)
-
         if 'manifest_filepath' in config and config['manifest_filepath'] is None and ('synthetic' not in config or config['synthetic'] == False or self.cfg_msdd_model.train_ds.include_base_ds):
             logging.warning(f"Could not load dataset as `manifest_filepath` was None. Provided config : {config}")
             return None
         if 'synthetic' in config and config['synthetic'] == True:
-            # dataset = AudioToSpeechMSDDSyntheticTrainDataset(
-            #     manifest_filepath=config['manifest_filepath'],
-            #     multiscale_args_dict=self.multiscale_args_dict,
-            #     multiscale_timestamp_dict=multiscale_timestamp_dict,
-            #     soft_label_thres=config.soft_label_thres,
-            #     featurizer=featurizer,
-            #     window_stride=self.cfg_msdd_model.preprocessor.window_stride,
-            #     emb_batch_size=config['emb_batch_size'],
-            #     pairwise_infer=False,
-            #     emb_dir=self.cfg_msdd_model.train_ds.emb_dir,
-            #     ds_config=self.cfg_msdd_model,
-            #     trainer=self.trainer
-            # )
-            self.dataset.multiscale_args_dict = self.multiscale_args_dict
-            self.dataset.multiscale_timestamp_dict = multiscale_timestamp_dict
-            self.dataset.featurizer = featurizer
-            self.dataset.regenerate_dataset()
+            #dataset = AudioToSpeechMSDDSyntheticTrainDataset(
+            #    manifest_filepath=config['manifest_filepath'],
+            #    multiscale_args_dict=self.multiscale_args_dict,
+            #    multiscale_timestamp_dict=multiscale_timestamp_dict,
+            #    soft_label_thres=config.soft_label_thres,
+            #    featurizer=featurizer,
+            #    window_stride=self.cfg_msdd_model.preprocessor.window_stride,
+            #    emb_batch_size=config['emb_batch_size'],
+            #    pairwise_infer=False,
+            #    emb_dir=self.cfg_msdd_model.train_ds.emb_dir,
+            #    ds_config=self.cfg_msdd_model,
+            #    trainer=self.trainer
+            #)
             dataset = self.dataset
-
         else:
             dataset = AudioToSpeechMSDDTrainDataset(
                 manifest_filepath=config['manifest_filepath'],
@@ -931,16 +937,12 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 emb_batch_size=config['emb_batch_size'],
                 pairwise_infer=False,
             )
-            # self.val_dataset = dataset
 
         self.data_collection = dataset.collection
         collate_ds = dataset
         collate_fn = collate_ds.msdd_train_collate_fn
         batch_size = config['batch_size']
         if 'synthetic' in config and config['synthetic'] == True:
-            print('train loader:')
-            # sampler = torch.utils.data.SequentialSampler(dataset)
-            # print(sampler)
             return SyntheticDataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
@@ -949,12 +951,8 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 shuffle=False,
                 num_workers=config.get('num_workers', 0),
                 pin_memory=config.get('pin_memory', False),
-                # sampler=sampler,
             )
         else:
-            print('val loader:')
-            # sampler = torch.utils.data.distributed.DistributedSampler(dataset),
-            # print(vl.sampler)
             return torch.utils.data.DataLoader(
                 dataset=dataset,
                 batch_size=batch_size,
@@ -963,7 +961,6 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel, ClusterEmbedding):
                 shuffle=False,
                 num_workers=config.get('num_workers', 0),
                 pin_memory=config.get('pin_memory', False),
-                # sampler=sampler,
             )
 
     def __setup_dataloader_from_config_infer(
