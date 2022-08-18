@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import os
-
 import pytorch_lightning as pl
 from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything
@@ -49,7 +48,7 @@ seed_everything(42)
 def main(cfg):
     trainer = pl.Trainer(**cfg.trainer)
     log_dir = exp_manager(trainer, cfg.get("exp_manager", None))
-    msdd_model = EncDecDiarLabelModel(cfg=cfg.msdd_model, trainer=trainer)
+    msdd_model = EncDecDiarLabelModel(cfg=cfg.model, trainer=trainer)
     trainer.fit(msdd_model)
 
 if __name__ == '__main__':

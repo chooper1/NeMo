@@ -1032,39 +1032,6 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         )
         return subsegments_manifest_path
 
-    def prepare_split_data(self, manifest_filepath, _out_dir, batch_size):
-        _speaker_dir = os.path.join(_out_dir, 'speaker_outputs')
-        if not os.path.exists(_speaker_dir):
-            os.makedirs(_speaker_dir)
-        if not os.path.exists(f'{_out_dir}/speaker_outputs/embeddings'):
-            os.makedirs(f'{_out_dir}/speaker_outputs/embeddings')
-
-        split_audio_rttm_map = get_audio_rttm_map(manifest_filepath)
-
-        out_rttm_dir = os.path.join(_out_dir, 'pred_rttms')
-        os.makedirs(out_rttm_dir, exist_ok=True)
-
-        # Speech Activity Detection part
-        _speaker_manifest_path = os.path.join(_speaker_dir, f'oracle_vad_manifest_rank{self.trainer.global_rank}.json')
-        _speaker_manifest_path = write_rttm2manifest(
-            split_audio_rttm_map, _speaker_manifest_path, include_uniq_id=True
-        )
-
-        multiscale_and_timestamps = {}
-
-        # Segmentation
-        for scale_idx, (window, shift) in self.multiscale_args_dict['scale_dict'].items():
-
-            # Segmentation for the current scale (scale_idx)
-            subsegments_manifest_path = self._run_segmentation(
-                window, shift, _speaker_dir, _speaker_manifest_path, scale_tag=f'_scale{scale_idx}'
-            )
-            multiscale_timestamps = self._extract_timestamps(subsegments_manifest_path)
-            multiscale_and_timestamps[scale_idx] = multiscale_timestamps
-
-        multiscale_timestamps_dict = self.get_timestamps(multiscale_and_timestamps, self.multiscale_args_dict)
-        return multiscale_timestamps_dict
-
     def regenerate_dataset(self):
         """
         Regenerate dataset and create subsegment manifest files
@@ -1093,4 +1060,7 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
             clus_label_dict=None,
             pairwise_infer=self.pairwise_infer,
         )
-        self.multiscale_timestamp_dict = self.prepare_split_data(segment_manifest_path, tmp_dir, emb_batch_size)
+        self.multiscale_timestamp_dict = prepare_split_data(
+            self.manifest_filepath, self.emb_dir, self.multiscale_args_dict, self.trainer.global_rank,
+        )
+        #self.multiscale_timestamp_dict = self.prepare_split_data(segment_manifest_path, tmp_dir, emb_batch_size)
