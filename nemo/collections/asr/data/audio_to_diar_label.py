@@ -285,7 +285,8 @@ class _AudioMSDDTrainDataset(Dataset):
                 multiscale embeddings to form an input matrix for the MSDD model.
         """
         per_scale_clus_label = []
-        print('uniqid: ', uniqid)
+        print('uniqid: ', uniq_id)
+        print('self.global_rank: ', self.global_rank)
         print(self.multiscale_timestamp_dict)
         self.scale_n = len(self.multiscale_timestamp_dict[uniq_id]['scale_dict'])
         uniq_scale_mapping = get_scale_mapping_list(self.multiscale_timestamp_dict[uniq_id])
