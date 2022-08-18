@@ -878,7 +878,7 @@ class SyntheticDataLoader(torch.utils.data.dataloader.DataLoader):
     after a specified number of epochs.
     """
     def __init__(self, *args, **kwargs):
-        if kwargs['dataset'].trainer.global_rank == 0:   #remove for working version
+        if kwargs['dataset'].global_rank == 0:   #remove for working version
             logging.info(f"Reloading dataset in synthetic dataloader, rank is {kwargs['dataset'].trainer.global_rank}")
             kwargs['dataset'].regenerate_dataset()
         super().__init__(*args, **kwargs)
