@@ -103,16 +103,15 @@ class EncDecDiarLabelModel(ModelPT, ExportableEncDecModel):
                 )
                 self.dataset = AudioToSpeechMSDDSyntheticTrainDataset(
                     manifest_filepath=cfg.train_ds.manifest_filepath,
+                    emb_dir=cfg.train_ds.emb_dir,
                     multiscale_args_dict=self.multiscale_args_dict,
-                    multiscale_timestamp_dict=None,
                     soft_label_thres=cfg.train_ds.soft_label_thres,
                     featurizer=featurizer,
                     window_stride=cfg.preprocessor.window_stride,
                     emb_batch_size=cfg.train_ds.emb_batch_size,
                     pairwise_infer=False,
-                    emb_dir=cfg.train_ds.emb_dir,
                     ds_config=cfg,
-                    trainer=self.trainer,
+                    global_rank=self._trainer.global_rank,
                 )
             self.world_size = trainer.num_nodes * trainer.num_devices
             self.emb_batch_size = self.cfg_msdd_model.emb_batch_size

@@ -285,6 +285,8 @@ class _AudioMSDDTrainDataset(Dataset):
                 multiscale embeddings to form an input matrix for the MSDD model.
         """
         per_scale_clus_label = []
+        print('uniqid: ', uniqid)
+        print(self.multiscale_timestamp_dict)
         self.scale_n = len(self.multiscale_timestamp_dict[uniq_id]['scale_dict'])
         uniq_scale_mapping = get_scale_mapping_list(self.multiscale_timestamp_dict[uniq_id])
         for scale_index in range(self.scale_n):
@@ -909,8 +911,8 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
             Directory for generating speaker embeddings
         ds_config (dict):
             Model config used to access data simulator parameters
-        trainer:
-            Pytorch trainer
+        global_rank:
+            Pytorch trainer global rank
     """
 
     def __init__(
@@ -918,7 +920,6 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         *,
         manifest_filepath: str,
         multiscale_args_dict: str,
-        multiscale_timestamp_dict: Dict,
         soft_label_thres: float,
         featurizer,
         window_stride,
@@ -927,12 +928,12 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         random_flip: bool = True,
         emb_dir: str,
         ds_config,
-        trainer,
+        global_rank: int=0,
     ):
 
         self.featurizer = featurizer
         self.multiscale_args_dict = multiscale_args_dict
-        self.multiscale_timestamp_dict = multiscale_timestamp_dict
+        self.multiscale_timestamp_dict = None
         self.round_digits = 2
         self.decim = 10 ** self.round_digits
         self.soft_label_thres = soft_label_thres
@@ -951,11 +952,11 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
 
         self.include_base_ds = cfg.train_ds.include_base_ds
         self.manifest_filepath = manifest_filepath
-        self.trainer = trainer
+        self.global_rank = global_rank
 
         logging.info(f"Initializing dataset in synthetic dataloader ")
         self.collection = None
-        if self.trainer.global_rank == 0:
+        if self.global_rank == 0:
             self.regenerate_dataset()
 
     def regenerate_dataset(self):
@@ -987,5 +988,5 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
             pairwise_infer=self.pairwise_infer,
         )
         self.multiscale_timestamp_dict = prepare_split_data(
-            self.manifest_filepath, self.emb_dir, self.multiscale_args_dict, self.trainer.global_rank,
+            self.manifest_filepath, self.emb_dir, self.multiscale_args_dict, self.global_rank,
         )
