@@ -285,9 +285,6 @@ class _AudioMSDDTrainDataset(Dataset):
                 multiscale embeddings to form an input matrix for the MSDD model.
         """
         per_scale_clus_label = []
-        print('uniqid: ', uniq_id)
-        print('self.global_rank: ', self.global_rank)
-        print(self.multiscale_timestamp_dict)
         self.scale_n = len(self.multiscale_timestamp_dict[uniq_id]['scale_dict'])
         uniq_scale_mapping = get_scale_mapping_list(self.multiscale_timestamp_dict[uniq_id])
         for scale_index in range(self.scale_n):
@@ -972,8 +969,6 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
         segment_manifest_path = self.data_simulator.create_segment_manifest_ds()
 
         #regenerate segments
-        tmp_dir = self.emb_dir
-        emb_batch_size = self.emb_batch_size
         if self.include_base_ds: #add base manifest
             with open(self.manifest_filepath, 'r') as fp:
                 manifest_lines = fp.readlines()
@@ -989,5 +984,5 @@ class AudioToSpeechMSDDSyntheticTrainDataset(AudioToSpeechMSDDTrainDataset):
             pairwise_infer=self.pairwise_infer,
         )
         self.multiscale_timestamp_dict = prepare_split_data(
-            self.manifest_filepath, self.emb_dir, self.multiscale_args_dict, self.global_rank,
+            segment_manifest_path, self.emb_dir, self.multiscale_args_dict, self.global_rank,
         )
